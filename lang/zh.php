@@ -1827,6 +1827,12 @@ nowpayments.io
                         'askAqayePardakhtMerchant' => '💳 从 Aghaye Pardakht 获取您的商户代码并在此部分输入
         
 您当前的商户代码：%s',
+'askVarizaApiToken' => '💳 请从 Variza 控制面板（个人资料 → API 密钥）输入您的 Variza API 令牌
+
+当前密钥：<code>%s</code>',
+'askVarizaWebhookSecret' => '🔐 请从 Variza 控制面板（个人资料 → Webhook）输入您的 Variza Webhook 密钥
+
+当前密钥：<code>%s</code>',
                         'askZarinpalMerchant' => '💳 从 ZarinPal 获取您的商户代码并在此部分输入
         
 您当前的商户代码：%s',
@@ -3699,6 +3705,7 @@ f,n.n2',
 🧑‍🦯 您可以通过按下方按钮并选择您的操作系统来获取连接方法',
                 'wheelLuck' => '🎲 幸运转盘',
                 'zarinPal' => '🟡 ZarinPal',
+                'variza' => '💳 Variza（自动点对点转账',
         ],
         'keyboard' => [
                 'acceptRules' => '✅ 我接受规则',
@@ -4143,6 +4150,12 @@ f,n.n2',
                 'yes' => '是',
                 'yesterday' => '☀️ 昨天',
                 'zarinPalGateway' => '🟡 ZarinPal',
+'varizaApiToken' => 'Variza API 令牌',
+'varizaWebhookSecret' => 'Variza Webhook 密钥',
+'cashbackVariza' => 'Variza 返现',
+'minAmountVariza' => 'Variza 最低金额',
+'maxAmountVariza' => 'Variza 最高金额',
+'setEducationVariza' => 'Variza 教程',
                 'zarinPalMerchant' => 'ZarinPal 商户',
                 'zeroBalance' => '0️⃣ 余额清零',
                 'panelSetting' => '🎛 面板设置',
@@ -4341,6 +4354,7 @@ f,n.n2',
                 'paymentMethodRialGateway2' => '里亚尔网关 2',
                 'paymentMethodRialGateway3' => '里亚尔网关 3',
                 'paymentMethodTelegramStar' => 'Telegram Stars',
+                'paymentMethodVariza' => 'Variza',
                 'paymentMethodZarinpal' => 'ZarinPal',
                 'paymentSearchBtn' => '总数',
                 'paymentSearchTransactionPlaceholder' => '用户 ID 或交易编号...',

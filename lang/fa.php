@@ -1827,6 +1827,12 @@ nowpayments.io
                         'askZarinpalMerchant' => '💳 مرچنت کد خود را از زرین پال دریافت و در این قسمت وارد کنید
         
 مرچنت کد فعلی شما : %s',
+                        'askVarizaApiToken' => '💳 کلید API واریزا را از پنل واریزا (پروفایل ← کلید API) دریافت و وارد کنید
+
+کلید فعلی شما: <code>%s</code>',
+                        'askVarizaWebhookSecret' => '🔐 کلید امضای وب‌هوک واریزا را از پنل واریزا (پروفایل ← وب‌هوک) دریافت و وارد کنید
+
+کلید فعلی شما: <code>%s</code>',
                         'askMerchant' => '💳 مرچنت کد خود را دریافت و در این قسمت وارد کنید
         
 مرچنت کد فعلی شما : %s',
@@ -3683,6 +3689,7 @@ f,n.n2',
 🧑‍🦯 شما میتوانید شیوه اتصال را  با فشردن دکمه زیر و انتخاب سیستم عامل خود را دریافت کنید',
                 'wheelLuck' => '🎲 گردونه شانس',
                 'zarinPal' => '🟡 زرین پال',
+                'variza' => '💳 واریزا (کارت‌به‌کارت خودکار)',
         ],
         'keyboard' => [
                 'acceptRules' => '✅ قوانین را می پذیرم',
@@ -4128,6 +4135,12 @@ f,n.n2',
                 'yesterday' => '☀️ دیروز',
                 'zarinPalGateway' => '🟡 زرین پال',
                 'zarinPalMerchant' => 'مرچنت زرین پال',
+                'varizaApiToken' => 'کلید API واریزا',
+                'varizaWebhookSecret' => 'کلید وب‌هوک واریزا',
+                'cashbackVariza' => 'کش‌بک واریزا',
+                'minAmountVariza' => 'حداقل واریز واریزا',
+                'maxAmountVariza' => 'حداکثر واریز واریزا',
+                'setEducationVariza' => 'آموزش واریزا',
                 'zeroBalance' => '0️⃣ صفر کردن موجودی',
                 'panelSetting' => '🎛 تنظیم پنل',
                 'mirzaAgentPanel' => 'نمایندگی میرزا',
@@ -4325,6 +4338,7 @@ f,n.n2',
                 'paymentMethodRialGateway2' => 'درگاه ریالی ۲',
                 'paymentMethodRialGateway3' => 'درگاه ریالی ۳',
                 'paymentMethodTelegramStar' => 'استار تلگرام',
+                'paymentMethodVariza' => 'واریزا',
                 'paymentMethodZarinpal' => 'زرین‌پال',
                 'paymentSearchBtn' => 'تعداد کل',
                 'paymentSearchTransactionPlaceholder' => 'آیدی کاربر یا شماره تراکنش...',
