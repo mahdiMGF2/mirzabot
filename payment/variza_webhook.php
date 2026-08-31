@@ -76,8 +76,8 @@ if (($data['event'] ?? '') !== 'payment.paid') {
 }
 
 $slug = (string) ($data['slug'] ?? '');
-$attempt_code = (string) ($data['attempt_code'] ?? '');
 $amount = (int) ($data['amount'] ?? 0);
+// attempt_code available as $data['attempt_code'] for audit if needed
 
 if ($slug === '') {
     variza_webhook_respond(400, 'missing slug');
@@ -99,7 +99,7 @@ if ($payment['payment_Status'] === 'paid') {
     variza_webhook_respond(200, 'already paid');
 }
 
-// Amount check — do not credit if gateway reports less than billed.
+// Amount check — both in Toman, do not credit if gateway reports less than billed.
 $billed = (int) $payment['price'];
 if ($amount < $billed) {
     error_log("variza webhook: amount mismatch for {$slug}: billed {$billed}, got {$amount}");

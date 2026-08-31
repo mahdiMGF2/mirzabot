@@ -2181,10 +2181,14 @@ function createPayVariza($price, $order_id)
         curl_close($curl);
         return ['error' => 'curl: ' . $err];
     }
+    $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
     curl_close($curl);
     $decoded = json_decode($response, true);
     if (!is_array($decoded)) {
-        return ['error' => 'invalid json', 'raw' => $response];
+        return ['error' => 'invalid json', 'raw' => $response, 'http_code' => $httpCode];
+    }
+    if ($httpCode < 200 || $httpCode >= 300) {
+        return ['error' => 'http ' . $httpCode, 'raw' => $response, 'decoded' => $decoded, 'http_code' => $httpCode];
     }
     return $decoded;
 }
