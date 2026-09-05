@@ -1944,6 +1944,13 @@ function publickey()
         'preshared_key' => $presharedKey
     ];
 }
+function containsHtmlMarkup($value)
+{
+    if (!is_string($value)) {
+        return false;
+    }
+    return strpos($value, '<') !== false;
+}
 function stripCustomEmojiTags($value)
 {
     if (!is_string($value) || stripos($value, '<tg-emoji') === false) {
@@ -1955,19 +1962,30 @@ function stripCustomEmojiTags($value)
 function splitCustomEmojiLabel($value)
 {
     $text = is_string($value) ? $value : '';
-    $icon = '';
     if ($text === '' || stripos($text, '<tg-emoji') === false) {
-        return ['text' => $text, 'icon' => $icon];
+        return ['text' => $text, 'icon' => ''];
     }
-    if (preg_match('#^\s*<tg-emoji\b[^>]*\bemoji-id\s*=\s*"(\d+)"[^>]*>.*?</tg-emoji>\s*#isu', $text, $leading)) {
-        $icon = $leading[1];
-        $text = substr($text, strlen($leading[0]));
+    $icon = '';
+    $stripped = preg_replace_callback(
+        '#<tg-emoji\b[^>]*\bemoji-id\s*=\s*"(\d+)"[^>]*>(.*?)</tg-emoji>#isu',
+        function ($match) use (&$icon) {
+            if ($icon === '') {
+                $icon = $match[1];
+                return '';
+            }
+            return $match[2];
+        },
+        $text
+    );
+    $fallback = stripCustomEmojiTags($text);
+    if (!is_string($stripped)) {
+        return ['text' => $fallback, 'icon' => ''];
     }
-    $text = stripCustomEmojiTags($text);
-    if (trim($text) === '') {
-        return ['text' => stripCustomEmojiTags($value), 'icon' => ''];
+    $stripped = trim(preg_replace('/[ \t]+/u', ' ', stripCustomEmojiTags($stripped)));
+    if ($stripped === '') {
+        return ['text' => $fallback, 'icon' => ''];
     }
-    return ['text' => $text, 'icon' => $icon];
+    return ['text' => $stripped, 'icon' => $icon];
 }
 function customEmojiLabelText($value)
 {
@@ -2045,9 +2063,10 @@ function bottext_apply_overrides(array &$base, $lang)
             if (!is_string($v))
                 continue;
             $base[$group][$k] = $v;
-            $plain = customEmojiLabelText($v);
-            if ($plain !== $v && $plain !== '')
-                $emojiLabels[$plain] = $v;
+            foreach ([customEmojiLabelText($v), stripCustomEmojiTags($v)] as $plain) {
+                if (is_string($plain) && $plain !== $v && $plain !== '')
+                    $emojiLabels[$plain] = $v;
+            }
         }
     }
     customEmojiLabels($emojiLabels);

@@ -648,6 +648,10 @@ if (in_array($text, $textadmin) || $datain == "admin") {
     deletemessage($from_id, $message_id);
     savedata("clear", "type", $typepanel);
 } elseif ($user['step'] == "add_name_panel") {
+    if (containsHtmlMarkup($text)) {
+        sendmessage($from_id, $textbotlang['common']['htmlNotAllowed'], $backadmin, 'HTML');
+        return;
+    }
     if (rowExists("marzban_panel", "name_panel", $text)) {
         sendmessage($from_id, $textbotlang['Admin']['managepanel']['repeatPanel'], $backadmin, 'HTML');
         return;
@@ -2509,6 +2513,10 @@ elseif ($datain == "systemsms") {
     sendmessage($from_id, $textbotlang['Admin']['Product']['addProductStepOne'], $backadmin, 'HTML');
     step('get_limit', $from_id);
 } elseif ($user['step'] == "get_limit") {
+    if (containsHtmlMarkup($text)) {
+        sendmessage($from_id, $textbotlang['common']['htmlNotAllowed'], $backadmin, 'HTML');
+        return;
+    }
     if (strlen($text) > 150) {
         sendmessage($from_id, $textbotlang['Admin']['Product']['nameTooLong'], $backadmin, 'HTML');
         return;
@@ -2905,6 +2913,10 @@ elseif ($datain == "systemsms") {
     sendmessage($from_id, $textbotlang['Admin']['Product']['askNewName'], $backadmin, 'HTML');
     step('change_name', $from_id);
 } elseif ($user['step'] == "change_name") {
+    if (containsHtmlMarkup($text)) {
+        sendmessage($from_id, $textbotlang['common']['htmlNotAllowed'], $backadmin, 'HTML');
+        return;
+    }
     if (strlen($text) > 150) {
         sendmessage($from_id, $textbotlang['Admin']['Product']['nameTooLong'], $backadmin, 'HTML');
         return;
@@ -3692,6 +3704,10 @@ elseif ($datain == "systemsms") {
     sendmessage($from_id, $textbotlang['Admin']['managepanel']['getNameNew'], $backadmin, 'HTML');
     step('GetNameNew', $from_id);
 } elseif ($user['step'] == "GetNameNew") {
+    if (containsHtmlMarkup($text)) {
+        sendmessage($from_id, $textbotlang['common']['htmlNotAllowed'], $backadmin, 'HTML');
+        return;
+    }
     if (rowExists("marzban_panel", "name_panel", $text)) {
         sendmessage($from_id, $textbotlang['Admin']['managepanel']['repeatPanel'], $backadmin, 'HTML');
         return;
@@ -10977,5 +10993,11 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     $textbotlang = languagechange();
     $bt_home = strtr($textbotlang['bottext']['home_text'], ['{lang}' => $textbotlang['bottext']['langs'][$bt_lang] ?? $bt_lang]);
     sendmessage($from_id, $bt_reset ? $textbotlang['bottext']['msg_reset_done'] : $textbotlang['bottext']['msg_saved'], $keyboardadmin, 'HTML');
+    if (!$bt_reset && stripos($bt_new, '<tg-emoji') !== false) {
+        sendmessage($from_id, $bt_new, null, 'HTML');
+        if (customEmojiBlocked()) {
+            sendmessage($from_id, $textbotlang['bottext']['msg_emoji_unsupported'], null, 'HTML');
+        }
+    }
     sendmessage($from_id, $bt_home, keyboard_list_text($bt_lang), 'HTML');
 }

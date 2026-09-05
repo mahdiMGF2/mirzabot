@@ -15,6 +15,9 @@ Current language: <b>{lang}</b>',
                 'msg_session' => '⛔️ Session expired. Please open it again.',
                 'msg_empty' => '⛔️ The text is empty. Send it again or tap «Close».',
                 'msg_saved' => '✅ Text saved.',
+                'msg_emoji_unsupported' => '⚠️ Premium emoji cannot be displayed by this bot.
+The text was saved, but a regular emoji is shown instead of the premium one.
+To enable it, the bot owner needs a Telegram Premium subscription, or the bot must own a username purchased on Fragment.',
                 'msg_closed' => 'Closed.',
                 'langs' => [
                         'fa' => '🇮🇷 فارسی',
@@ -187,6 +190,7 @@ Current language: <b>{lang}</b>',
                         'unknown' => 'Unknown',
                         'unlimited' => 'Unlimited',
                 ],
+                'htmlNotAllowed' => '⛔️ HTML tags are not allowed in this name. Please send it without the “&lt;” character.',
                 'invalidInput' => '⭕️ Invalid input',
                 'invalidTime' => 'The number of days is invalid',
                 'invalidUsername' => '❌ The username is invalid.

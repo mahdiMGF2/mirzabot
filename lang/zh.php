@@ -15,6 +15,9 @@ return [
                 'msg_session' => '⛔️ 会话已过期，请重新打开。',
                 'msg_empty' => '⛔️ 文本为空。请重新发送或点击「关闭」。',
                 'msg_saved' => '✅ 文本已保存。',
+                'msg_emoji_unsupported' => '⚠️ 此机器人无法显示高级表情。
+文本已保存，但会用普通表情代替高级表情。
+如需启用，机器人所有者需拥有 Telegram Premium 订阅，或机器人拥有在 Fragment 购买的用户名。',
                 'msg_closed' => '已关闭。',
                 'langs' => [
                         'fa' => '🇮🇷 فارسی',
@@ -187,6 +190,7 @@ return [
                         'unknown' => '未知',
                         'unlimited' => '无限制',
                 ],
+                'htmlNotAllowed' => '⛔️ 此名称中不允许使用 HTML 标签。请发送不含“&lt;”字符的名称。',
                 'invalidInput' => '⭕️ 输入无效',
                 'invalidTime' => '天数无效',
                 'invalidUsername' => '❌ 用户名无效。
