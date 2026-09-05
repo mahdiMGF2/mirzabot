@@ -1231,6 +1231,7 @@ $abangatewaykeyboard = json_encode([
     'keyboard' => [
         [['text' => $textbotlang['keyboard']['apiIranPay4']], ['text' => $textbotlang['keyboard']['endpointIranPay4']]],
         [['text' => $textbotlang['keyboard']['minAmountIranPay4']], ['text' => $textbotlang['keyboard']['maxAmountIranPay4']]],
+        [['text' => $textbotlang['keyboard']['dailyLimitIranPay4']]],
         [['text' => $textbotlang['keyboard']['cashbackIranPay4']]],
         [['text' => $textbotlang['keyboard']['setEducationIranPay4']]],
         [['text' => $textbotlang['Admin']['backAdminBtn']], ['text' => $textbotlang['Admin']['backMenuBtn']]]

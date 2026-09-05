@@ -84,6 +84,7 @@ $values = [
     'statusiranpay4' => 'offiranpay4',
     'minbalanceiranpay4' => '20000',
     'maxbalanceiranpay4' => '1000000',
+    'dailylimitiranpay4' => '0',
     'chashbackiranpay4' => '0',
     'helpperfectmony' => '2',
     'helpzarinpal' => '2',

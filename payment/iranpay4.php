@@ -140,18 +140,60 @@ try {
     iranpay4_finish(false, $failedTitle, 'پرداخت تایید شد ولی تحویل سرویس خطا داد. با پشتیبانی تماس بگیرید.');
 }
 
+// The gateway's own answer, kept beside the order. When a shop later asks what
+// the gateway actually said about a payment — the question card-to-card
+// generates more than any other method — this is where it is, in their own
+// database rather than in our logs. `zarinpal`, `nowpayment` and `iranpay2`
+// all keep theirs the same way.
+$statement = $pdo->prepare(
+    "UPDATE Payment_report SET dec_not_confirmed = :answer WHERE id_order = :id_order"
+);
+$statement->bindValue(':answer', json_encode($response, JSON_UNESCAPED_UNICODE));
+$statement->bindValue(':id_order', $order_id);
+$statement->execute();
+
+// Needed twice below — for the cashback message and for the shop's report —
+// so it is read once rather than per use.
+$buyer = select("user", "*", "id", $payment['id_user'], "select");
+
 // Cashback, on the same terms as every other gateway here. Left out of the
 // first version of this file, which quietly made this the one gateway where a
 // shop's cashback setting did nothing.
 $cashback = intval(getPaySettingValue('chashbackiranpay4', '0'));
-if ($cashback > 0) {
-    $buyer = select("user", "*", "id", $payment['id_user'], "select");
-    if ($buyer) {
-        $reward = intval($price * $cashback / 100);
-        if ($reward > 0) {
-            update("user", "Balance", intval($buyer['Balance']) + $reward, "id", $payment['id_user']);
-        }
+if ($cashback > 0 && $buyer) {
+    $reward = intval($price * $cashback / 100);
+    if ($reward > 0) {
+        update("user", "Balance", intval($buyer['Balance']) + $reward, "id", $payment['id_user']);
+        // Crediting it in silence was the other half of the same omission: the
+        // buyer saw their balance change with nothing saying why. `giftReport`
+        // is what every other gateway sends, and it already exists in all four
+        // languages.
+        sendmessage(
+            $buyer['id'],
+            sprintf($textbotlang['paymentGateway']['giftReport'], number_format($reward)),
+            null,
+            'HTML'
+        );
     }
+}
+
+// The shop's own record of the sale, posted to its report channel like every
+// other gateway does. Shops that moved onto this slot from a borrowed one
+// noticed the day it stopped arriving: it is how a seller watches the shop
+// without opening the panel, and its absence read as "the gateway broke".
+if ($buyer && strlen((string) ($setting['Channel_Report'] ?? '')) > 0) {
+    $paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
+    telegram('sendmessage', [
+        'chat_id' => $setting['Channel_Report'],
+        'message_thread_id' => $paymentreports,
+        'text' => sprintf(
+            $textbotlang['paymentGateway']['reportAbanGateway'],
+            $buyer['username'],
+            $buyer['id'],
+            number_format($price)
+        ),
+        'parse_mode' => 'HTML',
+    ]);
 }
 
 iranpay4_finish(true, $successTitle, 'پرداخت شما با موفقیت انجام شد.');

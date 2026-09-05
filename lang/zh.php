@@ -1806,6 +1806,7 @@ trojan://xyz',
                         'cubepayFeeAsk' => "💵 请发送手续费数值：\n\n▫️ <b>0 到 100</b> → 按<b>百分比</b>收取（可含小数，如 <code>9.9</code>）\n▫️ <b>大于 100</b> → 按<b>固定土曼金额</b>收取（如 <code>5000</code>）\n\n当前数值：<b>%s</b>",
                         'cubepayFeeSavedPercent' => "✅ 已保存 — <b>%s%%</b> 百分比手续费\n\n示例：100,000 土曼的订单，客户需支付 <b>%s</b> 土曼。",
                         'cubepayFeeSavedFixed' => "✅ 已保存 — <b>%s 土曼</b> 固定手续费\n\n示例：100,000 土曼的订单，客户需支付 <b>%s</b> 土曼。",
+                        'askDailyLimit' => "⏳ 请发送 AbanGateway <b>成功</b>支付的每日上限。\n\n<b>0</b> 表示无上限。",
                         'off' => '已关闭',
                         'on' => '已开启',
                         'intro' => '📌 在下方列表中，您可以管理网关。
@@ -3961,6 +3962,7 @@ f,n.n2',
                 'endpointIranPay4Invalid' => '❌ 地址被拒绝。必须以 <code>https://</code> 开头且为有效域名。',
                 'minAmountIranPay4' => '⬇️ AbanGateway 最低金额',
                 'maxAmountIranPay4' => '⬆️ AbanGateway 最高金额',
+                'dailyLimitIranPay4' => '⏳ AbanGateway 每日上限',
                 'cashbackIranPay4' => '🎁 AbanGateway 返现',
                 'setEducationIranPay4' => '📚 AbanGateway 教程',
                 'lastHourStats' => '⏱️ 过去一小时',
@@ -4734,6 +4736,11 @@ f,n.n2',
 用户用户名：%s
 交易金额 %s
 支付方式：第一里亚尔货币',
+                'reportAbanGateway' => '💵 新付款
+- 👤 用户名 : @%s
+- 🆔 用户 ID : %s
+- 💸 金额 %s
+- 💳 支付方式 : AbanGateway',
                 'reportTronado' => '💵 新付款
 - 👤 用户用户名：@%s
 - 🆔用户数字 ID：%s

@@ -1806,6 +1806,7 @@ Current time: ',
                         'cubepayFeeAsk' => "💵 Send the fee value:\n\n▫️ <b>0 to 100</b> → a <b>percentage</b> fee (decimals allowed, e.g. <code>9.9</code>)\n▫️ <b>above 100</b> → a <b>fixed amount in toman</b> (e.g. <code>5000</code>)\n\nCurrent value: <b>%s</b>",
                         'cubepayFeeSavedPercent' => "✅ Saved — <b>%s%%</b> percentage fee\n\nExample: a 100,000 toman order becomes <b>%s</b> toman for the customer.",
                         'cubepayFeeSavedFixed' => "✅ Saved — <b>%s toman</b> fixed fee\n\nExample: a 100,000 toman order becomes <b>%s</b> toman for the customer.",
+                        'askDailyLimit' => "⏳ Send the daily cap for <b>successful</b> AbanGateway payments.\n\n<b>0</b> means no cap.",
                         'off' => 'Turned off',
                         'on' => 'Turned on',
                         'intro' => '📌 From the list below you can manage the gateways.
@@ -3961,6 +3962,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'endpointIranPay4Invalid' => '❌ Address rejected. It must start with <code>https://</code> and be a valid domain.',
                 'minAmountIranPay4' => '⬇️ AbanGateway minimum',
                 'maxAmountIranPay4' => '⬆️ AbanGateway maximum',
+                'dailyLimitIranPay4' => '⏳ AbanGateway daily cap',
                 'cashbackIranPay4' => '🎁 AbanGateway cashback',
                 'setEducationIranPay4' => '📚 AbanGateway guide',
                 'lastHourStats' => '⏱️ Last hour',
@@ -4734,6 +4736,11 @@ User numeric ID : %s
 User username : %s
 Transaction amount %s
 Payment method : First Rial currency',
+                'reportAbanGateway' => '💵 New payment
+- 👤 Username : @%s
+- 🆔 User ID : %s
+- 💸 Amount %s
+- 💳 Method : AbanGateway',
                 'reportTronado' => '💵 New payment
 - 👤 User username : @%s
 - 🆔User numeric ID : %s

@@ -6435,6 +6435,17 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     update("PaySetting", "ValuePay", intval($text), "NamePay", "maxbalanceiranpay4");
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $abangatewaykeyboard, 'HTML');
     step('home', $from_id);
+} elseif ($text == $textbotlang['keyboard']['dailyLimitIranPay4'] && $adminrulecheck['rule'] == "administrator") {
+    sendmessage($from_id, $textbotlang['Admin']['gateway']['askDailyLimit'] ?? $textbotlang['users']['selectoption'], $backadmin, 'HTML');
+    step("getdailyiranpay4", $from_id);
+} elseif ($user['step'] == "getdailyiranpay4") {
+    if (!ctype_digit($text)) {
+        sendmessage($from_id, $textbotlang['common']['invalidInput'], $backadmin, 'HTML');
+        return;
+    }
+    update("PaySetting", "ValuePay", intval($text), "NamePay", "dailylimitiranpay4");
+    sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $abangatewaykeyboard, 'HTML');
+    step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['cashbackIranPay4'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['gateway']['askCashback'] ?? $textbotlang['users']['selectoption'], $backadmin, 'HTML');
     step("getcashiranpay4", $from_id);
