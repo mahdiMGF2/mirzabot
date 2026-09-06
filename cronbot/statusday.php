@@ -51,7 +51,7 @@ $dayListSelltest = $stmt->fetchColumn() ?? 0;
 $sqlNewUsers = "SELECT COUNT(*) AS count 
                  FROM user 
                  WHERE (FROM_UNIXTIME(register) BETWEEN :startDate AND :endDate)";
-$stmt = executeQuery($pdo, $sqlNewUsers, $params);
+$stmt = executeQuery($pdo, $sqlNewUsers, [':startDate' => $datefirst, ':endDate' => $dateend]);
 $usernew = $stmt->fetchColumn() ?? 0;
 
 // Fetch extension data
