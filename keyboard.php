@@ -212,6 +212,16 @@ $keyboardzarinpal = json_encode([
     ],
     'resize_keyboard' => true
 ]);
+$keyboardvariza = json_encode([
+    'keyboard' => [
+        [['text' => $textbotlang['keyboard']['varizaApiToken']], ['text' => $textbotlang['keyboard']['varizaWebhookSecret']]],
+        [['text' => $textbotlang['keyboard']['cashbackVariza']]],
+        [['text' => $textbotlang['keyboard']['minAmountVariza']], ['text' => $textbotlang['keyboard']['maxAmountVariza']]],
+        [['text' => $textbotlang['keyboard']['setEducationVariza']]],
+        [['text' => $textbotlang['Admin']['backAdminBtn']], ['text' => $textbotlang['Admin']['backMenuBtn']]]
+    ],
+    'resize_keyboard' => true
+]);
 $aqayepardakht = json_encode([
     'keyboard' => [
         [['text' => $textbotlang['keyboard']['setAqayePardakhtMerchant']], ['text' => $textbotlang['keyboard']['cashbackAqayePardakht']]],
@@ -330,6 +340,18 @@ if ($PaySettingaqayepardakht == "onaqayepardakht") {
 if ($zarinpal == "onzarinpal") {
     $step_payment['inline_keyboard'][] = [
         ['text' => $textbotlang['textbot']['zarinPal'], 'callback_data' => "zarinpal"]
+    ];
+}
+$variza = getPaySettingValue("variza_status", "offvariza");
+if (
+    $variza == "onvariza"
+    && trim((string) getPaySettingValue("variza_api_token", "")) !== ""
+    && trim((string) getPaySettingValue("variza_api_token", "")) !== "0"
+    && trim((string) getPaySettingValue("variza_webhook_secret", "")) !== ""
+    && trim((string) getPaySettingValue("variza_webhook_secret", "")) !== "0"
+) {
+    $step_payment['inline_keyboard'][] = [
+        ['text' => $textbotlang['textbot']['variza'], 'callback_data' => "variza"]
     ];
 }
 if ($paymentstatussnotverify == "onverifypay") {

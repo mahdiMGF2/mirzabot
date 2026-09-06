@@ -2369,6 +2369,52 @@ function createPayZarinpal($price, $order_id)
     curl_close($curl);
     return json_decode($response, true);
 }
+function createPayVariza($price, $order_id)
+{
+    global $domainhosts;
+    $api_token = trim((string) getPaySettingValue('variza_api_token', ''));
+    if ($api_token === '' || $api_token === '0') {
+        return ['error' => 'variza_api_token not set'];
+    }
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://variza.ir/api/v1/pay',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'Accept: application/json',
+            'Authorization: Bearer ' . $api_token,
+        ],
+        CURLOPT_POSTFIELDS => json_encode([
+            'amount' => (int) $price,
+            'return_url' => 'https://' . $domainhosts . '/payment/variza.php?order=' . $order_id,
+            'title' => 'Mirza order ' . $order_id,
+            'expires_in' => '1h',
+        ], JSON_UNESCAPED_UNICODE),
+    ]);
+    $response = curl_exec($curl);
+    if ($response === false) {
+        $err = curl_error($curl);
+        curl_close($curl);
+        return ['error' => 'curl: ' . $err];
+    }
+    $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    curl_close($curl);
+    $decoded = json_decode($response, true);
+    if (!is_array($decoded)) {
+        return ['error' => 'invalid json', 'raw' => $response, 'http_code' => $httpCode];
+    }
+    if ($httpCode < 200 || $httpCode >= 300) {
+        return ['error' => 'http ' . $httpCode, 'raw' => $response, 'decoded' => $decoded, 'http_code' => $httpCode];
+    }
+    return $decoded;
+}
 function createPayaqayepardakht($price, $order_id)
 {
     global $domainhosts;

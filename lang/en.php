@@ -1834,8 +1834,14 @@ nowpayments.io
         
 Your current merchant code: %s',
                         'askZarinpalMerchant' => '💳 Obtain your merchant code from ZarinPal and enter it in this section
-        
+         
 Your current merchant code: %s',
+                        'askVarizaApiToken' => '💳 Enter your Variza API token from Variza panel (Profile → API key)
+
+Current key: <code>%s</code>',
+                        'askVarizaWebhookSecret' => '🔐 Enter your Variza webhook secret from Variza panel (Profile → Webhook)
+
+Current key: <code>%s</code>',
                         'askMerchant' => '💳 Obtain your merchant code and enter it in this section
         
 Your current merchant code: %s',
@@ -3727,6 +3733,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
 🧑‍🦯 You can get the connection method by pressing the button below and selecting your operating system',
                 'wheelLuck' => '🎲 Wheel of fortune',
                 'zarinPal' => '🟡 ZarinPal',
+                'variza' => '💳 Variza (auto card-to-card)',
         ],
         'keyboard' => [
                 'acceptRules' => '✅ I accept the rules',
@@ -4169,6 +4176,12 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'yesterday' => '☀️ Yesterday',
                 'zarinPalGateway' => '🟡 ZarinPal',
                 'zarinPalMerchant' => 'ZarinPal merchant',
+                'varizaApiToken' => 'Variza API token',
+                'varizaWebhookSecret' => 'Variza webhook secret',
+                'cashbackVariza' => 'Variza cashback',
+                'minAmountVariza' => 'Variza min amount',
+                'maxAmountVariza' => 'Variza max amount',
+                'setEducationVariza' => 'Variza tutorial',
                 'zeroBalance' => '0️⃣ Reset balance to zero',
                 'panelSetting' => '🎛 Panel Settings',
                 'mirzaAgentPanel' => 'Mirza Agent',
@@ -4366,6 +4379,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'paymentMethodRialGateway2' => 'Rial gateway 2',
                 'paymentMethodRialGateway3' => 'Rial gateway 3',
                 'paymentMethodTelegramStar' => 'Telegram Stars',
+                'paymentMethodVariza' => 'Variza',
                 'paymentMethodZarinpal' => 'ZarinPal',
                 'paymentSearchBtn' => 'Total count',
                 'paymentSearchTransactionPlaceholder' => 'User ID or transaction number...',
