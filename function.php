@@ -831,6 +831,51 @@ function trnado($order_id, $price)
 
     return $decoded;
 }
+
+/**
+ * Builds the optional "pay by card inside the bot" message for CubePay.
+ *
+ * CubePay returns the card details of the invoice together with the payment
+ * link, plus a `show_card_in_bot` flag that mirrors the merchant's own choice
+ * in their CubePay panel. When the merchant turned that option off (the
+ * default) this returns null and nothing extra is sent, so the behaviour for
+ * everyone else stays exactly as before.
+ *
+ * Note: the card may differ from invoice to invoice (card rotation), so the
+ * details are always taken from the response of that specific invoice.
+ */
+function cubepayCardDetailsText($payment)
+{
+    global $textbotlang;
+
+    if (empty($payment['show_card_in_bot']) || empty($payment['card']['number'])) {
+        return null;
+    }
+
+    $amount  = intval($payment['pay_amount_toman'] ?? 0);
+    $minutes = intval($payment['expires_in_minutes'] ?? 0);
+    if ($amount < 1 || $minutes < 1) {
+        return null;
+    }
+
+    $holder = trim((string) ($payment['card']['holder'] ?? ''));
+    if ($holder === '') {
+        $holder = '-';
+    }
+
+    $template = $textbotlang['users']['Balance']['cubepayCardDetails'] ?? '';
+    if ($template === '') {
+        return null;
+    }
+
+    return sprintf(
+        $template,
+        htmlspecialchars((string) $payment['card']['number'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($holder, ENT_QUOTES, 'UTF-8'),
+        number_format($amount),
+        $minutes
+    );
+}
 function formatBytes($bytes, $precision = 2): string
 {
     global $textbotlang;
