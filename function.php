@@ -819,6 +819,7 @@ function trnado($order_id, $price)
         'price_amount' => $amount_toman,
         'order_id' => $order_id,
         'callback_url' => "https://$domainhosts/payment/iranpay2.php",
+        'redirect_after_payment' => false,
     ], JSON_UNESCAPED_UNICODE));
 
     $response = curl_exec($curl);
