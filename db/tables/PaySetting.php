@@ -78,12 +78,10 @@ $values = [
     'helpiranpay4' => '2',
     'apiiranpay4' => '0',
     'endpointiranpay4' => '0',
-    // Off by default. The gateway cannot work until an admin has pasted both a
-    // key and an endpoint, and a button shown before that is a buyer sent to a
-    // dead end.
     'statusiranpay4' => 'offiranpay4',
     'minbalanceiranpay4' => '20000',
     'maxbalanceiranpay4' => '1000000',
+    'dailylimitiranpay4' => '0',
     'chashbackiranpay4' => '0',
     'helpperfectmony' => '2',
     'helpzarinpal' => '2',

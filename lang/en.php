@@ -263,7 +263,6 @@ To enable it, the bot owner needs a Telegram Premium subscription, or the bot mu
                 
 ',
                         'giftFromManagement' => '🎁 Dear user, an amount of %s Toman was credited to your wallet as a gift from management.',
-                        'deductedNotice' => '❌ Dear user, an amount of %s Toman was deducted from your wallet balance.',
                         'addedNotice' => '💎 Dear user, an amount of %s Toman was added to your wallet balance.',
                         'deductedNotice2' => '❌ Dear user, an amount of %s Toman was deducted from your wallet balance.',
                         'addedNotice2' => '💎 Dear user, an amount of %s Toman was added to your wallet balance.',
@@ -1264,18 +1263,12 @@ The <code>install</code> folder still exists on the server and the bot could not
                         'addBalanceUser' => '✅ The amount was added to the user\'s balance',
                         'addBalanceUsers' => '✅ The amount was added to the users\' balances',
                         'invalidPrice' => 'The amount is invalid',
-                        'negativeBalance' => '⚜️ Send the user\'s numeric ID 
-Description: To deduct the user\'s balance, first send the user\'s numeric ID',
-                        'negativeBalanceUser' => '✅ The amount was deducted from the user\'s balance',
-                        'priceBalance' => 'The numeric ID was received. Send the amount you want to deduct from the user; the amount should be in Toman',
                         'askUserGroup' => '📌 Which of the following user groups should the top-up be deposited to?',
                         'askTargetUsers' => '📌 Which user should the public top-up be sent to?',
                         'askNotify' => '📌 Should a top-up notification message be sent to the users or not?
 Yes: 1
 No: 0',
                         'operationStarted' => '✅ The message-sending operation has begun. You will be notified when it finishes.',
-                        'btnDecrease' => '⬇️ Decrease balance',
-                        'maxAmountRial' => '📌 The maximum amount is 100 million Rials.',
                         'maxAmountToman' => '❌ The maximum amount is 100 million Toman',
                         'askMinCharge' => '📌 Set the minimum amount you want the user to top up their account with',
                         'askMinChargeGroup' => '📌 For which user group should the minimum balance apply?
@@ -1490,13 +1483,6 @@ Number of products sold: %s
     
 ',
                         'nameExists2' => '❌ A product named %s already exists',
-                ],
-                'Protocol' => [
-                        'invalidProtocol' => '❌ Invalid protocol',
-                        'removeProtocol' => 'Select the protocol you want to delete.',
-                        'removedProtocol' => 'The protocol was successfully deleted.',
-                        'btnDelete' => '🗑 Delete protocol',
-                        'btnSettings' => '⚙️ Protocol settings',
                 ],
                 'SettingPayment' => [
                         'cartDirect' => '✅ Your username was successfully registered.',
@@ -1788,7 +1774,6 @@ trojan://xyz',
 Current time: ',
                         'setVolumeRemove' => '📌 Send the number of days after which accounts whose volume has run out should be deleted. The account time is calculated based on the user\'s last connection. This feature is for the Marzban panel
 Current time: ',
-                        'btnSettings' => '🕚 Cron job settings',
                         'cannotDeleteUnlimited' => '❌ The service cannot be deleted because its volume and time are unlimited. ',
                         'askOnHoldDays' => 'In this section you must set, if the user has not connected to their config after a certain number of days and is in on_hold status, to send the user a message',
                         'askVolumeAlert' => '📌 In this section you can set that if the user\'s volume reaches x, a warning message is sent. Send the volume in GB.',
@@ -1810,10 +1795,10 @@ Current time: ',
                         'cubepayFeeAsk' => "💵 Send the fee value:\n\n▫️ <b>0 to 100</b> → a <b>percentage</b> fee (decimals allowed, e.g. <code>9.9</code>)\n▫️ <b>above 100</b> → a <b>fixed amount in toman</b> (e.g. <code>5000</code>)\n\nCurrent value: <b>%s</b>",
                         'cubepayFeeSavedPercent' => "✅ Saved — <b>%s%%</b> percentage fee\n\nExample: a 100,000 toman order becomes <b>%s</b> toman for the customer.",
                         'cubepayFeeSavedFixed' => "✅ Saved — <b>%s toman</b> fixed fee\n\nExample: a 100,000 toman order becomes <b>%s</b> toman for the customer.",
+                        'askDailyLimit' => "⏳ Send the daily cap for <b>successful</b> AbanGateway payments.\n\n<b>0</b> means no cap.",
                         'off' => 'Turned off',
                         'on' => 'Turned on',
                         'intro' => '📌 From the list below you can manage the gateways.
-
 ⚠️ The Nova team gives no guarantee for the gateways, and all use and responsibility is on you',
                         'btnPerfectMoneyHelp' => '📚 Set up Perfect Money tutorial',
                         'askPlisioApi' => '⚙️ Please send your Plisio API Key.
@@ -1896,7 +1881,6 @@ Error reason : %s',
                         'dataorder' => 'No date recorded',
                         'descriptionBlock' => '✍️ The reason for blocking the user was saved',
                         'failedPhone' => 'Not confirmed',
-                        'getIdMessage' => '✅ The text was received. Now send the user\'s numeric ID.',
                         'getIdUserUnblock' => '👤 Send the user\'s numeric ID',
                         'getText' => 'Send your text',
                         'getTextResponse' => 'To reply to the message, send your text.',
@@ -2030,7 +2014,6 @@ If you want it to be unlimited, send the text unlimited',
                         'savedData' => '✅ The changes were successfully saved.',
                         'savedName' => '✅ The name was successfully saved',
                         'setLimit' => 'Send the new account creation limit. If you want it to be unlimited, send the text unlimited',
-                        'setProtocol' => '✅ The protocol was successfully set',
                         'usernameSet' => '👤 The panel address was saved. Now send the username',
                         'noteSetInboundAndDomain' => '❌ Note:
 To activate the panel, you must go to the panel management menu and be sure to configure the Set Inbound ID and Subscription Link Domain options; otherwise, the config will not be created',
@@ -2147,9 +2130,9 @@ To hide a panel, select your panels from the list below, then send the /end_hide
                         'notFound' => '❌ The requested panel was not found.',
                         'errorCode' => '❌ An error occurred. Error code: %s',
                         'xuiErrorCode' => '❌ An error occurred. Error code:  ',
-                        'eylanErrorCode' => '❌  An error occurred. Error code:  %s',
-                        'eylanUserNotExist' => '❌ User does not exist in the panel.',
-                        'eylanPanelOutput' => 'Panel output: ',
+                        'ErrorCode' => '❌  An error occurred. Error code:  %s',
+                        'UserNotExist' => '❌ User does not exist in the panel.',
+                        'PanelOutput' => 'Panel output: ',
                 ],
                 'messageBulk' => [
                         'userMessage' => '📥 A reply to a message was received from the user. To reply, click the button below and send your message.
@@ -2185,7 +2168,6 @@ Send your number of days.',
 1 - Yes, they can reply 
 2 - No, they cannot reply
 Send the answer as a number',
-                        'btnForwardToUser' => '📤 Forward message to a user',
                         'confirmSummary' => '📌 You are performing a message-sending operation; by reviewing the information below and confirming the button below, the sending operation will start.
 ⚙️ Operation type: %s',
                         'inactiveDaysLabel' => 'Number of days the user has not messaged: %s',
@@ -2212,8 +2194,6 @@ Number of remaining people :  %s',
                         'ipSaved' => '✅ Node address saved successfully.',
                         'reconnected' => '✅ Node reconnection completed.',
                         'deleted' => '✅ Node deleted successfully',
-                        'btnSettings' => '⚙️ Node settings',
-                        'askSetup' => '📌 To set up a node, create a user in your panel, activate the nodes you want to be active inside the panel, and send the user\'s username',
                         'info' => '📌 Node information 
 
 🖥 Node name:  %s
@@ -2375,11 +2355,6 @@ Current amount: %s',
                         'btnErrors' => '❌ Error reports',
                         'btnFinancial' => '💰 Financial report',
                         'btnBackup' => '🤖 Bot backup ',
-                        'btnExport' => '🪪 Export data',
-                        'noDataToExport' => '❌ There is no data to export',
-                        'btnExportUsers' => '🪪 Export user data',
-                        'btnExportOrders' => '🪪 Export user orders',
-                        'btnExportPayments' => '🪪 Export user payments',
                         'btnOptimize' => '🗑 Optimize bot',
                         'optimizeWarning' => '❌❌❌❌❌❌❌ Read the text below carefully
 
@@ -2519,15 +2494,6 @@ Username of approving admin: @%s
 💰 Payment amount: %s
 Rejection reason: %s
 👤 User numeric ID: %s',
-                        'balanceDecreased' => '📌 An admin has reduced a user\'s balance:
-        
-🪪 Information of the admin who reduced the balance: 
-Username:@%s
-Numeric ID: %s
-👤 User information:
-User numeric ID: %s
-Balance amount: %s
-User balance after reduction: %s',
                         'balanceIncreased' => '📌 An admin has increased a user\'s balance:
         
 🪪 Information of the admin who increased the balance: 
@@ -3913,9 +3879,6 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'excludeUserAutoConfirm' => '💳 Exempt user from automatic approval',
                 'exclusiveSubLink' => '💎 Dedicated subscription link',
                 'exportActiveCardUsers' => '📄 Export users with active card number',
-                'exportOrders' => 'Export orders',
-                'exportPayments' => 'Export payments',
-                'exportUsers' => 'Export users',
                 'extraTimePrice' => '⏳ Extra time price',
                 'extraVolumePrice' => '➕ Extra volume price',
                 'featureStatus' => '⚙️ Feature status',
@@ -3956,6 +3919,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'endpointIranPay4Invalid' => '❌ Address rejected. It must start with <code>https://</code> and be a valid domain.',
                 'minAmountIranPay4' => '⬇️ AbanGateway minimum',
                 'maxAmountIranPay4' => '⬆️ AbanGateway maximum',
+                'dailyLimitIranPay4' => '⏳ AbanGateway daily cap',
                 'cashbackIranPay4' => '🎁 AbanGateway cashback',
                 'setEducationIranPay4' => '📚 AbanGateway guide',
                 'lastHourStats' => '⏱️ Last hour',
@@ -4729,6 +4693,11 @@ User numeric ID : %s
 User username : %s
 Transaction amount %s
 Payment method : First Rial currency',
+                'reportAbanGateway' => '💵 New payment
+- 👤 Username : @%s
+- 🆔 User ID : %s
+- 💸 Amount %s
+- 💳 Method : AbanGateway',
                 'reportTronado' => '💵 New payment
 - 👤 User username : @%s
 - 🆔User numeric ID : %s

@@ -263,7 +263,6 @@ return [
                 
 ',
                         'giftFromManagement' => '🎁 尊敬的用户，管理层向您的钱包赠送了 %s 托曼。',
-                        'deductedNotice' => '❌ 尊敬的用户，已从您的钱包余额中扣除 %s 托曼。',
                         'addedNotice' => '💎 尊敬的用户，已向您的钱包余额添加 %s 托曼。',
                         'deductedNotice2' => '❌ 尊敬的用户，已从您的钱包余额中扣除 %s 托曼。',
                         'addedNotice2' => '💎 尊敬的用户，已向您的钱包余额添加 %s 托曼。',
@@ -1264,18 +1263,12 @@ https://t.me/%s?start=%s',
                         'addBalanceUser' => '✅ 金额已添加到该用户的余额',
                         'addBalanceUsers' => '✅ 金额已添加到各用户的余额',
                         'invalidPrice' => '金额无效',
-                        'negativeBalance' => '⚜️ 请发送用户的数字ID 
-说明：如需扣除用户余额，请先发送用户的数字ID',
-                        'negativeBalanceUser' => '✅ 金额已从该用户的余额中扣除',
-                        'priceBalance' => '已收到数字ID。请发送您想从该用户扣除的金额，金额应以托曼为单位',
                         'askUserGroup' => '📌 充值应存入以下哪个用户组？',
                         'askTargetUsers' => '📌 全体充值应发送给哪位用户？',
                         'askNotify' => '📌 是否应向用户发送充值通知消息？
 是：1
 否：0',
                         'operationStarted' => '✅ 消息发送操作已开始。完成后将通知您。',
-                        'btnDecrease' => '⬇️ 减少余额',
-                        'maxAmountRial' => '📌 最大金额为 1 亿里亚尔。',
                         'maxAmountToman' => '❌ 最大金额为 1 亿托曼',
                         'askMinCharge' => '📌 请设置您希望用户为账户充值的最低金额',
                         'askMinChargeGroup' => '📌 最低余额应适用于哪个用户组？
@@ -1490,13 +1483,6 @@ n2',
     
 ',
                         'nameExists2' => '❌ 名为 %s 的产品已存在',
-                ],
-                'Protocol' => [
-                        'invalidProtocol' => '❌ 无效的协议',
-                        'removeProtocol' => '请选择您想删除的协议。',
-                        'removedProtocol' => '协议已成功删除。',
-                        'btnDelete' => '🗑 删除协议',
-                        'btnSettings' => '⚙️ 协议设置',
                 ],
                 'SettingPayment' => [
                         'cartDirect' => '✅ 您的用户名已成功登记。',
@@ -1788,7 +1774,6 @@ trojan://xyz',
 当前时间： ',
                         'setVolumeRemove' => '📌 请发送在流量用尽后多少天删除账户。账户时间根据用户最后一次连接计算。此功能适用于 Marzban 面板
 当前时间： ',
-                        'btnSettings' => '🕚 定时任务设置',
                         'cannotDeleteUnlimited' => '❌ 由于流量和时间均为无限，无法删除该服务。',
                         'askOnHoldDays' => '在此部分，您必须设置：如果用户在若干天后仍未连接到其配置且处于 on_hold 状态，则向用户发送消息',
                         'askVolumeAlert' => '📌 在此部分，您可以设置：当用户的流量达到 x 时发送警告消息。请以 GB 为单位发送流量。',
@@ -1810,6 +1795,7 @@ trojan://xyz',
                         'cubepayFeeAsk' => "💵 请发送手续费数值：\n\n▫️ <b>0 到 100</b> → 按<b>百分比</b>收取（可含小数，如 <code>9.9</code>）\n▫️ <b>大于 100</b> → 按<b>固定土曼金额</b>收取（如 <code>5000</code>）\n\n当前数值：<b>%s</b>",
                         'cubepayFeeSavedPercent' => "✅ 已保存 — <b>%s%%</b> 百分比手续费\n\n示例：100,000 土曼的订单，客户需支付 <b>%s</b> 土曼。",
                         'cubepayFeeSavedFixed' => "✅ 已保存 — <b>%s 土曼</b> 固定手续费\n\n示例：100,000 土曼的订单，客户需支付 <b>%s</b> 土曼。",
+                        'askDailyLimit' => "⏳ 请发送 AbanGateway <b>成功</b>支付的每日上限。\n\n<b>0</b> 表示无上限。",
                         'off' => '已关闭',
                         'on' => '已开启',
                         'intro' => '📌 在下方列表中，您可以管理网关。
@@ -1896,7 +1882,6 @@ nowpayments.io
                         'dataorder' => '未记录日期',
                         'descriptionBlock' => '✍️ 封禁该用户的原因已保存',
                         'failedPhone' => '未确认',
-                        'getIdMessage' => '✅ 已收到文本。现在请发送用户的数字ID。',
                         'getIdUserUnblock' => '👤 请发送用户的数字ID',
                         'getText' => '请发送您的文本',
                         'getTextResponse' => '如需回复该消息，请发送您的文本。',
@@ -2030,7 +2015,6 @@ support 权限级别可访问用户服务和客服消息回复部分',
                         'savedData' => '✅ 更改已成功保存。',
                         'savedName' => '✅ 名称已成功保存',
                         'setLimit' => '请发送新的账户创建限制。如果您希望无限制，请发送文本 unlimited',
-                        'setProtocol' => '✅ 协议已成功设置',
                         'usernameSet' => '👤 面板地址已保存。现在请发送用户名',
                         'noteSetInboundAndDomain' => '❌ 注意：
 如需激活面板，您必须前往面板管理菜单，并务必设置“设置入站ID”和“订阅链接域名”选项；否则将无法创建配置',
@@ -2147,9 +2131,9 @@ support 权限级别可访问用户服务和客服消息回复部分',
                         'notFound' => '❌ 未找到所需的面板。',
                         'errorCode' => '❌ 发生错误，错误代码：%s',
                         'xuiErrorCode' => '❌ 发生错误。错误代码：  ',
-                        'eylanErrorCode' => '❌  发生错误。错误代码：  %s',
-                        'eylanUserNotExist' => '❌ 用户在面板中不存在。',
-                        'eylanPanelOutput' => '面板输出：',
+                        'ErrorCode' => '❌  发生错误。错误代码：  %s',
+                        'UserNotExist' => '❌ 用户在面板中不存在。',
+                        'PanelOutput' => '面板输出：',
                 ],
                 'messageBulk' => [
                         'userMessage' => '📥 收到来自用户的消息回复。如需回复，请点击下方按钮并发送您的消息。
@@ -2185,7 +2169,6 @@ support 权限级别可访问用户服务和客服消息回复部分',
 1 - 是，可以回复 
 2 - 否，不可回复
 请以数字发送答案',
-                        'btnForwardToUser' => '📤 将消息转发给某用户',
                         'confirmSummary' => '📌 您正在执行发送消息操作；查看以下信息并确认下方按钮后，发送操作将开始。
 ⚙️ 操作类型：%s',
                         'inactiveDaysLabel' => '用户未发消息的天数：%s',
@@ -2212,8 +2195,6 @@ support 权限级别可访问用户服务和客服消息回复部分',
                         'ipSaved' => '✅ 节点地址保存成功。',
                         'reconnected' => '✅ 节点重新连接完成。',
                         'deleted' => '✅ 节点删除成功',
-                        'btnSettings' => '⚙️ 节点设置',
-                        'askSetup' => '📌 要设置节点，请在您的面板中创建一个用户，在面板内激活您希望启用的节点，然后发送该用户的用户名',
                         'info' => '📌 节点信息 
 
 🖥 节点名称：%s
@@ -2375,11 +2356,6 @@ f,n.n2',
                         'btnErrors' => '❌ 错误报告',
                         'btnFinancial' => '💰 财务报告',
                         'btnBackup' => '🤖 机器人备份 ',
-                        'btnExport' => '🪪 导出数据',
-                        'noDataToExport' => '❌ 没有可导出的数据',
-                        'btnExportUsers' => '🪪 导出用户数据',
-                        'btnExportOrders' => '🪪 导出用户订单',
-                        'btnExportPayments' => '🪪 导出用户付款记录',
                         'btnOptimize' => '🗑 优化机器人',
                         'optimizeWarning' => '❌❌❌❌❌❌❌ 请仔细阅读以下文本
 
@@ -2519,15 +2495,6 @@ f,n.n2',
 💰 付款金额：%s
 拒绝原因：%s
 👤 用户数字 ID：%s',
-                        'balanceDecreased' => '📌 一位管理员减少了用户的余额：
-        
-🪪 减少余额的管理员信息： 
-用户名：@%s
-数字 ID：%s
-👤 用户信息：
-用户数字 ID：%s
-余额金额：%s
-减少后的用户余额：%s',
                         'balanceIncreased' => '📌 一位管理员增加了用户的余额：
         
 🪪 增加余额的管理员信息： 
@@ -3913,9 +3880,6 @@ f,n.n2',
                 'excludeUserAutoConfirm' => '💳 将用户从自动批准中排除',
                 'exclusiveSubLink' => '💎 专属订阅链接',
                 'exportActiveCardUsers' => '📄 导出卡号已激活的用户',
-                'exportOrders' => '导出订单',
-                'exportPayments' => '导出付款',
-                'exportUsers' => '导出用户',
                 'extraTimePrice' => '⏳ 额外时间价格',
                 'extraVolumePrice' => '➕ 额外流量价格',
                 'featureStatus' => '⚙️ 功能状态',
@@ -3956,6 +3920,7 @@ f,n.n2',
                 'endpointIranPay4Invalid' => '❌ 地址被拒绝。必须以 <code>https://</code> 开头且为有效域名。',
                 'minAmountIranPay4' => '⬇️ AbanGateway 最低金额',
                 'maxAmountIranPay4' => '⬆️ AbanGateway 最高金额',
+                'dailyLimitIranPay4' => '⏳ AbanGateway 每日上限',
                 'cashbackIranPay4' => '🎁 AbanGateway 返现',
                 'setEducationIranPay4' => '📚 AbanGateway 教程',
                 'lastHourStats' => '⏱️ 过去一小时',
@@ -4729,6 +4694,11 @@ f,n.n2',
 用户用户名：%s
 交易金额 %s
 支付方式：第一里亚尔货币',
+                'reportAbanGateway' => '💵 新付款
+- 👤 用户名 : @%s
+- 🆔 用户 ID : %s
+- 💸 金额 %s
+- 💳 支付方式 : AbanGateway',
                 'reportTronado' => '💵 新付款
 - 👤 用户用户名：@%s
 - 🆔用户数字 ID：%s
