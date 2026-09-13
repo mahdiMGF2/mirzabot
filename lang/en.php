@@ -404,6 +404,14 @@ Use the button below to pay👇🏻',
 ❌ After the transaction it takes 15 minutes to one hour for the transaction to be approved
 
 ✅ If you have a problem, you can contact support',
+                        'cubepayCardDetails' => '💳 Card-to-card payment
+
+🔢 Card number: <code>%s</code>
+👤 Card holder: %s
+💰 Exact amount: <code>%s</code> Toman
+⏳ Payment deadline: %s minutes
+
+⚠️ Transfer exactly this amount; the last digits are intentional and automatic confirmation relies on them.',
                         'transactionCreated3' => '✅ Your transaction was created
         
 🛒 Tracking code:  <code>%s</code> 

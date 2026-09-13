@@ -5130,6 +5130,10 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         }
         $message_id = sendmessage($from_id, $textnowpayments, $paymentkeyboard, 'HTML');
         updatePaymentMessageId($message_id, $randomString);
+        $cubepayCardText = cubepayCardDetailsText($payment);
+        if ($cubepayCardText !== null) {
+            sendmessage($from_id, $cubepayCardText, null, 'HTML');
+        }
     } elseif ($datain == "iranpay4") {
         $mainbalance = getPaySettingValue('minbalanceiranpay4', '0');
         $maxbalance = getPaySettingValue('maxbalanceiranpay4', '0');
