@@ -309,6 +309,10 @@ if ($action !== '') {
 
         $values = mirza_install_config_values();
         $webhookUrl = 'https://' . $values['domainhosts'] . '/index.php';
+        $webhookSecret = mirza_install_webhook_secret($values);
+        $webhookTarget = $webhookSecret === ''
+            ? $webhookUrl
+            : $webhookUrl . '?secret=' . rawurlencode($webhookSecret);
         $reactivateUrl = 'https://' . $values['domainhosts'] . '/table.php';
 
         @file_put_contents(mirza_install_lock_file(), (string) time());
@@ -333,7 +337,7 @@ if ($action !== '') {
         $steps = [['status' => 'ok', 'label' => 'حذف پوشه install', 'detail' => 'نصب‌کننده از روی هاست پاک شد و مسدودسازی ربات برداشته شد']];
 
         $webhook = mirza_install_telegram($values['APIKEY'], 'setWebhook', [
-            'url' => $webhookUrl,
+            'url' => $webhookTarget,
             'max_connections' => 40,
         ]);
         if (!$webhook['ok']) {

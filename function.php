@@ -1644,6 +1644,65 @@ function isClientIpInRange($clientIp, $lowerBound, $upperBound)
 
     return strcmp($clientPacked, $lowerPacked) >= 0 && strcmp($clientPacked, $upperPacked) <= 0;
 }
+
+function webhookSecretMatches($secret)
+{
+    $received = $_GET['secret'] ?? '';
+
+    return is_string($received) && $received !== '' && hash_equals($secret, $received);
+}
+
+function ensureWebhookSecret()
+{
+    global $domainhosts;
+
+    $stored = (string) (select("setting", "*")['webhook_secret'] ?? '');
+    if ($stored !== '') {
+        return ['secret' => $stored, 'created' => false];
+    }
+
+    $secret = bin2hex(random_bytes(24));
+    update("setting", "webhook_secret", $secret, null, null);
+
+    $stored = (string) (select("setting", "*", null, null, "select", ['cache' => false])['webhook_secret'] ?? '');
+    if ($stored !== '') {
+        $secret = $stored;
+    }
+
+    telegram('setWebhook', [
+        'url' => "https://$domainhosts/index.php?secret=$secret",
+    ]);
+
+    return ['secret' => $secret, 'created' => true];
+}
+
+function setAgentWebhook($token, $id_user, $username, $secret)
+{
+    global $domainhosts;
+
+    return telegram('setWebhook', [
+        'url' => "https://$domainhosts/vpnbot/{$id_user}{$username}/index.php?secret=$secret",
+    ], $token);
+}
+
+function ensureAgentWebhookSecret($bot)
+{
+    $secret = (string) ($bot['webhook_secret'] ?? '');
+    if ($secret !== '') {
+        return ['secret' => $secret, 'created' => false];
+    }
+
+    if (empty($bot['bot_token'])) {
+        return ['secret' => '', 'created' => false];
+    }
+
+    $secret = bin2hex(random_bytes(24));
+    update("botsaz", "webhook_secret", $secret, "bot_token", $bot['bot_token']);
+    setAgentWebhook($bot['bot_token'], $bot['id_user'], $bot['username'], $secret);
+
+    return ['secret' => $secret, 'created' => true];
+}
+
 function addCronIfNotExists($cronCommand)
 {
     $commands = is_array($cronCommand) ? $cronCommand : [$cronCommand];

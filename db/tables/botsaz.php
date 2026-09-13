@@ -9,9 +9,11 @@ return [
         username varchar(200) NOT NULL,
         setting TEXT NULL,
         hide_panel JSON NOT NULL,
+        webhook_secret varchar(200) NOT NULL DEFAULT '',
         time varchar(200) NOT NULL
         SQL,
     'columns' => [
         ['hide_panel', '{}', 'JSON'],
+        ['webhook_secret', null, "VARCHAR(200) NOT NULL DEFAULT ''"],
     ],
 ];

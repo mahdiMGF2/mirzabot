@@ -18,6 +18,9 @@ $text = restoreCustomEmojiLabel($text);
 if (!checktelegramip())
     die("Unauthorized access");
 #-----------end telegram_ip_ranges------------#
+$webhookSecret = ensureWebhookSecret();
+if (!$webhookSecret['created'] && $webhookSecret['secret'] !== '' && !webhookSecretMatches($webhookSecret['secret']))
+    die("Unauthorized access");
 if ($is_bot)
     return;
 if (isset($update['chat_member'])) {

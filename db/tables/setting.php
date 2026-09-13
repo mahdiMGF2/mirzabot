@@ -65,7 +65,8 @@ return [
         status_keyboard_config varchar(20) NULL,
         cron_status TEXT NOT NULL,
         text_edit JSON NULL,
-        limitnumber varchar(200) NULL
+        limitnumber varchar(200) NULL,
+        webhook_secret varchar(200) NOT NULL DEFAULT ''
         SQL,
     'seedOnCreate' => [
         [
@@ -166,5 +167,6 @@ return [
         ['status_keyboard_config', '1', 'varchar(20)'],
         ['cron_status', $cronStatus, 'TEXT'],
         ['text_edit', '{}', 'JSON'],
+        ['webhook_secret', null, "VARCHAR(200) NOT NULL DEFAULT ''"],
     ],
 ];

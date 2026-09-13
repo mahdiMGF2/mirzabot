@@ -9370,7 +9370,8 @@ if (isset($update["inline_query"])) {
     $contentconfig = file_get_contents($dirsource . "/config.php");
     $new_code = str_replace('BotTokenNew', $userdate['token'], $contentconfig);
     file_put_contents($dirsource . "/config.php", $new_code);
-    file_get_contents("https://api.telegram.org/bot{$userdate['token']}/setwebhook?url=https://$domainhosts/vpnbot/{$userdate['id_user']}{$userdate['username']}/index.php");
+    $agent_secret = bin2hex(random_bytes(24));
+    setAgentWebhook($userdate['token'], $userdate['id_user'], $userdate['username'], $agent_secret);
     file_get_contents(sprintf($textbotlang['Admin']['agentbot']['activatedUrlAlt'], $userdate['token'], $userdate['id_user']));
     $datasetting = json_encode(array(
         "minpricetime" => 4000,
@@ -9383,7 +9384,7 @@ if (isset($update["inline_query"])) {
         'show_product' => true,
     ));
     $value = "{}";
-    $stmt = $pdo->prepare("INSERT INTO botsaz (id_user,bot_token,admin_ids,username,time,setting,hide_panel) VALUES (:id_user,:bot_token,:admin_ids,:username,:time,:setting,:hide_panel)");
+    $stmt = $pdo->prepare("INSERT INTO botsaz (id_user,bot_token,admin_ids,username,time,setting,hide_panel,webhook_secret) VALUES (:id_user,:bot_token,:admin_ids,:username,:time,:setting,:hide_panel,:webhook_secret)");
     $stmt->bindParam(':id_user', $userdate['id_user'], PDO::PARAM_STR);
     $stmt->bindParam(':bot_token', $userdate['token'], PDO::PARAM_STR);
     $stmt->bindParam(':admin_ids', $admin_ids);
@@ -9392,6 +9393,7 @@ if (isset($update["inline_query"])) {
     $stmt->bindParam(':time', $time, PDO::PARAM_STR);
     $stmt->bindParam(':setting', $datasetting, PDO::PARAM_STR);
     $stmt->bindParam(':hide_panel', $value, PDO::PARAM_STR);
+    $stmt->bindParam(':webhook_secret', $agent_secret, PDO::PARAM_STR);
     $stmt->execute();
     $texbot = sprintf($textbotlang['Admin']['agentbot']['created'], $userdate['username'], $userdate['token']);
     sendmessage($from_id, $texbot, $keyboardadmin, 'HTML');
@@ -10433,7 +10435,12 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     sendmessage($from_id, $textbotlang['Admin']['agentbot']['webhookRunning'], null, 'HTML');
     foreach ($bots_agent as $bot) {
-        file_get_contents("https://api.telegram.org/bot{$bot['bot_token']}/setwebhook?url=https://$domainhosts/vpnbot/{$bot['id_user']}{$bot['username']}/index.php");
+        $agent_secret = (string) ($bot['webhook_secret'] ?? '');
+        if ($agent_secret === '') {
+            $agent_secret = bin2hex(random_bytes(24));
+            update("botsaz", "webhook_secret", $agent_secret, "bot_token", $bot['bot_token']);
+        }
+        setAgentWebhook($bot['bot_token'], $bot['id_user'], $bot['username'], $agent_secret);
     }
     sendmessage($from_id, $textbotlang['Admin']['agentbot']['webhookDone'], null, 'HTML');
 } elseif (preg_match('/statuscronuser-(.*)/', $datain, $dataget)) {
