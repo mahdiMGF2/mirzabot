@@ -548,6 +548,11 @@ function mirza_install_paths_check(): array
             $items[] = mirza_install_item('fail', 'فایل cronbot/' . $job['job'] . '.php', 'یافت نشد', $job['title']);
         }
     }
+    foreach (['jobs.php' => 'فهرست کارهای کرون', 'run.php' => 'اجرای کرون ربات'] as $file => $reason) {
+        $items[] = is_file($root . '/cronbot/' . $file)
+            ? mirza_install_item('ok', 'فایل cronbot/' . $file, 'موجود است', $reason)
+            : mirza_install_item('fail', 'فایل cronbot/' . $file, 'یافت نشد', $reason);
+    }
 
     $missingHtaccess = [];
     foreach (mirza_install_required_htaccess() as $htaccess) {
@@ -959,35 +964,9 @@ function mirza_install_telegram_request(string $token, string $method, array $pa
 
 function mirza_install_cron_jobs(): array
 {
-    return [
-        ['job' => 'croncard', 'schedule' => '*/1 * * * *', 'minutes' => 1, 'optional' => false, 'title' => 'تأیید خودکار رسید کارت به کارت'],
-        ['job' => 'NoticationsService', 'schedule' => '*/1 * * * *', 'minutes' => 1, 'optional' => false, 'title' => 'ارسال اعلان‌های ربات'],
-        ['job' => 'sendmessage', 'schedule' => '*/1 * * * *', 'minutes' => 1, 'optional' => false, 'title' => 'صف ارسال پیام همگانی'],
-        ['job' => 'activeconfig', 'schedule' => '*/1 * * * *', 'minutes' => 1, 'optional' => false, 'title' => 'فعال‌سازی سرویس‌های خریداری‌شده'],
-        ['job' => 'disableconfig', 'schedule' => '*/1 * * * *', 'minutes' => 1, 'optional' => false, 'title' => 'غیرفعال‌سازی سرویس‌های منقضی'],
-        ['job' => 'iranpay1', 'schedule' => '*/1 * * * *', 'minutes' => 1, 'optional' => false, 'title' => 'پیگیری پرداخت‌های ایران‌پی'],
-        ['job' => 'gift', 'schedule' => '*/2 * * * *', 'minutes' => 2, 'optional' => false, 'title' => 'پردازش کدهای هدیه'],
-        ['job' => 'configtest', 'schedule' => '*/2 * * * *', 'minutes' => 2, 'optional' => false, 'title' => 'مدیریت سرویس‌های تست'],
-        ['job' => 'plisio', 'schedule' => '*/3 * * * *', 'minutes' => 3, 'optional' => false, 'title' => 'پیگیری پرداخت‌های ارز دیجیتال'],
-        ['job' => 'payment_expire', 'schedule' => '*/5 * * * *', 'minutes' => 5, 'optional' => false, 'title' => 'انقضای فاکتورهای پرداخت‌نشده'],
-        ['job' => 'statusday', 'schedule' => '*/15 * * * *', 'minutes' => 15, 'optional' => false, 'title' => 'گزارش وضعیت روزانه'],
-        ['job' => 'on_hold', 'schedule' => '*/15 * * * *', 'minutes' => 15, 'optional' => false, 'title' => 'سرویس‌های در حالت انتظار'],
-        ['job' => 'uptime_node', 'schedule' => '*/15 * * * *', 'minutes' => 15, 'optional' => false, 'title' => 'پایش وضعیت نودها'],
-        ['job' => 'uptime_panel', 'schedule' => '*/15 * * * *', 'minutes' => 15, 'optional' => false, 'title' => 'پایش وضعیت پنل‌ها'],
-        ['job' => 'expireagent', 'schedule' => '*/30 * * * *', 'minutes' => 30, 'optional' => false, 'title' => 'انقضای اشتراک نمایندگان'],
-        ['job' => 'backupbot', 'schedule' => '0 */5 * * *', 'minutes' => 300, 'optional' => false, 'title' => 'پشتیبان‌گیری ربات‌ساز'],
-        ['job' => 'lottery', 'schedule' => '*/1 * * * *', 'minutes' => 1, 'optional' => true, 'title' => 'قرعه‌کشی و امتیازات (فقط اگر امتیازدهی را فعال کنید)'],
-    ];
-}
+    require_once mirza_install_root() . '/cronbot/jobs.php';
 
-function mirza_install_cron_command(array $job): string
-{
-    return $job['schedule'] . ' curl -s ' . mirza_install_base_url() . '/cronbot/' . $job['job'] . '.php > /dev/null 2>&1';
-}
-
-function mirza_install_cron_command_php(array $job): string
-{
-    return $job['schedule'] . ' /usr/bin/php ' . mirza_install_root() . '/cronbot/' . $job['job'] . '.php > /dev/null 2>&1';
+    return mirza_cron_jobs();
 }
 
 function mirza_install_probe_command(): string
@@ -1098,31 +1077,23 @@ function mirza_install_probe_status(): array
 
 function mirza_install_cron_plan(): array
 {
-    $jobs = [];
-    foreach (mirza_install_cron_jobs() as $job) {
-        $jobs[] = [
-            'job' => $job['job'],
-            'title' => $job['title'],
-            'schedule' => $job['schedule'],
-            'optional' => $job['optional'],
-            'command_curl' => mirza_install_cron_command($job),
-            'command_php' => mirza_install_cron_command_php($job),
-        ];
-    }
+    require_once mirza_install_root() . '/cronbot/jobs.php';
 
-    return $jobs;
+    return [
+        [
+            'job' => 'dispatcher',
+            'title' => 'اجرای کرون ربات (یک خط)',
+            'schedule' => '* * * * *',
+            'optional' => false,
+            'command_curl' => mirza_cron_dispatcher_curl_command(mirza_install_base_url()),
+            'command_php' => mirza_cron_dispatcher_command(mirza_install_base_url()),
+        ],
+    ];
 }
 
 function mirza_install_required_jobs(): array
 {
-    $required = [];
-    foreach (mirza_install_cron_jobs() as $job) {
-        if (!$job['optional']) {
-            $required[] = $job['job'];
-        }
-    }
-
-    return $required;
+    return ['dispatcher'];
 }
 
 function mirza_install_delete_tree(string $path): bool

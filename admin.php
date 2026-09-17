@@ -1966,14 +1966,8 @@ elseif ($datain == "systemsms") {
         update("setting", "statuscopycart", $valuenew);
     } elseif ($type == "score") {
         if ($value == "1") {
-            removeCron(__DIR__ . '/cronbot/lottery.php');
             $valuenew = "0";
         } else {
-            $phpPath = PHP_BINDIR . '/php';
-            $basePath = __DIR__ . '/cronbot';
-            if (!addCronIfNotExists("*/1 * * * * $phpPath $basePath/lottery.php")) {
-                error_log('Unable to register lottery cron job because shell_exec is unavailable.');
-            }
             $valuenew = "1";
         }
         update("setting", "scorestatus", $valuenew);

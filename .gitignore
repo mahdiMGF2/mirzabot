@@ -7,6 +7,7 @@ composer.phar
 
 # Runtime / generated files
 error_log
+cronbot/.run.lock
 /storage/**
 !/storage/cache/
 !/storage/.htaccess

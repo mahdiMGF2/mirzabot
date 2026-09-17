@@ -1790,33 +1790,16 @@ function activecron()
 {
     global $domainhosts;
 
-    removeCron("https://$domainhosts/cronbot/");
-
-    $phpPath = PHP_BINDIR . '/php';
-    $basePath = __DIR__ . '/cronbot';
-    $cronCommands = [
-        "*/15 * * * * $phpPath $basePath/statusday.php",
-        "*/1 * * * * $phpPath $basePath/croncard.php",
-        "*/1 * * * * $phpPath $basePath/NoticationsService.php",
-        "*/5 * * * * $phpPath $basePath/payment_expire.php",
-        "*/1 * * * * $phpPath $basePath/sendmessage.php",
-        "*/3 * * * * $phpPath $basePath/plisio.php",
-        "*/1 * * * * $phpPath $basePath/activeconfig.php",
-        "*/1 * * * * $phpPath $basePath/disableconfig.php",
-        "*/1 * * * * $phpPath $basePath/iranpay1.php",
-        "0 */5 * * * $phpPath $basePath/backupbot.php",
-        "*/2 * * * * $phpPath $basePath/gift.php",
-        "*/30 * * * * $phpPath $basePath/expireagent.php",
-        "*/15 * * * * $phpPath $basePath/on_hold.php",
-        "*/2 * * * * $phpPath $basePath/configtest.php",
-        "*/15 * * * * $phpPath $basePath/uptime_node.php",
-        "*/15 * * * * $phpPath $basePath/uptime_panel.php",
-    ];
-    if (intval(select("setting", "*")['scorestatus'] ?? 0) == 1) {
-        $cronCommands[] = "*/1 * * * * $phpPath $basePath/lottery.php";
+    if (!is_string($domainhosts) || $domainhosts === '') {
+        return;
     }
 
-    addCronIfNotExists($cronCommands);
+    require_once __DIR__ . '/cronbot/jobs.php';
+
+    removeCron("https://$domainhosts/cronbot/");
+    removeCron(__DIR__ . '/cronbot/');
+
+    addCronIfNotExists(mirza_cron_dispatcher_command($domainhosts));
 }
 function createInvoice($amount)
 {

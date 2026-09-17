@@ -299,7 +299,7 @@ if ($action !== '') {
             $confirmed = is_array($confirmed) ? array_map('strval', $confirmed) : [];
             $missing = array_diff(mirza_install_required_jobs(), $confirmed);
             if ($missing !== []) {
-                mirza_install_json(['ok' => false, 'error' => 'این کرون‌ها هنوز تأیید نشده‌اند: ' . implode('، ', $missing)], 400);
+                mirza_install_json(['ok' => false, 'error' => 'کرون ربات هنوز تأیید نشده است.'], 400);
             }
         }
 
@@ -1514,15 +1514,15 @@ $host = mirza_install_host();
                     + '<div class="actions" style="margin:10px 0 0"><div class="left">'
                     + '<button id="copyProbe">کپی دستور تست</button><button id="resetProbe">شروع دوباره تست</button>'
                     + '</div><div class="right"></div></div>'
-                    + '<div class="group-title">۲. کرون‌های اصلی ربات</div>'
-                    + '<p class="lead">هر خط را در کنترل پنل ثبت کنید و بعد تیک کنارش را بزنید. تا وقتی همه کرون‌های اجباری تیک نخورند، ادامه ممکن نیست. این کرون‌ها تا پایان نصب و حذف شدن پوشه install پاسخی نمی‌گیرند و از همان لحظه به بعد شروع به کار می‌کنند.</p>'
+                    + '<div class="group-title">۲. کرون اصلی ربات</div>'
+                    + '<p class="lead">این یک خط را در کنترل پنل ثبت کنید و تیک کنارش را بزنید. همین یک کرون همه کارهای زمان‌بندی‌شده ربات را اجرا می‌کند. تا وقتی این کرون تأیید نشود، ادامه ممکن نیست.</p>'
                     + '<div class="actions" style="margin:0 0 12px"><div class="left">'
-                    + '<button id="copyAll">کپی همه دستورها</button><button id="checkAll">تیک همه</button>'
+                    + '<button id="copyAll">کپی دستور</button><button id="checkAll">تأیید کرون</button>'
                     + '</div><div class="right"></div></div>'
                     + jobs.map(jobRow).join('')
                     + '<pre class="cmd" id="allBox" style="display:none">' + escapeHtml(allCommands) + '</pre>'
                     + '<div class="summary" style="margin-top:14px"><span class="pill ' + (missing.length === 0 ? 'ok' : 'fail') + '">'
-                    + (required.length - missing.length) + ' از ' + required.length + ' کرون اجباری تأیید شد</span>'
+                    + (missing.length === 0 ? 'کرون ربات تأیید شد' : 'کرون ربات هنوز تأیید نشده') + '</span>'
                     + '<span class="pill ' + (probe.verified ? 'ok' : 'fail') + '">تست کرون هاست: ' + (probe.verified ? 'تأیید شد' : 'در انتظار') + '</span></div>'
                     + actionsHtml('مرحله بعد', canContinue);
 
