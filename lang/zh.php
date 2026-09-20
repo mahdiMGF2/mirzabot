@@ -249,6 +249,8 @@ return [
                         'waiting' => '等待支付确认',
                         'zarinpal' => '❌ 错误 
     通过此网关支付的最低金额为 5000 托曼。',
+                        'variza' => '❌ 错误 
+    通过此网关支付的最低金额为 5000 托曼。',
                         'pendingPayment' => '❌ 您有一笔未确认的支付。请等待上一笔支付审核完毕，然后再发送新支付',
                         'cardEnabledNotice' => '💳 尊敬的用户，卡号已为您激活；现在您可以进行购买。',
                         'cardInstructionAlt' => '如需付款，请将金额存入下方卡号',
@@ -4150,6 +4152,7 @@ f,n.n2',
                 'yes' => '是',
                 'yesterday' => '☀️ 昨天',
                 'zarinPalGateway' => '🟡 ZarinPal',
+                'varizaGateway' => '💳 Variza',
 'varizaApiToken' => 'Variza API 令牌',
 'varizaWebhookSecret' => 'Variza Webhook 密钥',
 'cashbackVariza' => 'Variza 返现',
@@ -4748,6 +4751,13 @@ f,n.n2',
 - 💸 交易金额 %s
 - 📥 已存入的 Tron 金额：%s
 - 💳 支付方式：nowpayment',
+                'reportVariza' => '💵 新付款
+- 👤 用户用户名：@%s
+- 🆔 用户数字 ID：%s
+- 💸 交易金额 %s
+- 🧾 订单 ID：%s
+- 🔗 Variza 支付标识：%s
+- 💳 支付方式：Variza',
                 'invoiceTitle' => '付款发票',
                 'invoiceTransactionNo' => '交易编号：',
                 'invoiceAmount' => '支付金额：',

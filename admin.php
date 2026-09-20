@@ -3505,7 +3505,7 @@ elseif ($datain == "systemsms") {
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['varizaApiToken'] && $adminrulecheck['rule'] == "administrator") {
     $PaySetting = select("PaySetting", "ValuePay", "NamePay", "variza_api_token")['ValuePay'];
-    $msg = sprintf($textbotlang['Admin']['gateway']['askVarizaApiToken'] ?? 'کلید API واریزا فعلی: %s', $PaySetting);
+    $msg = sprintf($textbotlang['Admin']['gateway']['askVarizaApiToken'], $PaySetting);
     sendmessage($from_id, $msg, $backadmin, 'HTML');
     step('variza_api_token', $from_id);
 } elseif ($user['step'] == "variza_api_token") {
@@ -3514,7 +3514,7 @@ elseif ($datain == "systemsms") {
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['varizaWebhookSecret'] && $adminrulecheck['rule'] == "administrator") {
     $PaySetting = select("PaySetting", "ValuePay", "NamePay", "variza_webhook_secret")['ValuePay'];
-    $msg = sprintf($textbotlang['Admin']['gateway']['askVarizaWebhookSecret'] ?? 'کلید وب‌هوک واریزا فعلی: %s', $PaySetting);
+    $msg = sprintf($textbotlang['Admin']['gateway']['askVarizaWebhookSecret'], $PaySetting);
     sendmessage($from_id, $msg, $backadmin, 'HTML');
     step('variza_webhook_secret', $from_id);
 } elseif ($user['step'] == "variza_webhook_secret") {
@@ -7038,7 +7038,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             [
                 ['text' => $textbotlang['keyboard']['settings'], 'callback_data' => "varizasetting"],
                 ['text' => $varizastatus, 'callback_data' => "editpayment-variza-$variza"],
-                ['text' => $textbotlang['keyboard']['varizaGateway'] ?? '💳 Variza', 'callback_data' => "variza"],
+                ['text' => $textbotlang['keyboard']['varizaGateway'], 'callback_data' => "variza"],
             ],
             [
                 ['text' => $textbotlang['keyboard']['settings'], 'callback_data' => "affilnecurrencysetting"],
@@ -7281,7 +7281,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             [
                 ['text' => $textbotlang['keyboard']['settings'], 'callback_data' => "varizasetting"],
                 ['text' => $varizastatus, 'callback_data' => "editpayment-variza-$variza"],
-                ['text' => $textbotlang['keyboard']['varizaGateway'] ?? '💳 Variza', 'callback_data' => "variza"],
+                ['text' => $textbotlang['keyboard']['varizaGateway'], 'callback_data' => "variza"],
             ],
             [
                 ['text' => $textbotlang['keyboard']['settings'], 'callback_data' => "affilnecurrencysetting"],

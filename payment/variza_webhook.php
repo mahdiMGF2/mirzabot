@@ -128,6 +128,8 @@ if ($cashback > 0) {
         $reward = intval($billed * $cashback / 100);
         if ($reward > 0) {
             update("user", "Balance", intval($buyer['Balance']) + $reward, "id", $payment['id_user']);
+            $text_gift = sprintf($textbotlang['paymentGateway']['giftReport'], $reward);
+            sendmessage($payment['id_user'], $text_gift, null, 'HTML');
         }
     }
 }
@@ -137,8 +139,14 @@ $setting = select("setting", "*");
 $paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'] ?? null;
 if (!empty($setting['Channel_Report']) && $paymentreports) {
     $buyer = select("user", "*", "id", $payment['id_user'], "select");
-    $priceFmt = number_format($billed);
-    $text_report = sprintf("✅ واریزا تایید شد\n👤 %s (%s)\n💰 %s تومان\n🆔 %s\n🔗 %s", $buyer['username'] ?? '-', $payment['id_user'], $priceFmt, $order_id, $slug);
+    $text_report = sprintf(
+        $textbotlang['paymentGateway']['reportVariza'],
+        $buyer['username'] ?? '-',
+        $payment['id_user'],
+        number_format($billed),
+        $order_id,
+        $slug
+    );
     telegram('sendmessage', [
         'chat_id' => $setting['Channel_Report'],
         'message_thread_id' => $paymentreports,

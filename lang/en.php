@@ -249,6 +249,8 @@ Current language: <b>{lang}</b>',
                         'waiting' => 'Awaiting payment confirmation',
                         'zarinpal' => '❌ Error 
     The minimum amount for payment via this gateway is 5000 Toman.',
+                        'variza' => '❌ Error 
+    The minimum amount for payment via this gateway is 5000 Toman.',
                         'pendingPayment' => '❌ You have an unconfirmed payment. Please wait until the previous payment is reviewed, then send the new payment',
                         'cardEnabledNotice' => '💳 Dear user, the card number has been activated for you; you can now make your purchase.',
                         'cardInstructionAlt' => 'To pay, deposit the amount to the card number below',
@@ -4150,6 +4152,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'yes' => 'Yes',
                 'yesterday' => '☀️ Yesterday',
                 'zarinPalGateway' => '🟡 ZarinPal',
+                'varizaGateway' => '💳 Variza',
                 'zarinPalMerchant' => 'ZarinPal merchant',
                 'varizaApiToken' => 'Variza API token',
                 'varizaWebhookSecret' => 'Variza webhook secret',
@@ -4748,6 +4751,13 @@ Payment tracking code : %s',
 - 💸 Transaction amount %s
 - 📥 Deposited Tron amount. : %s
 - 💳 Payment method :  nowpayment',
+                'reportVariza' => '💵 New payment
+- 👤 User username : @%s
+- 🆔 User numeric ID : %s
+- 💸 Transaction amount %s
+- 🧾 Order ID : %s
+- 🔗 Variza payment slug : %s
+- 💳 Payment method : Variza',
                 'invoiceTitle' => 'Payment invoice',
                 'invoiceTransactionNo' => 'Transaction number:',
                 'invoiceAmount' => 'Paid amount:',

@@ -4846,7 +4846,7 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         updatePaymentMessageId($message_id, $randomString);
     } elseif ($datain == "variza") {
         if ($user['Processing_value'] < 5000) {
-            sendmessage($from_id, $textbotlang['users']['Balance']['variza'] ?? $textbotlang['users']['Balance']['zarinpal'], null, 'HTML');
+            sendmessage($from_id, $textbotlang['users']['Balance']['variza'], null, 'HTML');
             return;
         }
         $mainbalance = select("PaySetting", "ValuePay", "NamePay", "minbalancevariza", "select")['ValuePay'];
