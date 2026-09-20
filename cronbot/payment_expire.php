@@ -1,4 +1,5 @@
 <?php
+chdir(__DIR__);
 ini_set('error_log', 'error_log');
 date_default_timezone_set('Asia/Tehran');
 require_once __DIR__ . '/../config.php';
@@ -15,25 +16,6 @@ $stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE time < :mp1 AND paymen
 $stmt->execute([':mp1' => $month_date_time_start]);
 
 while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $status_var = [
-        'cart to cart' =>  $textbotlang['textbot']['cartToCart'],
-        'aqayepardakht' => $textbotlang['textbot']['aqayePardakht'],
-        'zarinpal' => $textbotlang['textbot']['zarinPal'],
-        'plisio' => $textbotlang['textbot']['nowPayment'],
-        'arze digital offline' => $textbotlang['textbot']['nowPaymentTron'],
-        'Currency Rial 1' => $textbotlang['textbot']['iranPay2'],
-        'Currency Rial 2' => $textbotlang['textbot']['iranPay3'],
-        'Currency Rial 3' => $textbotlang['textbot']['iranPay1'],
-        'Currency Rial tow' => $textbotlang['common']['gateways']['rial1'],
-        'Currency Rial gateway3' => $textbotlang['common']['gateways']['rial2'],
-        'perfect' => $textbotlang['common']['gateways']['perfectMoney'],
-        'paymentnotverify' => $textbotlang['textbot']['paymentNotVerify'],
-        'Star Telegram' => $textbotlang['textbot']['starTelegram'],
-        'nowpayment' => $textbotlang['textbot']['cryptoPayment']
-        
-    ][$result['Payment_Method']];
-    $textexpire = sprintf($textbotlang['users']['Balance']['invoiceExpired'], $status_var, $result['id_order'], $result['price']);
-// sendmessage($result['id_user'], $textexpire, null, 'html');
-deletemessage($result['id_user'], $result['message_id']);
-update("Payment_report","payment_Status","expire","id_order",$result['id_order']);
+    deletemessage($result['id_user'], $result['message_id']);
+    update("Payment_report", "payment_Status", "expire", "id_order", $result['id_order']);
 }

@@ -4,6 +4,8 @@ require_once __DIR__ . '/db/bootstrap.php';
 
 global $domainhosts;
 
-telegram('setwebhook', [
-    'url' => "https://$domainhosts/index.php"
+$webhookSecret = ensureWebhookSecret();
+
+telegram('setWebhook', [
+    'url' => "https://$domainhosts/index.php?secret={$webhookSecret['secret']}",
 ]);

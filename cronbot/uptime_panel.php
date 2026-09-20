@@ -1,4 +1,5 @@
 <?php
+chdir(__DIR__);
 ini_set('error_log', 'error_log');
 date_default_timezone_set('Asia/Tehran');
 require_once __DIR__ . '/../config.php';

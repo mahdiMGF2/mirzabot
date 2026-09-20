@@ -129,11 +129,11 @@ function prod_product_add(array $data, string $method): void
             'agent' => empty($data['agent']) ? "f" : $data['agent'],
             'note' => empty($data['note']) ? "" : $data['note'],
             'data_limit_reset' => empty($data['data_limit_reset']) ? "no_reset" : $data['data_limit_reset'],
-            'inbounds' => empty($data['inbounds']) ? null : $data['inbounds'],
-            'proxies' => empty($data['proxies']) ? null : $data['proxies'],
+            'inbounds' => empty($data['inbounds']) ? null : (is_array($data['inbounds']) ? json_encode($data['inbounds']) : $data['inbounds']),
+            'proxies' => empty($data['proxies']) ? null : (is_array($data['proxies']) ? json_encode($data['proxies']) : $data['proxies']),
             'category' => empty($data['category']) ? null : $data['category'],
             'one_buy_status' => empty($data['one_buy_status']) ? 0 : $data['one_buy_status'],
-            'hide_panel' => empty($data['hide_panel']) ? "{}" : $data['hide_panel'],
+            'hide_panel' => empty($data['hide_panel']) ? "{}" : (is_array($data['hide_panel']) ? json_encode($data['hide_panel']) : $data['hide_panel']),
         ];
 
         $columns = implode(',', array_keys($productData));
@@ -196,8 +196,8 @@ function prod_product_edit(array $data, string $method): void
             'agent' => isset($data['agent']) ? $data['agent'] : $product['agent'],
             'note' => isset($data['note']) ? $data['note'] : $product['note'],
             'data_limit_reset' => isset($data['data_limit_reset']) ? $data['data_limit_reset'] : $product['data_limit_reset'],
-            'inbounds' => isset($data['inbounds']) ? $data['inbounds'] : $product['inbounds'],
-            'proxies' => isset($data['proxies']) ? $data['proxies'] : $product['proxies'],
+            'inbounds' => isset($data['inbounds']) ? (is_array($data['inbounds']) ? json_encode($data['inbounds']) : $data['inbounds']) : $product['inbounds'],
+            'proxies' => isset($data['proxies']) ? (is_array($data['proxies']) ? json_encode($data['proxies']) : $data['proxies']) : $product['proxies'],
             'category' => isset($data['category']) ? $data['category'] : $product['category'],
             'one_buy_status' => isset($data['one_buy_status']) ? $data['one_buy_status'] : $product['one_buy_status'],
             'hide_panel' => isset($data['hide_panel']) ? json_encode($data['hide_panel']) : $product['hide_panel'],

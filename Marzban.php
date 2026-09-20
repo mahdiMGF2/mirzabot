@@ -138,12 +138,14 @@ function getusers($location, $status)
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_HTTPGET, true);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, ($GLOBALS['request_exec_timeout'] ?? null) ?: 10000);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
         'Accept: application/json',
         'Authorization: ' . $header_value . $Check_token['access_token']
     ));
 
     $output = curl_exec($ch);
+    curl_close($ch);
     $data_useer = json_decode($output, true);
     return $data_useer;
 }
@@ -152,6 +154,8 @@ function getinbounds($location)
 {
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $location, "select");
     $Check_token = token_panel($marzban_list_get['code_panel']);
+    if (!isset($Check_token['access_token']))
+        return null;
     $url = $marzban_list_get['url_panel'] . '/api/inbounds';
     $header_value = 'Bearer ';
 
@@ -159,12 +163,14 @@ function getinbounds($location)
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_HTTPGET, true);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, ($GLOBALS['request_exec_timeout'] ?? null) ?: 10000);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
         'Accept: application/json',
         'Authorization: ' . $header_value . $Check_token['access_token']
     ));
 
     $output = curl_exec($ch);
+    curl_close($ch);
     $inbounds = json_decode($output, true);
     return $inbounds;
 }
@@ -225,6 +231,9 @@ function adduser($location, $data_limit, $username_ac, $timestamp, $note = '', $
         } else {
             $inbounds = json_decode($marzban_list_get['inbounds'], true);
         }
+    }
+    if (!panelProtocolsConfigured($marzban_list_get['proxies'])) {
+        return panelProtocolsMissingError($marzban_list_get['name_panel']);
     }
     if ($marzban_list_get['version_panel'] == "1") {
         $data = array(
@@ -330,6 +339,8 @@ function Get_System_Stats($location)
 {
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $location, "select");
     $Check_token = token_panel($marzban_list_get['code_panel']);
+    if (!isset($Check_token['access_token']))
+        return null;
     $url = $marzban_list_get['url_panel'] . '/api/system';
     $header_value = 'Bearer ';
 
@@ -337,12 +348,14 @@ function Get_System_Stats($location)
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_HTTPGET, true);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, ($GLOBALS['request_exec_timeout'] ?? null) ?: 10000);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
         'Accept: application/json',
         'Authorization: ' . $header_value . $Check_token['access_token']
     ));
 
     $output = curl_exec($ch);
+    curl_close($ch);
     $Get_System_Stats = json_decode($output, true);
     return $Get_System_Stats;
 }
@@ -421,6 +434,7 @@ function Modifyuser_node($location, $id_node, array $data)
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
     $result = curl_exec($ch);
+    curl_close($ch);
     $data_useer = json_decode($result, true);
     return $data_useer;
 }

@@ -8,6 +8,21 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../function.php';
 
+if (!function_exists('getallheaders')) {
+    function getallheaders(): array
+    {
+        $headers = [];
+        foreach ($_SERVER as $name => $value) {
+            if (substr($name, 0, 5) !== 'HTTP_') {
+                continue;
+            }
+            $headerName = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
+            $headers[$headerName] = $value;
+        }
+        return $headers;
+    }
+}
+
 function sendJsonResponse($status, $message, $data = [], $httpCode = 200)
 {
     http_response_code($httpCode);
@@ -52,9 +67,6 @@ function apiTokens()
     global $APIKEY;
 
     $tokens = [];
-    if (isset($APIKEY) && $APIKEY !== '') {
-        $tokens[] = (string) $APIKEY;
-    }
 
     $hashFile = __DIR__ . '/hash.txt';
     if (is_file($hashFile)) {
@@ -62,6 +74,10 @@ function apiTokens()
         if ($fileToken !== '') {
             $tokens[] = $fileToken;
         }
+    }
+
+    if (empty($tokens) && isset($APIKEY) && $APIKEY !== '') {
+        $tokens[] = (string) $APIKEY;
     }
 
     return $tokens;

@@ -6,13 +6,34 @@ require_auth();
 $keyboard = json_decode(file_get_contents("php://input"), true);
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method == "POST" && is_array($keyboard)) {
-    $keyboardmain = ['keyboard' => []];
-    $keyboardmain['keyboard'] = $keyboard;
+    $validKeyboard = count($keyboard) > 0;
+    foreach ($keyboard as $row) {
+        if (!is_array($row) || count($row) === 0) {
+            $validKeyboard = false;
+            break;
+        }
+        foreach ($row as $button) {
+            if (!is_array($button) || !isset($button['text']) || !is_string($button['text']) || trim($button['text']) === '') {
+                $validKeyboard = false;
+                break 2;
+            }
+        }
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    if (!$validKeyboard) {
+        http_response_code(422);
+        echo json_encode(['ok' => false]);
+        exit;
+    }
+    $keyboardmain = ['keyboard' => $keyboard];
     update("setting", "keyboardmain", json_encode($keyboardmain), null, null);
+    echo json_encode(['ok' => true]);
+    exit;
 } else {
-    $keyboardmain = '{"keyboard":[[{"text":"text_sell"},{"text":"text_extend"}],[{"text":"text_usertest"},{"text":"text_wheel_luck"}],[{"text":"text_Purchased_services"},{"text":"accountwallet"}],[{"text":"text_affiliates"},{"text":"text_Tariff_list"}],[{"text":"text_support"},{"text":"text_help"}]]}';
+    $keyboardmain = '{"keyboard":[[{"text":"text_sell"},{"text":"text_extend"}],[{"text":"text_usertest"},{"text":"text_wheel_luck"}],[{"text":"text_Purchased_services"},{"text":"accountwallet"}],[{"text":"text_affiliates"},{"text":"text_Tariff_list"}],[{"text":"text_support"},{"text":"text_help"}],[{"text":"text_agentpanel"},{"text":"text_requestagent"}]]}';
     $action = filter_input(INPUT_GET, 'action');
     if ($action === "reaset") {
+        csrf_check_get();
         update("setting", "keyboardmain", $keyboardmain, null, null);
         header('Location: keyboard.php');
         exit;
@@ -72,7 +93,7 @@ if ($method == "POST" && is_array($keyboard)) {
 
 <body>
     <a class="btnback" href="index.php"><?= $textbotlang['panel']['keyboardSortHint'] ?></a>
-    <a class="btndefult" href="keyboard.php?action=reaset"><?= $textbotlang['panel']['keyboardSaveBtn'] ?></a>
+    <a class="btndefult" href="keyboard.php?action=reaset&_csrf=<?= urlencode(csrf_token()) ?>"><?= $textbotlang['panel']['keyboardSaveBtn'] ?></a>
     <div id="root"></div>
 </body>
 

@@ -15,7 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $password = $_POST['password'] ?? '';
   $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
-  if ($username === '' || $password === '') {
+  if (!csrf_check_value($_POST['_csrf'] ?? '')) {
+    $error = $textbotlang['panel']['loginWrongCredentials'];
+  } elseif ($username === '' || $password === '') {
     $error = $textbotlang['panel']['loginEnterCredentials'];
   } elseif (!check_login_rate($ip)) {
 
@@ -26,21 +28,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $admin = select("admin", "*", "username", $username, "select");
 
     $dummyHash = '$2y$10$dummy.hash.for.timing.attack.prevention.xxxxxxxxxxxxxxxx';
-    $storedHash = $admin ? $admin['password'] : $dummyHash;
+    $storedHash = $admin ? (string) $admin['password'] : $dummyHash;
 
     $isCorrect = false;
-    if (password_verify($password, $storedHash)) {
-      $isCorrect = true;
-    } elseif ($admin && !password_needs_rehash($storedHash, PASSWORD_BCRYPT)) {
-
-      if ($password === $storedHash) {
-        $isCorrect = true;
-      }
+    $storedIsHash = str_starts_with($storedHash, '$2') || str_starts_with($storedHash, '$argon2');
+    if ($storedIsHash) {
+      $isCorrect = password_verify($password, $storedHash);
     } elseif ($admin) {
-
-      if ($password === $admin['password']) {
-        $isCorrect = true;
-      }
+      $isCorrect = hash_equals($storedHash, $password);
     }
 
     if ($isCorrect && $admin) {

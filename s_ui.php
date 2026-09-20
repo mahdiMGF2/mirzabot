@@ -13,18 +13,16 @@ function get_Clients_ui($username, $namepanel)
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT_MS => 4000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 4000,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'GET',
         CURLOPT_HTTPHEADER => array(
             'Token: ' . $marzban_list_get['password_panel']
         ),
-        CURLOPT_COOKIEFILE => 'cookie.txt',
     ));
-    $output = [];
     $response = curl_exec($curl);
-    if (!isset($response))
+    if ($response === false)
         return [];
     $response = json_decode($response, true);
     if (!$response['success'])
@@ -49,7 +47,7 @@ function GetClientsS_UI($username, $namepanel)
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT_MS => 4000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 4000,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'GET',
@@ -58,27 +56,21 @@ function GetClientsS_UI($username, $namepanel)
         ),
     ));
     $response = curl_exec($curl);
-    if (!isset($response))
+    if ($response === false)
         return [];
-    $response = json_decode(curl_exec($curl), true);
-    if (!$response['success'])
+    $response = json_decode($response, true);
+    if (empty($response['success']))
         return [];
-    return $response['obj']['clients'][0];
+    return $response['obj']['clients'][0] ?? [];
 }
 function addClientS_ui($namepanel, $usernameac, $Expire, $Total, $inboundid, $note)
 {
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $namepanel, "select");
-    if ($Expire == 0) {
-        $timeservice = 0;
-    } else {
-        $timelast = $Expire - time();
-        $timeservice = -intval(($timelast / 86400) * 86400000);
-    }
     if ($usernameac == null)
-        return json_encode(array(
-            'status' => false,
+        return array(
+            'success' => false,
             'msg' => "error"
-        ));
+        );
     $password = bin2hex(random_bytes(16));
     $configpanel = array(
         "object" => 'clients',
@@ -157,7 +149,7 @@ function addClientS_ui($namepanel, $usernameac, $Expire, $Total, $inboundid, $no
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT_MS => 4000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 4000,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
@@ -178,7 +170,7 @@ function updateClientS_ui($namepanel, array $config)
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT_MS => 4000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 4000,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
@@ -231,7 +223,7 @@ function removeClientS_ui($location, $username)
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT_MS => 4000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 4000,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
@@ -253,7 +245,7 @@ function get_onlineclients_ui($name_panel, $username)
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT_MS => 4000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 4000,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'GET',
@@ -281,7 +273,7 @@ function get_settig($name_panel)
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT_MS => 4000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 4000,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'GET',

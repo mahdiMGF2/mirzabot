@@ -1,4 +1,5 @@
 <?php
+chdir(__DIR__);
 ini_set('error_log', 'error_log');
 date_default_timezone_set('Asia/Tehran');
 require_once __DIR__ . '/../config.php';
@@ -30,8 +31,8 @@ $sqlInvoices = "SELECT COUNT(*) AS count, SUM(price_product) AS total_price, SUM
                 FROM invoice 
                 WHERE (FROM_UNIXTIME(time_sell) BETWEEN :startDate AND :endDate) 
                 AND (status IN ('active', 'end_of_time', 'sendedwarn', 'send_on_hold')) 
-                AND name_product != '{$textbotlang['common']['labels']['testServiceName']}'";
-$params = [':startDate' => $datefirst, ':endDate' => $dateend];
+                AND name_product != :testName";
+$params = [':startDate' => $datefirst, ':endDate' => $dateend, ':testName' => $textbotlang['common']['labels']['testServiceName']];
 $stmt = executeQuery($pdo, $sqlInvoices, $params);
 $result = $stmt->fetch(PDO::FETCH_ASSOC);
 $dayListSell = $result['count'] ?? 0;
@@ -43,7 +44,7 @@ $sqlTestService = "SELECT COUNT(*) AS count
                   FROM invoice 
                   WHERE (FROM_UNIXTIME(time_sell) BETWEEN :startDate AND :endDate) 
                   AND (status IN ('active', 'end_of_time', 'sendedwarn')) 
-                  AND name_product = '{$textbotlang['common']['labels']['testServiceName']}'";
+                  AND name_product = :testName";
 $stmt = executeQuery($pdo, $sqlTestService, $params);
 $dayListSelltest = $stmt->fetchColumn() ?? 0;
 
@@ -51,7 +52,7 @@ $dayListSelltest = $stmt->fetchColumn() ?? 0;
 $sqlNewUsers = "SELECT COUNT(*) AS count 
                  FROM user 
                  WHERE (FROM_UNIXTIME(register) BETWEEN :startDate AND :endDate)";
-$stmt = executeQuery($pdo, $sqlNewUsers, $params);
+$stmt = executeQuery($pdo, $sqlNewUsers, [':startDate' => $datefirst, ':endDate' => $dateend]);
 $usernew = $stmt->fetchColumn() ?? 0;
 
 // Fetch extension data
@@ -110,8 +111,8 @@ foreach ($panels as $panel) {
                  WHERE (FROM_UNIXTIME(time_sell) BETWEEN :startDate AND :endDate) 
                  AND (status IN ('active', 'end_of_time', 'sendedwarn', 'send_on_hold')) 
                  AND Service_location = :location 
-                 AND name_product != '{$textbotlang['common']['labels']['testServiceName']}'";
-    $params = [':startDate' => $datefirst, ':endDate' => $dateend, ':location' => $panel['name_panel']];
+                 AND name_product != :testName";
+    $params = [':startDate' => $datefirst, ':endDate' => $dateend, ':location' => $panel['name_panel'], ':testName' => $textbotlang['common']['labels']['testServiceName']];
     $stmt = executeQuery($pdo, $sqlPanel, $params);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
 

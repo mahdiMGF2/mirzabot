@@ -135,6 +135,11 @@ $initials = mb_strtoupper(mb_substr($currentUser, 0, 1, 'UTF-8'), 'UTF-8');
               <?= icon('settings') ?>
             </span><span class="nav-label"><?= $textbotlang['panel']['layoutThemeToggleLabel'] ?></span>
           </a>
+          <a href="bottext.php" class="nav-item <?= $activeNav === 'bottext' ? 'active' : '' ?>"
+            title="<?= $textbotlang['panel']['bottextPageTitle'] ?>">
+            <span class="nav-icon"><?= icon('edit') ?></span><span
+              class="nav-label"><?= $textbotlang['panel']['bottextPageTitle'] ?></span>
+          </a>
         </div>
         <div class="nav-section">
           <div class="nav-heading"><?= $textbotlang['panel']['layoutSidebarToggleLabel'] ?></div>

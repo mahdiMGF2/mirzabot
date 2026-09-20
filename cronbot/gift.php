@@ -1,4 +1,5 @@
 <?php
+chdir(__DIR__);
 
 ini_set('error_log', 'error_log');
 date_default_timezone_set('Asia/Tehran');
@@ -51,7 +52,7 @@ foreach ($userid as $iduser){
     $extra_volume = $ManagePanel->extra_volume($invoce['username'],$marzban_list_get['code_panel'],$info['value']);
      if($extra_volume['status'] == false){
             $extra_volume['msg'] = json_encode($extra_volume['msg']);
-            $textreports = sprintf($textbotlang['Admin']['gift']['volumeAddError'], $marzban_list_get['name_panel'], $nameloc['username'], $extra_volume['msg']);
+            $textreports = sprintf($textbotlang['Admin']['gift']['volumeAddError'], $marzban_list_get['name_panel'], $iduser->username, $extra_volume['msg']);
             if (strlen($setting['Channel_Report']) > 0) {
                 telegram('sendmessage',[
                     'chat_id' => $setting['Channel_Report'],
@@ -74,7 +75,7 @@ $stmt = $pdo->prepare("INSERT IGNORE INTO service_other (id_user, username, valu
     $dateacc = date('Y/m/d H:i:s');
     $type = "gift_volume";
     $stmt->execute([
-    ':id_user' => $iduser->username,
+    ':id_user' => $invoce['id_user'],
     ':username' => $invoce['username'],
     ':value' => $value,
     ':type' => $type,
@@ -100,7 +101,7 @@ foreach ($userid as $iduser){
     $extra_time = $ManagePanel->extra_time($get_username_info['username'],$marzban_list_get['code_panel'],intval($info['value']));
      if($extra_time['status'] == false){
             $extra_time['msg'] = json_encode($extra_time['msg']);
-            $textreports = sprintf($textbotlang['Admin']['gift']['volumeAddError2'], $marzban_list_get['name_panel'], $nameloc['username'], $extra_time['msg']);
+            $textreports = sprintf($textbotlang['Admin']['gift']['volumeAddError2'], $marzban_list_get['name_panel'], $iduser->username, $extra_time['msg']);
             if (strlen($setting['Channel_Report']) > 0) {
                 telegram('sendmessage',[
                     'chat_id' => $setting['Channel_Report'],

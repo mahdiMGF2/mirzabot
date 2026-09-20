@@ -11,6 +11,9 @@
   <a href="https://t.me/mirzapanelgroup">
     <img src="https://img.shields.io/badge/Telegram-Group-229ED9?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram Group"/>
   </a>
+  <a href="https://mirzabot.com/docs/">
+    <img src="https://img.shields.io/badge/Docs-mirzabot.com-38BDF8?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Documentation"/>
+  </a>
 </p>
 
 <p>
@@ -36,6 +39,7 @@
 ## 📚 Table of Contents
 
 - [✨ Overview](#-overview)
+- [📖 Documentation](#-documentation)
 - [🧩 Supported Panels](#-supported-panels)
 - [💳 Payment Gateways](#-payment-gateways)
 - [⚙️ Features](#️-features)
@@ -59,6 +63,27 @@
 It connects directly to your panels, builds configurations automatically, accepts a wide range of payment methods, and gives both customers and admins a clean experience through a **Telegram Mini App** and a **web admin panel**.
 
 > Whether you're handing out trial accounts or running a large-scale reseller business, Mirza Bot has the tools to run it end to end.
+
+---
+
+## 📖 Documentation
+
+The complete user manual lives at **[mirzabot.com/docs](https://mirzabot.com/docs/)** — 61 pages covering every part of the bot, written in **Persian (فارسی)**.
+
+It is not a feature list: every menu is documented with the exact order of the steps the bot asks for, what each field accepts, the error message you get when it rejects your input, and the mistake that most often breaks that feature.
+
+| Section | What it covers |
+|---------|----------------|
+| **شروع** (Getting started) | Architecture, requirements, server install, shared-host install, CLI flags, updating and removing |
+| **ساختار** (Structure) | Repository layout, database tables, which file does what |
+| **پنل‌ها** (Panels) | Adding each of the 13 panel types, protocol & inbound setup, per-panel menus, manual config creation, node management |
+| **فروشگاه** (Shop) | Products, categories, trial accounts, On-Hold services, bulk purchase, manual sale, renewals and location changes |
+| **پرداخت** (Payments) | Card-to-card with receipt approval, every online and crypto gateway, wallet and refunds |
+| **مدیریت** (Administration) | Admin roles, feature switches, report channel and topics, texts, forced-join channel, web panel |
+| **رشد و بازاریابی** (Growth) | Referrals, cashback, discount and gift codes, lottery and wheel, reseller system |
+| **نگهداری** (Operations) | Cron jobs, backup and restore, optimization, security checklist, troubleshooting |
+
+> The docs are generated from the bot's own source, so menu names, limits and error strings match the code rather than an older release.
 
 ---
 
@@ -277,6 +302,6 @@ Thanks to everyone who has contributed to making Mirza Bot better:
 
 **Made with ❤️ by the Mirza Panel community**
 
-💬 [Channel](https://t.me/mirzapanel) · 👥 [Group](https://t.me/mirzapanelgroup) · ⭐ [Star on GitHub](https://github.com/mahdiMGF2/mirzabot)
+📖 [Documentation](https://mirzabot.com/docs/) · 💬 [Channel](https://t.me/mirzapanel) · 👥 [Group](https://t.me/mirzapanelgroup) · ⭐ [Star on GitHub](https://github.com/mahdiMGF2/mirzabot)
 
 </div>

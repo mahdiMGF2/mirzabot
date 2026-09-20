@@ -9,7 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chang
     $new = $_POST['new_password'] ?? '';
     $confirm = $_POST['confirm_password'] ?? '';
     $admin = db_fetch($pdo, "SELECT * FROM admin WHERE username = ?", [$_SESSION['admin_user']]);
-    $valid = password_verify($cur, $admin['password']) || $cur === $admin['password'];
+    $storedPassword = (string) ($admin['password'] ?? '');
+    $storedIsHash = str_starts_with($storedPassword, '$2') || str_starts_with($storedPassword, '$argon2');
+    $valid = $storedIsHash ? password_verify($cur, $storedPassword) : hash_equals($storedPassword, $cur);
 
     if (!$valid) {
         flash('error', $textbotlang['panel']['settingsCurrentPasswordWrong']);

@@ -1,5 +1,15 @@
 <?php
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
+
 require __DIR__ . '/../../config.php';
 require __DIR__ . '/../../function.php';
 
@@ -58,6 +68,11 @@ function csrf_token(): string
         $_SESSION['csrf'] = bin2hex(random_bytes(32));
     }
     return $_SESSION['csrf'];
+}
+
+function csrf_check_value(string $token): bool
+{
+    return hash_equals($_SESSION['csrf'] ?? '', $token);
 }
 
 function csrf_check_post(): void

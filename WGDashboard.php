@@ -150,7 +150,6 @@ function updatepear($namepanel, array $config)
 {
 
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $namepanel, "select");
-    $configpanel = json_encode($config, true);
     $url = $marzban_list_get['url_panel'] . '/api/updatePeerSettings/' . $marzban_list_get['inboundid'];
     $headers = array(
         'Accept: application/json',

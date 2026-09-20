@@ -9,7 +9,7 @@ function getdatauser($username, $location)
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_HTTPGET, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 4000);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, ($GLOBALS['request_exec_timeout'] ?? null) ?: 4000);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
         'Authorization: Basic ' . base64_encode("{$marzban_list_get['secret_code']}:")
@@ -28,6 +28,7 @@ function getdatauser($username, $location)
             return $data;
         }
     }
+    return null;
 }
 function serverstatus($location)
 {
@@ -62,6 +63,9 @@ function updateuserhi($username, $location, array $data)
 {
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $location, "select");
     $paneldata = getdatauser($username, $location);
+    if (!is_array($paneldata) || empty($paneldata['uuid'])) {
+        return ['status' => null, 'body' => null, 'error' => 'user not found on panel'];
+    }
     $url = $marzban_list_get['url_panel'] . '/api/v2/admin/user/' . $paneldata['uuid'] . "/";
     $payload = json_encode($data, true);
     $headers = array(

@@ -15,6 +15,9 @@ return [
                 'msg_session' => '⛔️ 会话已过期，请重新打开。',
                 'msg_empty' => '⛔️ 文本为空。请重新发送或点击「关闭」。',
                 'msg_saved' => '✅ 文本已保存。',
+                'msg_emoji_unsupported' => '⚠️ 此机器人无法显示高级表情。
+文本已保存，但会用普通表情代替高级表情。
+如需启用，机器人所有者需拥有 Telegram Premium 订阅，或机器人拥有在 Fragment 购买的用户名。',
                 'msg_closed' => '已关闭。',
                 'langs' => [
                         'fa' => '🇮🇷 فارسی',
@@ -187,6 +190,7 @@ return [
                         'unknown' => '未知',
                         'unlimited' => '无限制',
                 ],
+                'htmlNotAllowed' => '⛔️ 此名称中不允许使用 HTML 标签。请发送不含“&lt;”字符的名称。',
                 'invalidInput' => '⭕️ 输入无效',
                 'invalidTime' => '天数无效',
                 'invalidUsername' => '❌ 用户名无效。
@@ -212,6 +216,7 @@ return [
 🔄 请重新发送您的用户名',
                 'sectionDisabled' => '📛 此部分当前已停用',
                 'selectoption' => '请选择一个选项',
+                'invalidCommand' => '无效的命令',
                 'selectusername' => '请发送一个自定义用户名
 ⚠️ 用户名不得包含多余字符，如 @、空格或连字符。
 ⚠️ 用户名必须为英文。
@@ -251,7 +256,6 @@ return [
     通过此网关支付的最低金额为 5000 托曼。',
                         'variza' => '❌ 错误 
     通过此网关支付的最低金额为 5000 托曼。',
-                        'pendingPayment' => '❌ 您有一笔未确认的支付。请等待上一笔支付审核完毕，然后再发送新支付',
                         'cardEnabledNotice' => '💳 尊敬的用户，卡号已为您激活；现在您可以进行购买。',
                         'cardInstructionAlt' => '如需付款，请将金额存入下方卡号',
                         'giftDepositAlt' => '🎁 尊敬的用户，%s 托曼已作为礼物存入您的账户。',
@@ -261,7 +265,6 @@ return [
                 
 ',
                         'giftFromManagement' => '🎁 尊敬的用户，管理层向您的钱包赠送了 %s 托曼。',
-                        'deductedNotice' => '❌ 尊敬的用户，已从您的钱包余额中扣除 %s 托曼。',
                         'addedNotice' => '💎 尊敬的用户，已向您的钱包余额添加 %s 托曼。',
                         'deductedNotice2' => '❌ 尊敬的用户，已从您的钱包余额中扣除 %s 托曼。',
                         'addedNotice2' => '💎 尊敬的用户，已向您的钱包余额添加 %s 托曼。',
@@ -457,7 +460,6 @@ return [
                         'invalidCode' => '❌ 优惠码无效',
                         'expired' => '❌ 优惠码时间已过期。',
                         'useLimit' => '⭕️ 此码仅可使用 {useuser}  次',
-                        'appliedRenew' => '🤩 您的优惠码有效，发票已应用 {discount_price}% 折扣。',
                         'applied' => '🤩 您的优惠码有效，发票已应用 {discount_price}% 折扣。',
                         'notAllowed' => '❌ 无法使用此优惠码购买',
                 ],
@@ -686,7 +688,6 @@ https://t.me/%s?start=%s',
                         'planNotAvailable' => '❌ 无法使用当前套餐续费。请从头执行各步骤并选择其他套餐。',
                         'restartError' => '❌ 发生了错误。请从头执行续费步骤。',
                         'errorSupport' => '❌ 续费服务时发生错误；请联系客服',
-                        'errorSupport2' => '❌ 续费服务时发生错误；请联系客服',
                         'genericError' => '❌ 续费过程中发生错误。请联系客服',
                         'giftCharged' => '恭喜 🎉
 📌 作为续费礼品，金额 %s 托曼已充值到您的账户',
@@ -1234,15 +1235,23 @@ https://t.me/%s?start=%s',
                 'errorCode5' => '❌  发生了错误。错误代码：%s',
                 'errorCode6' => '❌  发生了错误。错误代码：%s',
                 'errorOccurred' => '发生了错误',
-                'errorReason' => '错误原因： 
-%s',
-                'errorReason2' => '错误原因 %s',
                 'errorRestart' => '❌ 发生了错误；请从头执行各步骤。',
                 'getStats' => '如果您想查看其他日期范围的统计数据，请先发送开始日期。
 例如：
 <code>%s</code>',
                 'invalidValue' => '❌ 值无效',
                 'mainAdminOnly' => '❌ 此部分仅主管理员可用',
+                'installerNotice' => [
+                        'user' => '⛔️ <b>机器人暂时不可用。</b>
+
+服务正在维护中。请几分钟后重试，或联系客服。',
+                        'admin' => '⛔️ <b>机器人已停止：安装目录未被删除。</b>
+
+服务器上仍存在 <code>install</code> 目录，机器人无法自动删除它。只要该目录存在，机器人就不会回应任何用户。
+
+🔹 请通过 SSH 连接服务器，删除机器人目录下的 <code>install</code> 文件夹。
+🔹 然后检查机器人目录的属主和权限，确保 Web 服务器用户有删除权限。',
+                ],
                 'notUser' => '未找到具有此ID的用户',
                 'panelAdmin' => '👨‍💼 管理面板',
                 'saved' => '✅ 已保存。',
@@ -1256,18 +1265,12 @@ https://t.me/%s?start=%s',
                         'addBalanceUser' => '✅ 金额已添加到该用户的余额',
                         'addBalanceUsers' => '✅ 金额已添加到各用户的余额',
                         'invalidPrice' => '金额无效',
-                        'negativeBalance' => '⚜️ 请发送用户的数字ID 
-说明：如需扣除用户余额，请先发送用户的数字ID',
-                        'negativeBalanceUser' => '✅ 金额已从该用户的余额中扣除',
-                        'priceBalance' => '已收到数字ID。请发送您想从该用户扣除的金额，金额应以托曼为单位',
                         'askUserGroup' => '📌 充值应存入以下哪个用户组？',
                         'askTargetUsers' => '📌 全体充值应发送给哪位用户？',
                         'askNotify' => '📌 是否应向用户发送充值通知消息？
 是：1
 否：0',
                         'operationStarted' => '✅ 消息发送操作已开始。完成后将通知您。',
-                        'btnDecrease' => '⬇️ 减少余额',
-                        'maxAmountRial' => '📌 最大金额为 1 亿里亚尔。',
                         'maxAmountToman' => '❌ 最大金额为 1 亿托曼',
                         'askMinCharge' => '📌 请设置您希望用户为账户充值的最低金额',
                         'askMinChargeGroup' => '📌 最低余额应适用于哪个用户组？
@@ -1373,8 +1376,6 @@ n2',
                         'rejected' => '⭕️ 支付已成功拒绝，并已向用户发送消息',
                         'reviewedPayment' => '❌ 该支付已被其他管理员审核过',
                         'reviewReceiptsFirst' => '⚠️ 如需批准用户请求，请先审核并批准购买或续费收据。然后批准钱包充值收据。 ',
-                        'disableAutoConfirmFirst' => '❌ 请先关闭无需审核的自动批准。',
-                        'disableAutoConfirmFirst2' => '❌ 请先关闭自动批准。',
                         'autoConfirmDesc' => '📌 激活此功能后，在您不在线的时段，机器人会自动批准所有卡对卡交易；待您上线后，您再审核收据，如果发送的是虚假收据，则取消该交易',
                         'noPending' => '❌ 您没有未批准的付款。',
                         'pendingIntro' => '📌 未批准的卡对卡付款 
@@ -1485,13 +1486,6 @@ n2',
 ',
                         'nameExists2' => '❌ 名为 %s 的产品已存在',
                 ],
-                'Protocol' => [
-                        'invalidProtocol' => '❌ 无效的协议',
-                        'removeProtocol' => '请选择您想删除的协议。',
-                        'removedProtocol' => '协议已成功删除。',
-                        'btnDelete' => '🗑 删除协议',
-                        'btnSettings' => '⚙️ 协议设置',
-                ],
                 'SettingPayment' => [
                         'cartDirect' => '✅ 您的用户名已成功登记。',
                         'getNameCard' => '📌 请发送持卡人姓名。',
@@ -1508,7 +1502,6 @@ n2',
                         'activePanel' => '⭕️ 在此部分，您可以开启或关闭面板的销售功能',
                         'activePanelOff' => '❌ 面板已关闭',
                         'activePanelOn' => '✅ 面板已开启',
-                        'autoConfirmCard' => '卡转卡收据自动确认状态',
                         'botTitle' => '📌 在此部分，您可以指定以下功能是否启用。',
                         'btn' => '📊 机器人统计',
                         'cardStatusOffPv' => '⭕ 私聊中的离线网关状态已关闭',
@@ -1526,7 +1519,6 @@ n2',
                         'statusCategoryTime' => '⏱ 时间分类',
                         'statusNotifNewUser' => '👤 新用户通知',
                         'statusRole' => '♨️ 规则',
-                        'statusShowAgent' => '👨‍💻 代理申请',
                         'statusSubject' => '状态',
                         'statusTimeExtra' => '⏳ 额外时间',
                         'statusUsernameBtn' => '👤 用户名按钮',
@@ -1783,7 +1775,6 @@ trojan://xyz',
 当前时间： ',
                         'setVolumeRemove' => '📌 请发送在流量用尽后多少天删除账户。账户时间根据用户最后一次连接计算。此功能适用于 Marzban 面板
 当前时间： ',
-                        'btnSettings' => '🕚 定时任务设置',
                         'cannotDeleteUnlimited' => '❌ 由于流量和时间均为无限，无法删除该服务。',
                         'askOnHoldDays' => '在此部分，您必须设置：如果用户在若干天后仍未连接到其配置且处于 on_hold 状态，则向用户发送消息',
                         'askVolumeAlert' => '📌 在此部分，您可以设置：当用户的流量达到 x 时发送警告消息。请以 GB 为单位发送流量。',
@@ -1805,13 +1796,12 @@ trojan://xyz',
                         'cubepayFeeAsk' => "💵 请发送手续费数值：\n\n▫️ <b>0 到 100</b> → 按<b>百分比</b>收取（可含小数，如 <code>9.9</code>）\n▫️ <b>大于 100</b> → 按<b>固定土曼金额</b>收取（如 <code>5000</code>）\n\n当前数值：<b>%s</b>",
                         'cubepayFeeSavedPercent' => "✅ 已保存 — <b>%s%%</b> 百分比手续费\n\n示例：100,000 土曼的订单，客户需支付 <b>%s</b> 土曼。",
                         'cubepayFeeSavedFixed' => "✅ 已保存 — <b>%s 土曼</b> 固定手续费\n\n示例：100,000 土曼的订单，客户需支付 <b>%s</b> 土曼。",
-                        'tronadoDesc' => '在此部分，您可以关闭或开启 Tornado 网关',
+                        'askDailyLimit' => "⏳ 请发送 AbanGateway <b>成功</b>支付的每日上限。\n\n<b>0</b> 表示无上限。",
                         'off' => '已关闭',
                         'on' => '已开启',
                         'intro' => '📌 在下方列表中，您可以管理网关。
 
 ⚠️ Mirza 团队不对网关提供任何保证，所有使用和责任由您承担',
-                        'btnPerfectMoneyHelp' => '📚 设置 Perfect Money 教程',
                         'askPlisioApi' => '⚙️ 请发送您的 Plisio API 密钥。
 
 🔑 要获取 API 密钥，请访问以下网站：
@@ -1898,7 +1888,6 @@ nowpayments.io
                         'dataorder' => '未记录日期',
                         'descriptionBlock' => '✍️ 封禁该用户的原因已保存',
                         'failedPhone' => '未确认',
-                        'getIdMessage' => '✅ 已收到文本。现在请发送用户的数字ID。',
                         'getIdUserUnblock' => '👤 请发送用户的数字ID',
                         'getText' => '请发送您的文本',
                         'getTextResponse' => '如需回复该消息，请发送您的文本。',
@@ -2032,7 +2021,6 @@ support 权限级别可访问用户服务和客服消息回复部分',
                         'savedData' => '✅ 更改已成功保存。',
                         'savedName' => '✅ 名称已成功保存',
                         'setLimit' => '请发送新的账户创建限制。如果您希望无限制，请发送文本 unlimited',
-                        'setProtocol' => '✅ 协议已成功设置',
                         'usernameSet' => '👤 面板地址已保存。现在请发送用户名',
                         'noteSetInboundAndDomain' => '❌ 注意：
 如需激活面板，您必须前往面板管理菜单，并务必设置“设置入站ID”和“订阅链接域名”选项；否则将无法创建配置',
@@ -2058,6 +2046,40 @@ support 权限级别可访问用户服务和客服消息回复部分',
                         'invalidCredentials' => '❌ 面板用户名或密码错误',
                         'fetchErrorCode' => '❌ 获取数据时发生错误。错误代码：',
                         'fetchError' => '❌ 获取数据时发生错误。错误：',
+                        'protocolsNotConfigured' => '⚠️ 此位置的协议和入站尚未配置。在配置完成之前，机器人无法创建可用的配置。请前往面板管理 > 协议与入站设置，并发送一个示例配置的用户名。',
+                        'panelConnection' => [
+                                'timeout' => '⏳ <b>面板在 %s 秒内未响应。</b>
+
+这不是机器人的故障 — 请求已送达您的面板，但面板未及时回应。
+
+🔹 请检查面板服务器是否运行且可访问。
+🔹 如果面板负载较高，请在 <code>config.php</code> 中调高 <code>$request_exec_timeout</code>（单位毫秒，例如 25000）。',
+                                'refused' => '🚫 <b>无法连接到面板。</b>
+
+这不是机器人的故障 — 面板服务器拒绝了连接。
+
+🔹 请检查面板地址和端口。
+🔹 请确认面板服务正在运行且防火墙未封锁该端口。',
+                                'dns' => '🌐 <b>无法解析面板域名。</b>
+
+这不是机器人的故障 — 面板地址未能解析为 IP。
+
+🔹 请检查面板地址拼写。
+🔹 请检查域名的 DNS 记录。',
+                                'ssl' => '🔐 <b>与面板的安全连接失败。</b>
+
+这不是机器人的故障 — 面板的 SSL 证书无效或握手失败。
+
+🔹 请检查面板的 SSL 证书及其有效期。',
+                                'generic' => '⚠️ <b>无法连接面板。</b>
+
+这不是机器人的故障 — 向面板发出的请求失败。
+
+🔹 请检查面板服务器状态。',
+                                'detail' => '
+
+<i>技术详情：</i> <code>%s</code>',
+                        ],
                         'invalidUrl' => '❌ 发送的面板链接有误',
                         'notConnected' => '面板未连接',
                         'askUserGroup' => '📌 请发送用户类型
@@ -2115,10 +2137,9 @@ support 权限级别可访问用户服务和客服消息回复部分',
                         'notFound' => '❌ 未找到所需的面板。',
                         'errorCode' => '❌ 发生错误，错误代码：%s',
                         'xuiErrorCode' => '❌ 发生错误。错误代码：  ',
-                        'xuiErrorReason' => '❌ 发生错误。原因：  ',
-                        'eylanErrorCode' => '❌  发生错误。错误代码：  %s',
-                        'eylanUserNotExist' => '❌ 用户在面板中不存在。',
-                        'eylanPanelOutput' => '面板输出：',
+                        'ErrorCode' => '❌  发生错误。错误代码：  %s',
+                        'UserNotExist' => '❌ 用户在面板中不存在。',
+                        'PanelOutput' => '面板输出：',
                 ],
                 'messageBulk' => [
                         'userMessage' => '📥 收到来自用户的消息回复。如需回复，请点击下方按钮并发送您的消息。
@@ -2154,7 +2175,6 @@ support 权限级别可访问用户服务和客服消息回复部分',
 1 - 是，可以回复 
 2 - 否，不可回复
 请以数字发送答案',
-                        'btnForwardToUser' => '📤 将消息转发给某用户',
                         'confirmSummary' => '📌 您正在执行发送消息操作；查看以下信息并确认下方按钮后，发送操作将开始。
 ⚙️ 操作类型：%s',
                         'inactiveDaysLabel' => '用户未发消息的天数：%s',
@@ -2181,8 +2201,6 @@ support 权限级别可访问用户服务和客服消息回复部分',
                         'ipSaved' => '✅ 节点地址保存成功。',
                         'reconnected' => '✅ 节点重新连接完成。',
                         'deleted' => '✅ 节点删除成功',
-                        'btnSettings' => '⚙️ 节点设置',
-                        'askSetup' => '📌 要设置节点，请在您的面板中创建一个用户，在面板内激活您希望启用的节点，然后发送该用户的用户名',
                         'info' => '📌 节点信息 
 
 🖥 节点名称：%s
@@ -2344,11 +2362,6 @@ f,n.n2',
                         'btnErrors' => '❌ 错误报告',
                         'btnFinancial' => '💰 财务报告',
                         'btnBackup' => '🤖 机器人备份 ',
-                        'btnExport' => '🪪 导出数据',
-                        'noDataToExport' => '❌ 没有可导出的数据',
-                        'btnExportUsers' => '🪪 导出用户数据',
-                        'btnExportOrders' => '🪪 导出用户订单',
-                        'btnExportPayments' => '🪪 导出用户付款记录',
                         'btnOptimize' => '🗑 优化机器人',
                         'optimizeWarning' => '❌❌❌❌❌❌❌ 请仔细阅读以下文本
 
@@ -2497,15 +2510,6 @@ f,n.n2',
 💰 付款金额：%s
 拒绝原因：%s
 👤 用户数字 ID：%s',
-                        'balanceDecreased' => '📌 一位管理员减少了用户的余额：
-        
-🪪 减少余额的管理员信息： 
-用户名：@%s
-数字 ID：%s
-👤 用户信息：
-用户数字 ID：%s
-余额金额：%s
-减少后的用户余额：%s',
                         'balanceIncreased' => '📌 一位管理员增加了用户的余额：
         
 🪪 增加余额的管理员信息： 
@@ -3588,17 +3592,6 @@ f,n.n2',
 ‼️存款错误的责任由您承担。
 🔝付款后，点击我已付款按钮，然后发送收据图片
 💵您的付款经管理员批准后，您的钱包将被充值，如果您有订单，将会处理',
-                'cartAuto' => '如需即时批准，请准确存入以下金额。否则，您的付款批准可能会延迟。⚠️
-            要增加余额，请将 <code>{price}</code>  里亚尔  存入下方账号 👇🏻
-
-        ==================== 
-        <code>{card_number}</code>
-        {name_card}
-        ====================
-        
-💰请准确存入上述金额，以便即时批准。
-‼️无法从钱包中提取资金。
-🔝无需发送收据，但如果一段时间后您的存款未获批准，请发送您的收据图片。',
                 'cartToCart' => '💳 卡对卡',
                 'channel' => '   
         ⚠️ 尊敬的用户；您不是我们频道的成员
@@ -3897,16 +3890,12 @@ f,n.n2',
                 'editUsername' => '👤 编辑用户名',
                 'educationBtn' => '教程按钮',
                 'educationCategory' => '📗教程分类',
-                'educationFeature' => '教程功能',
                 'educationSection' => '📚 教程部分',
                 'enableShowCard' => '💰 激活卡号显示',
                 'excludeUser' => '➕ 例外用户',
                 'excludeUserAutoConfirm' => '💳 将用户从自动批准中排除',
                 'exclusiveSubLink' => '💎 专属订阅链接',
                 'exportActiveCardUsers' => '📄 导出卡号已激活的用户',
-                'exportOrders' => '导出订单',
-                'exportPayments' => '导出付款',
-                'exportUsers' => '导出用户',
                 'extraTimePrice' => '⏳ 额外时间价格',
                 'extraVolumePrice' => '➕ 额外流量价格',
                 'featureStatus' => '⚙️ 功能状态',
@@ -3947,6 +3936,7 @@ f,n.n2',
                 'endpointIranPay4Invalid' => '❌ 地址被拒绝。必须以 <code>https://</code> 开头且为有效域名。',
                 'minAmountIranPay4' => '⬇️ AbanGateway 最低金额',
                 'maxAmountIranPay4' => '⬆️ AbanGateway 最高金额',
+                'dailyLimitIranPay4' => '⏳ AbanGateway 每日上限',
                 'cashbackIranPay4' => '🎁 AbanGateway 返现',
                 'setEducationIranPay4' => '📚 AbanGateway 教程',
                 'lastHourStats' => '⏱️ 过去一小时',
@@ -4110,7 +4100,6 @@ f,n.n2',
                 'supportInPv' => '👤 私聊客服',
                 'supportSection' => '🤙 客服部分',
                 'testAccountBtn' => '测试账户按钮',
-                'testAccountFeature' => '测试账户功能',
                 'testAccountLimit' => '➕ 测试账户限制',
                 'testAccountVolume' => '💾 测试账户流量',
                 'testServiceTime' => '⏳ 测试服务时间',
@@ -4140,7 +4129,6 @@ f,n.n2',
                 'usersWithBalance' => '有余额的用户列表。',
                 'usersWithNegativeBalance' => '余额为负的用户列表',
                 'verifyChannelMembership' => '📑 频道成员资格验证',
-                'viewAccountInfoFeature' => '账户信息查看功能',
                 'viewInfo' => '查看信息',
                 'viewTutorial' => '📚 查看使用教程 ',
                 'volume' => '流量',
@@ -4181,6 +4169,33 @@ f,n.n2',
                 'categorySaveBtn' => '保存分类',
                 'categoryCancelBtn' => '取消',
                 'categorySaveChangeBtn' => '保存更改',
+                'bottextPageTitle' => '机器人文本',
+                'bottextPageLede' => '编辑所有机器人文本；修改后的文本保存在 lang/override',
+                'bottextLangLabel' => '语言',
+                'bottextGroups' => [
+                        'bottext' => '机器人内文本编辑器',
+                        'language' => '语言',
+                        'common' => '通用',
+                        'users' => '用户',
+                        'Admin' => '管理',
+                        'textbot' => '主要文本和按钮',
+                        'keyboard' => '键盘',
+                        'panel' => '网页面板',
+                        'paymentGateway' => '支付网关',
+                        'db_defaults' => '默认值',
+                ],
+                'bottextAllGroups' => '全部分类',
+                'bottextSearchPlaceholder' => '搜索键或文本...',
+                'bottextOnlyChanged' => '仅显示已修改',
+                'bottextFilterBtn' => '应用筛选',
+                'bottextSaveBtn' => '保存更改',
+                'bottextDefaultLabel' => '默认：',
+                'bottextResetBtn' => '恢复默认',
+                'bottextSaved' => '文本已保存',
+                'bottextSaveError' => '机器人无权在 {path} 中保存文件。请在服务器终端运行此命令进行修复：{command}',
+                'bottextEmpty' => '未找到文本',
+                'bottextChangedLabel' => '已修改',
+                'bottextCountLabel' => '条文本',
                 'categoryNameRequired' => '分类名称为必填项。',
                 'categoryNameExists' => '该分类名称已存在。',
                 'categoryAdded' => '分类添加成功。',
@@ -4427,7 +4442,6 @@ f,n.n2',
                 'productSearchPlaceholder' => '搜索...',
                 'productThirtyValue' => '۳۰',
                 'productTomanUnit' => '取消',
-                'productTypeExample' => 'VPN、套餐、...',
                 'productUnlimitedLabel' => '说明',
                 'productVolumeGbSuffix' => '流量 (GB)',
                 'productZeroValue' => '۰',
@@ -4711,7 +4725,6 @@ f,n.n2',
                 'statusFailed' => '失败',
                 'descThanks' => '感谢您完成交易！',
                 'giftReport' => '🎁 尊敬的用户，%s 托曼已作为礼物存入您的账户。',
-                'lowAmount' => '❌ 用户存入的金额少于指定金额。',
                 'reportZarinpal' => '💵 新付款
         
 用户数字 ID：%s
@@ -4732,14 +4745,11 @@ f,n.n2',
 用户用户名：%s
 交易金额 %s
 支付方式：第一里亚尔货币',
-                'reportCard' => '机器人批准了一张收据
-
-信息：
-💰 付款金额：%s
-👤  用户数字 ID：%s 
-👤 用户用户名：@%s 
-用户余额：%s 托曼
-付款跟踪码：%s',
+                'reportAbanGateway' => '💵 新付款
+- 👤 用户名 : @%s
+- 🆔 用户 ID : %s
+- 💸 金额 %s
+- 💳 支付方式 : AbanGateway',
                 'reportTronado' => '💵 新付款
 - 👤 用户用户名：@%s
 - 🆔用户数字 ID：%s

@@ -22,3 +22,13 @@ RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
 
 RewriteRule ^ /%1 [R=301,L]
 SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+Options -Indexes
+
+<FilesMatch "^error_log$|\.log$|\.log\.[0-9]+$">
+    Require all denied
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>

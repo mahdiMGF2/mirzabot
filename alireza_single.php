@@ -2,6 +2,10 @@
 require_once 'config.php';
 require_once 'request.php';
 ini_set('error_log', 'error_log');
+function alirezaCookiePath($code_panel)
+{
+    return sys_get_temp_dir() . '/mirza_alireza_' . md5((string) $code_panel) . '.cookie';
+}
 function panel_login_cookie($code_panel)
 {
     $panel = select("marzban_panel", "*", "code_panel", $code_panel, "select");
@@ -11,12 +15,12 @@ function panel_login_cookie($code_panel)
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT_MS => 10000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 10000,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_POSTFIELDS => "username=" . urlencode($panel['username_panel']) . "&password=" . urlencode($panel['password_panel']),
-        CURLOPT_COOKIEJAR => 'cookie.txt',
+        CURLOPT_COOKIEJAR => alirezaCookiePath($code_panel),
     ));
     $response = curl_exec($curl);
     if (curl_error($curl)) {
@@ -30,24 +34,26 @@ function panel_login_cookie($code_panel)
 function login($code_panel, $verify = true)
 {
     $panel = select("marzban_panel", "*", "code_panel", $code_panel, "select");
+    $cookieFile = alirezaCookiePath($code_panel);
     if ($panel['datelogin'] != null && $verify) {
         $date = json_decode($panel['datelogin'], true);
-        if (isset($date['time'])) {
-            $timecurrent = time();
+        if (isset($date['time']) && !empty($date['access_token'])) {
             $start_date = time() - strtotime($date['time']);
             if ($start_date <= 3000) {
-                file_put_contents('cookie.txt', $date['access_token']);
+                file_put_contents($cookieFile, $date['access_token']);
                 return;
             }
         }
     }
     $response = panel_login_cookie($panel['code_panel']);
-    $time = date('Y/m/d H:i:s');
-    $data = json_encode(array(
-        'time' => $time,
-        'access_token' => file_get_contents('cookie.txt')
-    ));
-    update("marzban_panel", "datelogin", $data, 'name_panel', $panel['name_panel']);
+    $cookieContent = is_file($cookieFile) ? file_get_contents($cookieFile) : false;
+    if ($cookieContent !== false && $cookieContent !== '') {
+        $data = json_encode(array(
+            'time' => date('Y/m/d H:i:s'),
+            'access_token' => $cookieContent
+        ));
+        update("marzban_panel", "datelogin", $data, 'name_panel', $panel['name_panel']);
+    }
     if (!is_string($response))
         return array('success' => false);
     return json_decode($response, true);
@@ -66,14 +72,14 @@ function get_clinetsalireza($username, $namepanel)
         CURLOPT_MAXREDIRS => 10,
         CURLOPT_SSL_VERIFYHOST => false,
         CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_TIMEOUT_MS => 4000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 4000,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'GET',
         CURLOPT_HTTPHEADER => array(
             'Accept: application/json'
         ),
-        CURLOPT_COOKIEFILE => 'cookie.txt',
+        CURLOPT_COOKIEFILE => alirezaCookiePath($marzban_list_get['code_panel']),
     ));
     $output = [];
     $response = json_decode(curl_exec($curl), true)['obj'];
@@ -97,7 +103,7 @@ function get_clinetsalireza($username, $namepanel)
 
     }
     curl_close($curl);
-    unlink('cookie.txt');
+    @unlink(alirezaCookiePath($marzban_list_get['code_panel']));
     return $output;
 }
 function addClientalireza_singel($namepanel, $usernameac, $Expire, $Total, $Uuid, $Flow, $subid, $inboundid)
@@ -133,9 +139,9 @@ function addClientalireza_singel($namepanel, $usernameac, $Expire, $Total, $Uuid
     );
     $req = new CurlRequest($url);
     $req->setHeaders($headers);
-    $req->setCookie('cookie.txt');
+    $req->setCookie(alirezaCookiePath($marzban_list_get['code_panel']));
     $response = $req->post($configpanel);
-    unlink('cookie.txt');
+    @unlink(alirezaCookiePath($marzban_list_get['code_panel']));
     return $response;
 }
 function updateClientalireza($namepanel, $username, array $config)
@@ -151,9 +157,9 @@ function updateClientalireza($namepanel, $username, array $config)
     );
     $req = new CurlRequest($url);
     $req->setHeaders($headers);
-    $req->setCookie('cookie.txt');
+    $req->setCookie(alirezaCookiePath($marzban_list_get['code_panel']));
     $response = $req->post($configpanel);
-    unlink('cookie.txt');
+    @unlink(alirezaCookiePath($marzban_list_get['code_panel']));
     return $response;
 }
 function ResetUserDataUsagealirezasin($usernamepanel, $namepanel)
@@ -168,9 +174,9 @@ function ResetUserDataUsagealirezasin($usernamepanel, $namepanel)
     );
     $req = new CurlRequest($url);
     $req->setHeaders($headers);
-    $req->setCookie('cookie.txt');
+    $req->setCookie(alirezaCookiePath($marzban_list_get['code_panel']));
     $response = $req->post(array());
-    unlink('cookie.txt');
+    @unlink(alirezaCookiePath($marzban_list_get['code_panel']));
     return $response;
 }
 function removeClientalireza_single($location, $username)
@@ -185,9 +191,9 @@ function removeClientalireza_single($location, $username)
     );
     $req = new CurlRequest($url);
     $req->setHeaders($headers);
-    $req->setCookie('cookie.txt');
+    $req->setCookie(alirezaCookiePath($marzban_list_get['code_panel']));
     $response = $req->post(array());
-    unlink('cookie.txt');
+    @unlink(alirezaCookiePath($marzban_list_get['code_panel']));
     return $response;
 
 }
@@ -210,9 +216,9 @@ function get_onlineclialireza($name_panel, $username)
         CURLOPT_HTTPHEADER => array(
             'Accept: application/json'
         ),
-        CURLOPT_COOKIEFILE => 'cookie.txt',
+        CURLOPT_COOKIEFILE => alirezaCookiePath($marzban_list_get['code_panel']),
     ));
-    $response = json_decode(curl_exec($curl), true)['obj'];
+    $response = json_decode(curl_exec($curl), true)['obj'] ?? null;
     if ($response == null)
         return "offline";
     if (in_array($username, $response))

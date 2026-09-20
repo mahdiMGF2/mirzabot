@@ -7,6 +7,12 @@ composer.phar
 
 # Runtime / generated files
 error_log
+/storage/**
+!/storage/cache/
+!/storage/.htaccess
+!/storage/cache/.htaccess
 /api/hash.txt
 *.xlsx
 graphify-out
+docs
+/lang/override/

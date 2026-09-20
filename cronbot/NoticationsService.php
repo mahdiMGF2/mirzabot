@@ -1,4 +1,5 @@
 <?php
+chdir(__DIR__);
 ini_set('error_log', 'error_log');
 date_default_timezone_set('Asia/Tehran');
 
@@ -6,6 +7,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../botapi.php';
 require_once __DIR__ . '/../panels.php';
 require_once __DIR__ . '/../function.php';
+$textbotlang = languagechange();
 class ServiceMonitor
 {
     private $Panel;
@@ -68,9 +70,9 @@ class ServiceMonitor
     private function getActiveInvoices()
     {
         $time_hours = time() - 3600;
-        $QUERY = "SELECT * FROM invoice WHERE (Status = 'active' OR Status = 'end_of_time' OR Status = 'end_of_volume' OR Status = 'sendedwarn' OR Status = 'send_on_hold') AND name_product != '{$this->textBotLang['common']['labels']['testServiceName']}' AND (time_cron <= '$time_hours' OR time_cron IS NULL) ORDER BY time_cron  LIMIT 30";
+        $QUERY = "SELECT * FROM invoice WHERE (Status = 'active' OR Status = 'end_of_time' OR Status = 'end_of_volume' OR Status = 'sendedwarn' OR Status = 'send_on_hold') AND name_product != :testName AND (time_cron <= :timeHours OR time_cron IS NULL) ORDER BY time_cron  LIMIT 30";
         $stmt = $this->pdo->prepare($QUERY);
-        $stmt->execute();
+        $stmt->execute([':testName' => $this->textBotLang['common']['labels']['testServiceName'], ':timeHours' => $time_hours]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -131,7 +133,7 @@ class ServiceMonitor
         $daysRemaining = intval($timeService / 86400);
         $removalThreshold = intval("-" . $this->setting['removedayc']);
         $result = $daysRemaining <= $removalThreshold;
-        $statusText = $statusMap = [
+        $statusText = [
             'active' => $this->textBotLang['users']['status']['active'],
             'limited' => $this->textBotLang['users']['status']['limited'],
             'disabled' => $this->textBotLang['users']['status']['disabled'],
@@ -237,6 +239,9 @@ class ServiceMonitor
 
     private function send_notifactions($invoice, $status_cron_user, $message, $keyboard_active, $bot_token)
     {
+        if (is_array($status_cron_user)) {
+            $status_cron_user = $status_cron_user['status_cron'] ?? 1;
+        }
         if (intval($status_cron_user) == 0)
             return;
         $keyboard = $this->createExtendServiceKeyboard($invoice['id_invoice']);

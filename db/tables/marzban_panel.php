@@ -59,7 +59,7 @@ return [
         ['agent', 'all', 'VARCHAR(50)'],
         ['sublink', 'onsublink', 'VARCHAR(50)'],
         ['config', 'offconfig', 'VARCHAR(50)'],
-        ['MethodUsername', $textbotlang['keyboard']['numericIdRandom'], 'VARCHAR(100)'],
+        ['MethodUsername', 'numericIdRandom', 'VARCHAR(100)'],
         ['TestAccount', 'ONTestAccount', 'VARCHAR(50)'],
         ['limit_panel', 'unlimted', 'VARCHAR(50)'],
         ['namecustom', 'vpn', 'VARCHAR(100)'],

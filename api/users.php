@@ -309,10 +309,15 @@ function usr_withdrawal(array $data, string $method): void
         sendJsonResponse(false, "user-id empty", [], 200);
     }
     $amount = requireInt($data, 'amount', 1);
-    $stmt = $pdo->prepare("UPDATE user SET Balance = Balance - :amount WHERE id = :user_id");
+    $stmt = $pdo->prepare("UPDATE user SET Balance = Balance - :amount WHERE id = :user_id AND Balance >= :amount2");
     $stmt->bindValue(':user_id', intval($data['chat_id']), PDO::PARAM_INT);
     $stmt->bindValue(':amount', $amount, PDO::PARAM_INT);
+    $stmt->bindValue(':amount2', $amount, PDO::PARAM_INT);
     $stmt->execute();
+    clearSelectCache('user');
+    if ($stmt->rowCount() === 0) {
+        sendJsonResponse(false, "insufficient balance", [], 200);
+    }
     $text_balance = sprintf($textbotlang['users']['Balance']['deducted'], $amount);
     sendmessage($data['chat_id'], $text_balance, null, 'html');
     sendJsonResponse(true, "Successful");
@@ -427,6 +432,10 @@ function usr_transfer_account(array $data, string $method): void
         sendJsonResponse(false, "new_userid empty", [], 200);
     if ($data["chat_id"] == $data["new_userid"])
         sendJsonResponse(false, "inavlid user_id", [], 200);
+    if (!ctype_digit((string) $data["new_userid"]) || !ctype_digit((string) $data["chat_id"]))
+        sendJsonResponse(false, "inavlid user_id", [], 200);
+    if (!rowExists("user", "id", $data['chat_id']))
+        sendJsonResponse(false, "source user not found", [], 200);
     $stmt = $pdo->prepare("DELETE FROM user WHERE id = :id_user");
     $stmt->execute([':id_user' => $data["new_userid"]]);
     update("user", "id", $data["new_userid"], "id", $data['chat_id']);
@@ -630,7 +639,8 @@ function usr_active_bot_agent(array $data, string $method): void
     }
     $new_code = str_replace('BotTokenNew', $data['token'], $contentconfig);
     file_put_contents($dirsource . "/config.php", $new_code);
-    file_get_contents("https://api.telegram.org/bot{$data['token']}/setwebhook?url=https://$domainhosts/vpnbot/{$data['chat_id']}{$botUsername}/index.php");
+    $agent_secret = bin2hex(random_bytes(24));
+    setAgentWebhook($data['token'], $data['chat_id'], $botUsername, $agent_secret);
     file_get_contents(sprintf($textbotlang['Admin']['agentbot']['activatedUrl'], $data['token'], $data['chat_id']));
     $datasetting = json_encode(array(
         "minpricetime" => 4000,
@@ -643,7 +653,7 @@ function usr_active_bot_agent(array $data, string $method): void
         'show_product' => true,
     ));
     $value = "{}";
-    $stmt = $pdo->prepare("INSERT INTO botsaz (id_user,bot_token,admin_ids,username,time,setting,hide_panel) VALUES (:id_user,:bot_token,:admin_ids,:username,:time,:setting,:hide_panel)");
+    $stmt = $pdo->prepare("INSERT INTO botsaz (id_user,bot_token,admin_ids,username,time,setting,hide_panel,webhook_secret) VALUES (:id_user,:bot_token,:admin_ids,:username,:time,:setting,:hide_panel,:webhook_secret)");
     $stmt->execute([
         ':id_user' => $data['chat_id'],
         ':bot_token' => $data['token'],
@@ -652,6 +662,7 @@ function usr_active_bot_agent(array $data, string $method): void
         ':time' => date('Y/m/d H:i:s'),
         ':setting' => $datasetting,
         ':hide_panel' => $value,
+        ':webhook_secret' => $agent_secret,
     ]);
     sendJsonResponse(true, "Successful");
 }
@@ -668,7 +679,7 @@ function usr_remove_agent_bot(array $data, string $method): void
     if (!$contentbot)
         sendJsonResponse(false, "User does not have an active bot.", [], 200);
     $destination = dirname(__DIR__);
-    $dirsource = "$destination/vpnbot/{$data['chat_id']}{$contentbot['username']}";
+    $dirsource = "$destination/vpnbot/" . intval($data['chat_id']) . $contentbot['username'];
     if (is_dir($dirsource) && !deleteDirectory($dirsource)) {
         error_log('Failed to remove bot directory: ' . $dirsource);
     }

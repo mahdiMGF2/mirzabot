@@ -300,7 +300,7 @@ include __DIR__ . '/inc/layout_head.php';
                                     'end_of_volume' => ['tag-no', $textbotlang['panel']['userStatusNearVolumeEnd']],
                                     'sendedwarn' => ['tag-warn', $textbotlang['panel']['userNotifAllSent']],
                                     'send_on_hold' => ['tag-plain', $textbotlang['panel']['userStatusWaiting']],
-                                    'unpiad' => ['tag-plain', $textbotlang['panel']['userStatusUnpaid']],
+                                    'unpaid' => ['tag-plain', $textbotlang['panel']['userStatusUnpaid']],
                                 ];
                                 foreach ($invoices as $inv):
                                     [$tagClass, $label] = $statusMap[$inv['Status'] ?? ''] ?? ['tag-plain', $inv['Status'] ?? '—'];

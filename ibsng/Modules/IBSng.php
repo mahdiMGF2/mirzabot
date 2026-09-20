@@ -45,7 +45,7 @@ class IBSng
             !$this->loginData['hostname']
         ) {
 
-            throw new Exception('IBSng needs correct login information');
+            throw new \Exception('IBSng needs correct login information');
         }
 
         $this->hostname = $loginArray['hostname'];
@@ -54,7 +54,7 @@ class IBSng
         $this->port = $loginArray['port'];
         $this->timeout = $loginArray['timeout'];
 
-        $this->cookiePathName = sys_get_temp_dir() . '/.' . self::class;
+        $this->cookiePathName = sys_get_temp_dir() . '/.ibsng_' . md5((string) $this->hostname . '|' . (string) $this->username);
 
         if ($this->autoConnect) {
             $this->connect();
@@ -390,7 +390,6 @@ class IBSng
         $used_traffic_pos3 = strpos($used_traffic_trim2, $used_traffic_pattern3);
         $used_traffic_trim3 = substr($used_traffic_trim2, 0, $used_traffic_pos3);
         $used_traffic = trim($used_traffic_trim3);
-        $used_traffics = strpos($used_traffic,"M");
         $used_traffic = str_replace('G','',$used_traffic);
         $used_traffic = str_replace('M','',$used_traffic);
         if($used_traffic == false){
@@ -748,7 +747,9 @@ class IBSng
         curl_setopt($this->handler, CURLOPT_COOKIEJAR, $this->getCookie());
         $output = curl_exec($this->handler);
         if (curl_errno($this->handler) != 0) {
-            throw new \Exception('Curl Error: ' . curl_error($this->handler) . $url);
+            $curlError = curl_error($this->handler);
+            curl_close($this->handler);
+            throw new \Exception('Curl Error: ' . $curlError . $url);
         }
         curl_close($this->handler);
         return $output;

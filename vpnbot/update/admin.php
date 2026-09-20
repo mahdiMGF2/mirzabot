@@ -418,17 +418,19 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     $Balance_user_afters = number_format(select("user", "*", "id", $user['Processing_value'], "select")['Balance']);
 } elseif ($text == "📊 آمار ربات") {
     $statistics = select("user", "*", "bottype", $ApiToken, "count");
-    $stmt2 = $pdo->prepare("SELECT COUNT( DISTINCT id_user) as count FROM `invoice` WHERE name_product = 'سرویس تست' AND  bottype = '$ApiToken'");
-    $stmt2->execute();
+    $stmt2 = $pdo->prepare("SELECT COUNT( DISTINCT id_user) as count FROM `invoice` WHERE name_product = 'سرویس تست' AND  bottype = :mp1");
+    $stmt2->execute([':mp1' => $ApiToken]);
     $statisticsorder = $stmt2->fetch(PDO::FETCH_ASSOC)['count'];
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product = 'سرویس تست' AND bottype = '$ApiToken'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product = 'سرویس تست' AND bottype = :mp1");
+    $stmt->execute([':mp1' => $ApiToken]);
     $count_usertest = $stmt->rowCount();
-    $sql1 = "SELECT COUNT(*) AS invoice_count FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND name_product != 'سرویس تست' AND bottype = '$ApiToken'";
-    $stmt1 = $pdo->query($sql1);
+    $sql1 = "SELECT COUNT(*) AS invoice_count FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND name_product != 'سرویس تست' AND bottype = :mp1";
+    $stmt1 = $pdo->prepare($sql1);
+    $stmt1->execute([':mp1' => $ApiToken]);
     $invoice = $stmt1->fetch(PDO::FETCH_ASSOC)['invoice_count'];
-    $sql2 = "SELECT SUM(price_product) AS total_price FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND name_product != 'سرویس تست' AND bottype = '$ApiToken'";
-    $stmt2 = $pdo->query($sql2);
+    $sql2 = "SELECT SUM(price_product) AS total_price FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND name_product != 'سرویس تست' AND bottype = :mp1";
+    $stmt2 = $pdo->prepare($sql2);
+    $stmt2->execute([':mp1' => $ApiToken]);
     $invoicesum = number_format($stmt2->fetch(PDO::FETCH_ASSOC)['total_price'], 0);
     $statisticsall = "
 📊 آمار کلی ربات  

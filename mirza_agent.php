@@ -41,7 +41,7 @@ function create_user_mirza(array $panel, int $data_limit_gb, int $expire_days, s
 
 function get_user_data_mirza(array $panel, string $username)
 {
-    $url = $panel['url_panel'] . '?actions=get_user_data&username=' . $username;
+    $url = $panel['url_panel'] . '?actions=get_user_data&username=' . urlencode($username);
     $headers = array(
         'accept: application/json'
     );

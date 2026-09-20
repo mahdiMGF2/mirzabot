@@ -44,7 +44,7 @@ jobs:
         env:
           TAG: ${{ steps.tag.outputs.name }}
         run: |
-          FILE="mirzabot-hosting-${TAG}.zip"
+          FILE="mirzabot-host-${TAG}.zip"
           zip -r -q "../${FILE}" . -x '.git/*' '.github/*' 'graphify-out/*' '.gitignore' 'install.sh'
           mv "../${FILE}" .
           echo "file=${FILE}" >> "$GITHUB_OUTPUT"

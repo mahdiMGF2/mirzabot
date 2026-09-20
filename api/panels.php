@@ -163,7 +163,7 @@ function panel_panel_add(array $data, string $method): void
             'sublink' => empty($data['sublink']) ? "onsublink" : $data['sublink'],
             'config' => empty($data['config']) ? "offconfig" : $data['config'],
             'type' => empty($data['type']) ? "marzban" : $data['type'],
-            'MethodUsername' => empty($data['MethodUsername']) ? null : $data['MethodUsername'],
+            'MethodUsername' => empty($data['MethodUsername']) ? null : usernameMethodKey($data['MethodUsername']),
             'Methodextend' => empty($data['Methodextend']) ? null : extendMethodKey($data['Methodextend']),
             'TestAccount' => empty($data['TestAccount']) ? "ONTestAccount" : $data['TestAccount'],
             'limit_panel' => empty($data['limit_panel']) ? "unlimted" : $data['limit_panel'],
@@ -257,6 +257,10 @@ function panel_panel_edit(array $data, string $method): void
 
         if (isset($panelData['Methodextend'])) {
             $panelData['Methodextend'] = extendMethodKey($panelData['Methodextend']);
+        }
+
+        if (isset($panelData['MethodUsername'])) {
+            $panelData['MethodUsername'] = usernameMethodKey($panelData['MethodUsername']);
         }
 
         foreach (['url_panel', 'username_panel', 'password_panel', 'linksubx'] as $rawColumn) {

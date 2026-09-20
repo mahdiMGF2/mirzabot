@@ -98,7 +98,7 @@ final class Schema
             $statement = $this->pdo->prepare("UPDATE `$table` SET `$column` = ?");
             $statement->execute([$default]);
         }
-        echo "The $column field was added ✅";
+        error_log("Schema: column {$column} added");
         return true;
     }
 

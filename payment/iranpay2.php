@@ -8,13 +8,6 @@ require_once __DIR__ . '/../function.php';
 require_once __DIR__ . '/../panels.php';
 require_once __DIR__ . '/../keyboard.php';
 require __DIR__ . '/../vendor/autoload.php';
-use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\Label\Font\OpenSans;
-use Endroid\QrCode\Label\LabelAlignment;
-use Endroid\QrCode\RoundBlockSizeMode;
-use Endroid\QrCode\Writer\PngWriter;
 
 $ManagePanel = new ManagePanel();
 

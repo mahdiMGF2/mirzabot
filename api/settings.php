@@ -13,7 +13,7 @@ ini_set('error_log', 'error_log');
 list($headers, $data, $action) = apiRequestContext();
 $method = $_SERVER['REQUEST_METHOD'];
 
-const DEFAULT_MAIN_KEYBOARD = '{"keyboard":[[{"text":"text_sell"},{"text":"text_extend"}],[{"text":"text_usertest"},{"text":"text_wheel_luck"}],[{"text":"text_Purchased_services"},{"text":"accountwallet"}],[{"text":"text_affiliates"},{"text":"text_Tariff_list"}],[{"text":"text_support"},{"text":"text_help"}]]}';
+const DEFAULT_MAIN_KEYBOARD = '{"keyboard":[[{"text":"text_sell"},{"text":"text_extend"}],[{"text":"text_usertest"},{"text":"text_wheel_luck"}],[{"text":"text_Purchased_services"},{"text":"accountwallet"}],[{"text":"text_affiliates"},{"text":"text_Tariff_list"}],[{"text":"text_support"},{"text":"text_help"}],[{"text":"text_agentpanel"},{"text":"text_requestagent"}]]}';
 
 function setting_keyboard_set(array $data, string $method): void
 {
@@ -80,7 +80,16 @@ function setting_save_setting_shop(array $data, string $method): void
             if (($row['type'] ?? '') === "shop") {
                 update("shopSetting", "value", $value, "Namevalue", $row['name_value']);
             } else {
-                update("setting", $row['name_value'], $value, null, null);
+                $settingField = (string) $row['name_value'];
+                if (!preg_match('/^[A-Za-z0-9_]{1,64}$/', $settingField)) {
+                    sendJsonResponse(false, "invalid setting name", [], 200);
+                }
+                $columnCheck = $GLOBALS['pdo']->prepare('SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?');
+                $columnCheck->execute(['setting', $settingField]);
+                if ((int) $columnCheck->fetchColumn() === 0) {
+                    sendJsonResponse(false, "invalid setting name", [], 200);
+                }
+                update("setting", $settingField, $value, null, null);
             }
         }
 

@@ -368,7 +368,7 @@ function mini_countries(array $data, string $method): void
         if ($setting['statusnoteforf'] == "0" && $user_info['agent'] == "f")
             $is_note = false;
         while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            if ($result['MethodUsername'] == $textbotlang['users']['customusername'] || $result['MethodUsername'] == $textbotlang['keyboard']['customUsernameRandom']) {
+            if (in_array(usernameMethodKey($result['MethodUsername']), ['customUsername', 'customUsernameRandom'], true)) {
                 $is_username = true;
             } else {
                 $is_username = false;
@@ -1028,11 +1028,11 @@ function mini_purchase(array $data, string $method): void
     $textcreatuser = str_replace('{config}', "<code>{$output_config_link}</code>", $textcreatuser);
     $textcreatuser = str_replace('{links}', $config, $textcreatuser);
     $textcreatuser = str_replace('{links2}', $output_config_link, $textcreatuser);
-    sendMessageService($panel, $dataoutput['configs'] ?? null, $output_config_link, $user_info['username'], null, $textcreatuser, $randomString, $user_info['id'], $image = __DIR__ . '/../images.jpg');
-    if ($panel['MethodUsername'] == $textbotlang['keyboard']['customTextSequential'] || $panel['MethodUsername'] == $textbotlang['keyboard']['usernameSequential'] || $panel['MethodUsername'] == $textbotlang['keyboard']['numericIdSequential'] || $panel['MethodUsername'] == $textbotlang['keyboard']['agentCustomTextSequential']) {
+    sendMessageService($panel, $dataoutput['configs'] ?? null, $output_config_link, $user_info['username'], null, $textcreatuser, $randomString, $user_info['id'], __DIR__ . '/../images.jpg');
+    if (in_array(usernameMethodKey($panel['MethodUsername']), ['customTextSequential', 'usernameSequential', 'numericIdSequential', 'agentCustomTextSequential'], true)) {
         $value = intval($user_info['number_username']) + 1;
         update("user", "number_username", $value, "id", $user_info['id']);
-        if ($panel['MethodUsername'] == $textbotlang['keyboard']['customTextSequential'] || $panel['MethodUsername'] == $textbotlang['keyboard']['agentCustomTextSequential']) {
+        if (in_array(usernameMethodKey($panel['MethodUsername']), ['customTextSequential', 'agentCustomTextSequential'], true)) {
             $value = intval($setting['numbercount']) + 1;
             update("setting", "numbercount", $value);
         }

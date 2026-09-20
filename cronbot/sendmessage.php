@@ -1,4 +1,5 @@
 <?php
+chdir(__DIR__);
 date_default_timezone_set('Asia/Tehran');
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../botapi.php';
@@ -76,8 +77,11 @@ $keyboardaddbalance = json_encode([
         ]
     ]);
 for ($i = 0; $i < 20; $i++) {
-    $iduser = $userid[$i];
-    unset($userid[$i]);
+    if (!isset($userid[0])) {
+        break;
+    }
+    $iduser = $userid[0];
+    unset($userid[0]);
     $userid = array_values($userid);
     if ($info['type'] == "unpinmessage") {
         unpinmessage($iduser->id);

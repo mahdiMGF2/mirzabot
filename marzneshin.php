@@ -5,7 +5,6 @@ function token_panelm($code_panel){
     if($panel['datelogin'] != null){
         $date = json_decode($panel['datelogin'],true);
         if(isset($date['time'])){
-        $timecurrent = time();
         $start_date = time() - strtotime($date['time']);
         if($start_date <= 3600){
             return $date;
@@ -20,7 +19,7 @@ function token_panelm($code_panel){
     $options = array(
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
-        CURLOPT_TIMEOUT_MS => 6000,
+        CURLOPT_TIMEOUT_MS => ($GLOBALS['request_exec_timeout'] ?? null) ?: 6000,
         CURLOPT_POSTFIELDS => http_build_query($data_token),
         CURLOPT_HTTPHEADER => array(
             'Content-Type: application/x-www-form-urlencoded',
@@ -32,7 +31,7 @@ function token_panelm($code_panel){
     $token = curl_exec($curl_token);
     if (curl_error($curl_token)) {
         $token = [];
-        $token['errror'] = curl_error($curl_token);
+        $token['error'] = curl_error($curl_token);
         return $token;
     }
     curl_close($curl_token);
@@ -97,11 +96,13 @@ function revoke_subm($username_account,$location)
 #-----------------------------#
 function adduserm($location,$data_limit,$username_ac,$timestamp,$name_product,$note ='',$data_limit_reset = 'no_reset')
 {
-    global $pdo;
     $product = select('product',"*","name_product",$name_product,"select");
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $location,"select");
     if($product['inbounds'] != null){
      $marzban_list_get['proxies'] = $product['inbounds'];   
+    }
+    if (!panelProtocolsConfigured($marzban_list_get['proxies'])) {
+        return panelProtocolsMissingError($marzban_list_get['name_panel']);
     }
     $Check_token = token_panelm($marzban_list_get['code_panel']);
     $data = array(

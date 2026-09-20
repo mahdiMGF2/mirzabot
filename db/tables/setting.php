@@ -12,7 +12,7 @@ $cronStatus = json_encode([
     'uptime_node' => false,
     'uptime_panel' => false,
 ]);
-$keyboardMain = '{"keyboard":[[{"text":"text_sell"},{"text":"text_extend"}],[{"text":"text_usertest"},{"text":"text_wheel_luck"}],[{"text":"text_Purchased_services"},{"text":"accountwallet"}],[{"text":"text_affiliates"},{"text":"text_Tariff_list"}],[{"text":"text_support"},{"text":"text_help"}]]}';
+$keyboardMain = '{"keyboard":[[{"text":"text_sell"},{"text":"text_extend"}],[{"text":"text_usertest"},{"text":"text_wheel_luck"}],[{"text":"text_Purchased_services"},{"text":"accountwallet"}],[{"text":"text_affiliates"},{"text":"text_Tariff_list"}],[{"text":"text_support"},{"text":"text_help"}],[{"text":"text_agentpanel"},{"text":"text_requestagent"}]]}';
 
 return [
     'create' => <<<SQL
@@ -29,7 +29,6 @@ return [
         showcard varchar(200) NULL,
         numbercount varchar(600) NULL,
         statusnewuser varchar(600) NULL,
-        statusagentrequest varchar(600) NULL,
         statuscategory varchar(200) NULL,
         statusterffh varchar(200) NULL,
         volumewarn varchar(200) NULL,
@@ -65,7 +64,8 @@ return [
         status_keyboard_config varchar(20) NULL,
         cron_status TEXT NOT NULL,
         text_edit JSON NULL,
-        limitnumber varchar(200) NULL
+        limitnumber varchar(200) NULL,
+        webhook_secret varchar(200) NOT NULL DEFAULT ''
         SQL,
     'seedOnCreate' => [
         [
@@ -82,7 +82,6 @@ return [
             'statuscategory' => 'offcategory',
             'numbercount' => '0',
             'statusnewuser' => 'onnewuser',
-            'statusagentrequest' => 'onrequestagent',
             'volumewarn' => '2',
             'inlinebtnmain' => 'offinline',
             'verifystart' => 'offverify',
@@ -130,7 +129,6 @@ return [
         ['showcard', '1', 'VARCHAR(200)'],
         ['numbercount', '0', 'VARCHAR(600)'],
         ['statusnewuser', 'onnewuser', 'VARCHAR(600)'],
-        ['statusagentrequest', 'onrequestagent', 'VARCHAR(600)'],
         ['statuscategory', 'offcategory', 'VARCHAR(600)'],
         ['volumewarn', '2', 'VARCHAR(200)'],
         ['inlinebtnmain', 'offinline', 'VARCHAR(200)'],
@@ -166,5 +164,6 @@ return [
         ['status_keyboard_config', '1', 'varchar(20)'],
         ['cron_status', $cronStatus, 'TEXT'],
         ['text_edit', '{}', 'JSON'],
+        ['webhook_secret', null, "VARCHAR(200) NOT NULL DEFAULT ''"],
     ],
 ];

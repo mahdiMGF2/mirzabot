@@ -517,6 +517,7 @@ function mirza_install_writable_paths(): array
         'cronbot' => 'ذخیره users.json و info',
         'api' => 'ذخیره hash.txt',
         'install/state' => 'ثبت وضعیت اجرای کرون‌ها',
+        'lang/override' => 'ذخیره متن‌های ویرایش‌شده ربات از پنل وب',
     ];
 }
 
@@ -708,6 +709,28 @@ function mirza_install_is_configured(): bool
     return !mirza_install_is_placeholder($values['APIKEY'])
         && !mirza_install_is_placeholder($values['dbname'])
         && !mirza_install_is_placeholder($values['adminnumber']);
+}
+
+function mirza_install_webhook_secret(array $values): string
+{
+    try {
+        $dsn = 'mysql:host=' . $values['dbhost'] . ';dbname=' . $values['dbname'] . ';charset=utf8mb4';
+        $pdo = new PDO($dsn, $values['usernamedb'], $values['passworddb'], [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_TIMEOUT => 10,
+        ]);
+
+        $statement = $pdo->prepare("UPDATE setting SET webhook_secret = ? WHERE webhook_secret IS NULL OR webhook_secret = ''");
+        $statement->execute([bin2hex(random_bytes(24))]);
+
+        $secret = $pdo->query('SELECT webhook_secret FROM setting LIMIT 1')->fetchColumn();
+    } catch (Throwable $exception) {
+        error_log('Unable to read the webhook secret from the database: ' . $exception->getMessage());
+
+        return '';
+    }
+
+    return is_string($secret) ? $secret : '';
 }
 
 function mirza_install_write_config(array $values): array

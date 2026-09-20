@@ -84,16 +84,6 @@ function getCrontabBinary()
         '/sbin',
     ];
 
-    $environmentPath = getenv('PATH');
-    if ($environmentPath !== false && $environmentPath !== '') {
-        foreach (explode(PATH_SEPARATOR, $environmentPath) as $pathDirectory) {
-            $pathDirectory = trim($pathDirectory);
-            if ($pathDirectory !== '' && !in_array($pathDirectory, $candidateDirectories, true)) {
-                $candidateDirectories[] = $pathDirectory;
-            }
-        }
-    }
-
     foreach ($candidateDirectories as $directory) {
         $executablePath = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'crontab';
         if (@is_file($executablePath) && @is_executable($executablePath)) {
@@ -418,10 +408,16 @@ function update($table, $field, $newValue, $whereField = null, $whereValue = nul
     if (!isset($user['step'])) {
         $user['step'] = '';
     }
-    $logValue = is_scalar($valueToStore) ? $valueToStore : json_encode($valueToStore, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $sensitiveFields = ['password', 'token', 'password_panel', 'secret_code', 'datelogin'];
+    $logValue = in_array(strtolower((string) $field), $sensitiveFields, true)
+        ? '[redacted]'
+        : (is_scalar($valueToStore) ? $valueToStore : json_encode($valueToStore, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     $logss = "{$table}_{$field}_{$logValue}_{$whereField}_{$whereValue}_{$user['step']}_$date";
     if ($field != "message_count" && $field != "last_message_time") {
-        file_put_contents('log.txt', "\n" . $logss, FILE_APPEND);
+        $logDir = __DIR__ . '/storage';
+        if (is_dir($logDir) || @mkdir($logDir, 0775, true)) {
+            @file_put_contents($logDir . '/log.txt', "\n" . $logss, FILE_APPEND);
+        }
     }
 
     clearSelectCache($table);
@@ -592,9 +588,21 @@ function generateUUID()
 }
 function rate_arze()
 {
-    $file = file_get_contents('https://demo.mirzabot.com/b.php', true);
-    $file = json_decode($file, true)['result'];
-    return $file;
+    $ch = curl_init('https://demo.mirzabot.com/b.php');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+    $response = curl_exec($ch);
+    if ($response === false) {
+        error_log('rate_arze failed: ' . curl_error($ch));
+        return null;
+    }
+    $decoded = json_decode($response, true);
+    if (!is_array($decoded) || !isset($decoded['result']) || !is_array($decoded['result'])) {
+        error_log('rate_arze: unexpected response');
+        return null;
+    }
+    return $decoded['result'];
 }
 function updatePaymentMessageId($response, $orderId)
 {
@@ -694,6 +702,10 @@ function isValidDate($date)
 {
     return (strtotime($date) != false);
 }
+function invoiceBelongsToUser($invoice, $userId)
+{
+    return is_array($invoice) && isset($invoice['id_user']) && (string) $invoice['id_user'] === (string) $userId;
+}
 function cubepayFeeValue()
 {
     $raw = select("PaySetting", "ValuePay", "NamePay", "feeternado", "select")['ValuePay'] ?? '0';
@@ -720,14 +732,6 @@ function cubepayPayableAmount($price)
 
     return cubepayApplyFee($price, cubepayFeeValue());
 }
-/**
- * Ask AbanGateway for a payment page — Rial gateway 4.
- *
- * The endpoint is the shop's own, pasted by the admin, so it is validated
- * before use rather than trusted: a `http://` address would put the bearer key
- * on the wire in clear, and a host that is not this gateway is a request the
- * bot should not make at all.
- */
 function abangatewayEndpoint(): ?string
 {
     $endpoint = trim((string) getPaySettingValue('endpointiranpay4', ''));
@@ -753,10 +757,6 @@ function createPayiranpay4($price, $order_id)
         return ['success' => false, 'message' => 'iranpay4: key or endpoint is unset'];
     }
 
-    // `https://` written here, not left to $domainhosts. That variable is a
-    // bare host — every other call site in this file prefixes it, and a
-    // callback without a scheme is either refused by the gateway or resolved
-    // as plain HTTP.
     $curl = curl_init();
     curl_setopt_array($curl, [
         CURLOPT_URL => $endpoint . '/create',
@@ -837,48 +837,57 @@ function formatBytes($bytes, $precision = 2): string
 }
 function generateUsername($from_id, $Metode, $username, $randomString, $text, $namecustome, $usernamecustom)
 {
-    global $textbotlang;
     $setting = select("setting", "*", null, null, "select");
     $user = select("user", "*", "id", $from_id, "select");
     if ($user == false) {
-        $user = array();
-        $user = array(
-            'number_username' => '',
-        );
+        $user = array('number_username' => '');
     }
-    if ($Metode == $textbotlang['keyboard']['numericIdRandom']) {
-        return $from_id . "_" . $randomString;
-    } elseif ($Metode == $textbotlang['keyboard']['usernameSequential']) {
-        if ($username == "NOT_USERNAME") {
-            if (preg_match('/^\w{3,32}$/', $namecustome)) {
+    $randomString = trim((string) $randomString);
+    if ($randomString === '')
+        $randomString = bin2hex(random_bytes(4));
+    $fallback = $from_id . "_" . $randomString;
+    switch (usernameMethodKey($Metode)) {
+        case 'usernameSequential':
+            if ($username == "NOT_USERNAME" && preg_match('/^\w{3,32}$/', (string) $namecustome))
                 $username = $namecustome;
-            }
-        }
-        return $username . "_" . $user['number_username'];
-    } elseif ($Metode == $textbotlang['keyboard']['customUsername'])
-        return $text;
-    elseif ($Metode == $textbotlang['keyboard']['customUsernameRandom']) {
-        $random_number = rand(1000000, 9999999);
-        return $text . "_" . $random_number;
-    } elseif ($Metode == $textbotlang['keyboard']['customTextRandom']) {
-        return $namecustome . "_" . $randomString;
-    } elseif ($Metode == $textbotlang['keyboard']['customTextSequential']) {
-        return $namecustome . "_" . $setting['numbercount'];
-    } elseif ($Metode == $textbotlang['keyboard']['numericIdSequential']) {
-        return $from_id . "_" . $user['number_username'];
-    } elseif ($Metode == $textbotlang['keyboard']['agentCustomTextSequential']) {
-        if ($usernamecustom == "none") {
-            return $namecustome . "_" . $setting['numbercount'];
-        }
-        return $usernamecustom . "_" . $user['number_username'];
+            $generated = $username . "_" . $user['number_username'];
+            break;
+        case 'customUsername':
+            $generated = $text;
+            break;
+        case 'customUsernameRandom':
+            $generated = $text . "_" . rand(1000000, 9999999);
+            break;
+        case 'customTextRandom':
+            $generated = $namecustome . "_" . $randomString;
+            break;
+        case 'customTextSequential':
+            $generated = $namecustome . "_" . $setting['numbercount'];
+            break;
+        case 'numericIdSequential':
+            $generated = $from_id . "_" . $user['number_username'];
+            break;
+        case 'agentCustomTextSequential':
+            if ($usernamecustom == "none")
+                $generated = $namecustome . "_" . $setting['numbercount'];
+            else
+                $generated = $usernamecustom . "_" . $user['number_username'];
+            break;
+        case 'numericIdRandom':
+        default:
+            $generated = $fallback;
     }
+    $generated = trim((string) $generated, " _");
+    if (strlen($generated) < 3)
+        $generated = $fallback;
+    return $generated;
 }
 function outputlink($text)
 {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $text);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, ($GLOBALS['request_exec_timeout'] ?? null) ?: 10000);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -886,7 +895,6 @@ function outputlink($text)
     curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
     $response = curl_exec($ch);
     if ($response === false) {
-        $error = curl_error($ch);
         return null;
     } else {
         return $response;
@@ -937,12 +945,6 @@ function DirectPayment($order_id, $image = 'images.jpg')
             $info_product['code_product'] = "customvolume";
             $info_product['Service_time'] = $get_invoice['Service_time'];
             $info_product['price_product'] = $get_invoice['price_product'];
-        } else {
-            $stmt = $pdo->prepare("SELECT * FROM product WHERE name_product = :name_product AND (Location = :Service_location  or Location = '/all')");
-            $stmt->bindParam(':name_product', $get_invoice['name_product'], PDO::PARAM_STR);
-            $stmt->bindParam(':Service_location', $get_invoice['Service_location'], PDO::PARAM_STR);
-            $stmt->execute();
-            $info_product = $stmt->fetch(PDO::FETCH_ASSOC);
         }
         $username_ac = $get_invoice['username'];
         $marzban_list_get = select("marzban_panel", "*", "name_panel", $get_invoice['Service_location'], "select");
@@ -959,12 +961,21 @@ function DirectPayment($order_id, $image = 'images.jpg')
             'username' => $Balance_id['username'],
             'type' => 'buy'
         );
+        $invoiceStatusBefore = $get_invoice['Status'] ?? null;
+        $invoiceClaimed = false;
+        if (!empty($get_invoice['id_invoice'])) {
+            $claimInvoice = $pdo->prepare("UPDATE invoice SET Status = 'active' WHERE id_invoice = ? AND Status <> 'active'");
+            $claimInvoice->execute([$get_invoice['id_invoice']]);
+            clearSelectCache('invoice');
+            if ($claimInvoice->rowCount() === 0) {
+                return;
+            }
+            $invoiceClaimed = true;
+        }
         $dataoutput = $ManagePanel->createUser($marzban_list_get['name_panel'], $info_product['code_product'], $username_ac, $datac);
         if (!is_array($dataoutput) || empty($dataoutput['username'])) {
-            clearSelectCache('invoice');
-            $invoice_now = select("invoice", "*", "id_invoice", $get_invoice['id_invoice'], "select");
-            if ($invoice_now && $invoice_now['Status'] == "active") {
-                return;
+            if ($invoiceClaimed) {
+                update("invoice", "Status", $invoiceStatusBefore, "id_invoice", $get_invoice['id_invoice']);
             }
             $dataoutput['msg'] = json_encode($dataoutput['msg'] ?? $dataoutput ?? 'unknown error');
             $balance = $Balance_id['Balance'] + $Payment_report['price'];
@@ -1092,10 +1103,10 @@ function DirectPayment($order_id, $image = 'images.jpg')
                 sendmessage($Balance_id['affiliates'], $textadd, null, 'HTML');
             }
         }
-        if ($marzban_list_get['MethodUsername'] == $textbotlang['keyboard']['customTextSequential'] || $marzban_list_get['MethodUsername'] == $textbotlang['keyboard']['usernameSequential'] || $marzban_list_get['MethodUsername'] == $textbotlang['keyboard']['numericIdSequential'] || $marzban_list_get['MethodUsername'] == $textbotlang['keyboard']['agentCustomTextSequential']) {
+        if (in_array(usernameMethodKey($marzban_list_get['MethodUsername']), ['customTextSequential', 'usernameSequential', 'numericIdSequential', 'agentCustomTextSequential'], true)) {
             $value = intval($Balance_id['number_username']) + 1;
             update("user", "number_username", $value, "id", $Balance_id['id']);
-            if ($marzban_list_get['MethodUsername'] == $textbotlang['keyboard']['customTextSequential'] || $marzban_list_get['MethodUsername'] == $textbotlang['keyboard']['agentCustomTextSequential']) {
+            if (in_array(usernameMethodKey($marzban_list_get['MethodUsername']), ['customTextSequential', 'agentCustomTextSequential'], true)) {
                 $value = intval($setting['numbercount']) + 1;
                 update("setting", "numbercount", $value);
             }
@@ -1274,10 +1285,6 @@ function DirectPayment($order_id, $image = 'images.jpg')
         $nameloc = select("invoice", "*", "username", $steppay[0], "select");
         $marzban_list_get = select("marzban_panel", "*", "name_panel", $nameloc['Service_location'], "select");
         $Balance_Low_user = 0;
-        $inboundid = $marzban_list_get['inboundid'];
-        if ($nameloc['inboundid'] != null) {
-            $inboundid = $nameloc['inboundid'];
-        }
         update("user", "Balance", $Balance_Low_user, "id", $Balance_id['id']);
         $DataUserOut = $ManagePanel->DataUser($nameloc['Service_location'], $steppay[0]);
         $data_for_database = json_encode(array(
@@ -1350,10 +1357,6 @@ function DirectPayment($order_id, $image = 'images.jpg')
         $nameloc = select("invoice", "*", "username", $steppay[0], "select");
         $marzban_list_get = select("marzban_panel", "*", "name_panel", $nameloc['Service_location'], "select");
         $Balance_Low_user = 0;
-        $inboundid = $marzban_list_get['inboundid'];
-        if ($nameloc['inboundid'] != false) {
-            $inboundid = $nameloc['inboundid'];
-        }
         update("user", "Balance", $Balance_Low_user, "id", $nameloc['id_user']);
         $DataUserOut = $ManagePanel->DataUser($nameloc['Service_location'], $steppay[0]);
         $data_for_database = json_encode(array(
@@ -1363,8 +1366,6 @@ function DirectPayment($order_id, $image = 'images.jpg')
         ));
         $dateacc = date('Y/m/d H:i:s');
         $type = "extra_time_user";
-        $timeservice = $DataUserOut['expire'] - time();
-        $day = floor($timeservice / 86400);
         $extra_time = $ManagePanel->extra_time($nameloc['username'], $marzban_list_get['code_panel'], $tmieextra);
         if ($extra_time['status'] == false) {
             $extra_time['msg'] = json_encode($extra_time['msg']);
@@ -1405,8 +1406,8 @@ function DirectPayment($order_id, $image = 'images.jpg')
         }
         $textextratime = sprintf($textbotlang['users']['extraTime']['successFn'], $steppay[0], $tmieextra, $volumesformat);
         sendmessage($Balance_id['id'], $textextratime, $keyboardextrafnished, 'HTML');
+        $volumes = $tmieextra;
         if ($Payment_report['Payment_Method'] == "cart to cart") {
-            $volumes = $tmieextra;
             $textconfrom = sprintf($textbotlang['Admin']['reportgroup']['paymentConfirmedExtraTime'], $volumes, $steppay[0], $Balance_id['id'], $Payment_report['id_order'], $Balance_id['username'], $Balance_id['Balance'], $format_price_cart);
             if (!isTelegramChatIdEmpty($from_id) && intval($message_id) != 0) {
                 Editmessagetext($from_id, $message_id, $textconfrom, $Confirm_pay);
@@ -1509,7 +1510,6 @@ function addFieldToTable($tableName, $fieldName, $defaultValue = null, $datatype
         $stmt->bindParam(1, $defaultValue);
         $stmt->execute();
     }
-    echo "The $fieldName field was added ✅";
 }
 function outtypepanel($typepanel, $message)
 {
@@ -1634,6 +1634,65 @@ function isClientIpInRange($clientIp, $lowerBound, $upperBound)
 
     return strcmp($clientPacked, $lowerPacked) >= 0 && strcmp($clientPacked, $upperPacked) <= 0;
 }
+
+function webhookSecretMatches($secret)
+{
+    $received = $_GET['secret'] ?? '';
+
+    return is_string($received) && $received !== '' && hash_equals($secret, $received);
+}
+
+function ensureWebhookSecret()
+{
+    global $domainhosts;
+
+    $stored = (string) (select("setting", "*")['webhook_secret'] ?? '');
+    if ($stored !== '') {
+        return ['secret' => $stored, 'created' => false];
+    }
+
+    $secret = bin2hex(random_bytes(24));
+    update("setting", "webhook_secret", $secret, null, null);
+
+    $stored = (string) (select("setting", "*", null, null, "select", ['cache' => false])['webhook_secret'] ?? '');
+    if ($stored !== '') {
+        $secret = $stored;
+    }
+
+    telegram('setWebhook', [
+        'url' => "https://$domainhosts/index.php?secret=$secret",
+    ]);
+
+    return ['secret' => $secret, 'created' => true];
+}
+
+function setAgentWebhook($token, $id_user, $username, $secret)
+{
+    global $domainhosts;
+
+    return telegram('setWebhook', [
+        'url' => "https://$domainhosts/vpnbot/{$id_user}{$username}/index.php?secret=$secret",
+    ], $token);
+}
+
+function ensureAgentWebhookSecret($bot)
+{
+    $secret = (string) ($bot['webhook_secret'] ?? '');
+    if ($secret !== '') {
+        return ['secret' => $secret, 'created' => false];
+    }
+
+    if (empty($bot['bot_token'])) {
+        return ['secret' => '', 'created' => false];
+    }
+
+    $secret = bin2hex(random_bytes(24));
+    update("botsaz", "webhook_secret", $secret, "bot_token", $bot['bot_token']);
+    setAgentWebhook($bot['bot_token'], $bot['id_user'], $bot['username'], $secret);
+
+    return ['secret' => $secret, 'created' => true];
+}
+
 function addCronIfNotExists($cronCommand)
 {
     $commands = is_array($cronCommand) ? $cronCommand : [$cronCommand];
@@ -1711,34 +1770,56 @@ function addCronIfNotExists($cronCommand)
     return true;
 }
 
+function removeCron($pattern)
+{
+    $crontabBinary = getCrontabBinary();
+    if ($crontabBinary === null) {
+        return false;
+    }
+
+    $crontab = escapeshellarg($crontabBinary);
+    if (strpos((string) runShellCommand("$crontab -l 2>/dev/null"), $pattern) === false) {
+        return true;
+    }
+
+    runShellCommand("$crontab -l 2>/dev/null | grep -vF " . escapeshellarg($pattern) . " | $crontab -");
+    return true;
+}
+
 function activecron()
 {
     global $domainhosts;
 
+    removeCron("https://$domainhosts/cronbot/");
+
+    $phpPath = PHP_BINDIR . '/php';
+    $basePath = __DIR__ . '/cronbot';
     $cronCommands = [
-        "*/15 * * * * curl https://$domainhosts/cronbot/statusday.php",
-        "*/1 * * * * curl https://$domainhosts/cronbot/croncard.php",
-        "*/1 * * * * curl https://$domainhosts/cronbot/NoticationsService.php",
-        "*/5 * * * * curl https://$domainhosts/cronbot/payment_expire.php",
-        "*/1 * * * * curl https://$domainhosts/cronbot/sendmessage.php",
-        "*/3 * * * * curl https://$domainhosts/cronbot/plisio.php",
-        "*/1 * * * * curl https://$domainhosts/cronbot/activeconfig.php",
-        "*/1 * * * * curl https://$domainhosts/cronbot/disableconfig.php",
-        "*/1 * * * * curl https://$domainhosts/cronbot/iranpay1.php",
-        "0 */5 * * * curl https://$domainhosts/cronbot/backupbot.php",
-        "*/2 * * * * curl https://$domainhosts/cronbot/gift.php",
-        "*/30 * * * * curl https://$domainhosts/cronbot/expireagent.php",
-        "*/15 * * * * curl https://$domainhosts/cronbot/on_hold.php",
-        "*/2 * * * * curl https://$domainhosts/cronbot/configtest.php",
-        "*/15 * * * * curl https://$domainhosts/cronbot/uptime_node.php",
-        "*/15 * * * * curl https://$domainhosts/cronbot/uptime_panel.php",
+        "*/15 * * * * $phpPath $basePath/statusday.php",
+        "*/1 * * * * $phpPath $basePath/croncard.php",
+        "*/1 * * * * $phpPath $basePath/NoticationsService.php",
+        "*/5 * * * * $phpPath $basePath/payment_expire.php",
+        "*/1 * * * * $phpPath $basePath/sendmessage.php",
+        "*/3 * * * * $phpPath $basePath/plisio.php",
+        "*/1 * * * * $phpPath $basePath/activeconfig.php",
+        "*/1 * * * * $phpPath $basePath/disableconfig.php",
+        "*/1 * * * * $phpPath $basePath/iranpay1.php",
+        "0 */5 * * * $phpPath $basePath/backupbot.php",
+        "*/2 * * * * $phpPath $basePath/gift.php",
+        "*/30 * * * * $phpPath $basePath/expireagent.php",
+        "*/15 * * * * $phpPath $basePath/on_hold.php",
+        "*/2 * * * * $phpPath $basePath/configtest.php",
+        "*/15 * * * * $phpPath $basePath/uptime_node.php",
+        "*/15 * * * * $phpPath $basePath/uptime_panel.php",
     ];
+    if (intval(select("setting", "*")['scorestatus'] ?? 0) == 1) {
+        $cronCommands[] = "*/1 * * * * $phpPath $basePath/lottery.php";
+    }
 
     addCronIfNotExists($cronCommands);
 }
 function createInvoice($amount)
 {
-    global $from_id, $domainhosts;
     $PaySetting = select("PaySetting", "*", "NamePay", "apiiranpay", "select")['ValuePay'];
     $walletaddress = select("PaySetting", "*", "NamePay", "walletaddress", "select")['ValuePay'];
 
@@ -1764,9 +1845,7 @@ function createInvoice($amount)
 }
 function verifpay($id)
 {
-    global $from_id, $domainhosts;
     $PaySetting = select("PaySetting", "*", "NamePay", "apiiranpay", "select")['ValuePay'];
-    $walletaddress = select("PaySetting", "*", "NamePay", "walletaddress", "select")['ValuePay'];
     $curl = curl_init();
 
     curl_setopt_array($curl, array(
@@ -1841,6 +1920,80 @@ function sanitizeUserName($userName)
 
     return $userName;
 }
+function panelErrorText($rawError)
+{
+    global $textbotlang, $request_exec_timeout;
+    if (is_array($rawError) || is_object($rawError)) {
+        $raw = json_encode($rawError, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    } else {
+        $raw = trim((string) $rawError);
+    }
+    if ($raw === '') {
+        $raw = 'unknown error';
+    }
+    error_log('Panel connection error: ' . $raw);
+    $messages = $textbotlang['Admin']['managepanel']['panelConnection'] ?? [];
+    if (empty($messages)) {
+        return $raw;
+    }
+    $needle = strtolower($raw);
+    if (str_contains($needle, 'timed out') || str_contains($needle, 'timeout') || str_contains($needle, 'operation too slow')) {
+        $seconds = 0;
+        if (preg_match('/after (\d+) milliseconds/', $needle, $matched)) {
+            $seconds = (int) round(intval($matched[1]) / 1000);
+        }
+        if ($seconds < 1) {
+            $seconds = (int) round(intval($request_exec_timeout ?: 10000) / 1000);
+        }
+        $text = sprintf($messages['timeout'], $seconds);
+    } elseif (str_contains($needle, 'could not resolve') || str_contains($needle, 'name or service not known') || str_contains($needle, 'name lookup')) {
+        $text = $messages['dns'];
+    } elseif (str_contains($needle, 'connection refused') || str_contains($needle, 'failed to connect') || str_contains($needle, "couldn't connect") || str_contains($needle, 'connection reset')) {
+        $text = $messages['refused'];
+    } elseif (str_contains($needle, 'ssl') || str_contains($needle, 'certificate')) {
+        $text = $messages['ssl'];
+    } else {
+        $text = $messages['generic'];
+    }
+    if (!empty($messages['detail'])) {
+        $text .= sprintf($messages['detail'], htmlspecialchars($raw, ENT_NOQUOTES, 'UTF-8'));
+    }
+    return $text;
+}
+function panelProtocolsConfigured($rawProxies)
+{
+    $decoded = json_decode((string) $rawProxies, true);
+    return is_array($decoded) && count($decoded) > 0;
+}
+
+function panelProtocolsMissingError($panelName = '')
+{
+    global $textbotlang;
+    $panelName = (string) $panelName;
+    $message = $textbotlang['Admin']['managepanel']['protocolsNotConfigured'] ?? null;
+    if ($message === null) {
+        $message = 'Protocols and inbounds are not configured for this location. Open panel management and run the protocol/inbound setup before selling.';
+    }
+    error_log('Panel protocols not configured' . ($panelName !== '' ? " [$panelName]" : ''));
+    return array('error' => $message);
+}
+function absoluteSubscriptionUrl($subUrl, $panelUrl)
+{
+    $subUrl = trim((string) $subUrl);
+    if ($subUrl === '') {
+        return '';
+    }
+    if (preg_match('#^[a-zA-Z][a-zA-Z0-9+.\-]*://#', $subUrl)) {
+        return $subUrl;
+    }
+    if ($subUrl[0] !== '/') {
+        $firstSegment = explode('/', $subUrl)[0];
+        if (preg_match('/[.:]/', $firstSegment)) {
+            return $subUrl;
+        }
+    }
+    return rtrim((string) $panelUrl, '/') . '/' . ltrim($subUrl, '/');
+}
 function normalizePanelUrl($url)
 {
     $url = trim((string) $url);
@@ -1863,6 +2016,88 @@ function publickey()
         'preshared_key' => $presharedKey
     ];
 }
+function containsHtmlMarkup($value)
+{
+    if (!is_string($value)) {
+        return false;
+    }
+    return strpos($value, '<') !== false;
+}
+function stripCustomEmojiTags($value)
+{
+    if (!is_string($value) || stripos($value, '<tg-emoji') === false) {
+        return $value;
+    }
+    $stripped = preg_replace('#<tg-emoji\b[^>]*>(.*?)</tg-emoji>#isu', '$1', $value);
+    return is_string($stripped) ? $stripped : $value;
+}
+function splitCustomEmojiLabel($value)
+{
+    $text = is_string($value) ? $value : '';
+    if ($text === '' || stripos($text, '<tg-emoji') === false) {
+        return ['text' => $text, 'icon' => ''];
+    }
+    $icon = '';
+    $stripped = preg_replace_callback(
+        '#<tg-emoji\b[^>]*\bemoji-id\s*=\s*"(\d+)"[^>]*>(.*?)</tg-emoji>#isu',
+        function ($match) use (&$icon) {
+            if ($icon === '') {
+                $icon = $match[1];
+                return '';
+            }
+            return $match[2];
+        },
+        $text
+    );
+    $fallback = stripCustomEmojiTags($text);
+    if (!is_string($stripped)) {
+        return ['text' => $fallback, 'icon' => ''];
+    }
+    $stripped = trim(preg_replace('/[ \t]+/u', ' ', stripCustomEmojiTags($stripped)));
+    if ($stripped === '') {
+        return ['text' => $fallback, 'icon' => ''];
+    }
+    return ['text' => $stripped, 'icon' => $icon];
+}
+function customEmojiLabelText($value)
+{
+    $label = splitCustomEmojiLabel($value);
+    return $label['text'];
+}
+function customEmojiLabels($labels = null)
+{
+    static $map = [];
+    if (is_array($labels)) {
+        $map = $labels;
+    }
+    return $map;
+}
+function restoreCustomEmojiLabel($value)
+{
+    if (!is_string($value) || $value === '' || stripos($value, '<tg-emoji') !== false) {
+        return $value;
+    }
+    $map = customEmojiLabels();
+    return $map[$value] ?? $value;
+}
+function applyKeyboardLabels($rows, array $labels)
+{
+    if (!is_array($rows)) {
+        return [];
+    }
+    foreach ($rows as $rowKey => $row) {
+        if (!is_array($row)) {
+            unset($rows[$rowKey]);
+            continue;
+        }
+        foreach ($row as $btnKey => $button) {
+            if (is_array($button) && isset($button['text']) && is_string($button['text']) && isset($labels[$button['text']])) {
+                $rows[$rowKey][$btnKey]['text'] = $labels[$button['text']];
+            }
+        }
+    }
+    return array_values($rows);
+}
 function languagechange($path_dir = null, string $lang = 'fa')
 {
     global $from_id;
@@ -1879,6 +2114,10 @@ function languagechange($path_dir = null, string $lang = 'fa')
 }
 function bottext_apply_overrides(array &$base, $lang)
 {
+    $overrideFile = __DIR__ . '/lang/override/' . $lang . '.php';
+    if (is_file($overrideFile) && is_array($overrideTexts = include $overrideFile))
+        $base = array_replace_recursive($base, $overrideTexts);
+    customEmojiLabels([]);
     $row = select("setting", "*", null, null, "select");
     $raw = is_array($row) ? ($row['text_edit'] ?? null) : null;
     if (!is_string($raw) || $raw === '')
@@ -1889,16 +2128,23 @@ function bottext_apply_overrides(array &$base, $lang)
     $langMap = $map[$lang] ?? null;
     if (!is_array($langMap))
         return;
+    $emojiLabels = [];
     foreach ($langMap as $group => $pairs) {
         if (!is_array($pairs))
             continue;
         if (!isset($base[$group]) || !is_array($base[$group]))
             $base[$group] = [];
         foreach ($pairs as $k => $v) {
-            if (is_string($v))
-                $base[$group][$k] = $v;
+            if (!is_string($v))
+                continue;
+            $base[$group][$k] = $v;
+            foreach ([customEmojiLabelText($v), stripCustomEmojiTags($v)] as $plain) {
+                if (is_string($plain) && $plain !== $v && $plain !== '')
+                    $emojiLabels[$plain] = $v;
+            }
         }
     }
+    customEmojiLabels($emojiLabels);
 }
 function extendMethodKeys()
 {
@@ -1936,10 +2182,64 @@ function extendMethodKey($value, $default = 'resetVolumeTime')
     $labels = extendMethodLabels();
     return $labels[$value] ?? $default;
 }
+function usernameMethodKeys()
+{
+    return ['usernameSequential', 'numericIdRandom', 'customUsername', 'customUsernameRandom', 'customTextRandom', 'customTextSequential', 'numericIdSequential', 'agentCustomTextSequential'];
+}
+function usernameMethodLabels()
+{
+    static $labels = null;
+    if ($labels !== null)
+        return $labels;
+    $labels = [];
+    $aliases = [
+        'customUsername' => ['users.customusername'],
+        'agentCustomTextSequential' => ['keyboard.usernameMethodAgentCustom'],
+    ];
+    foreach (['fa', 'en', 'ru', 'zh'] as $lang) {
+        $file = __DIR__ . '/lang/' . $lang . '.php';
+        if (!file_exists($file))
+            continue;
+        $texts = require $file;
+        if (!is_array($texts))
+            continue;
+        bottext_apply_overrides($texts, $lang);
+        foreach (usernameMethodKeys() as $key) {
+            $candidates = [
+                $texts['keyboard'][$key] ?? null,
+                $texts['common']['labels'][$key] ?? null,
+            ];
+            foreach ($aliases[$key] ?? [] as $alias) {
+                [$group, $name] = explode('.', $alias, 2);
+                $candidates[] = $texts[$group][$name] ?? null;
+            }
+            foreach ($candidates as $label) {
+                if (is_string($label) && trim($label) !== '')
+                    $labels[trim($label)] = $key;
+            }
+        }
+    }
+    return $labels;
+}
+function usernameMethodKey($value, $default = 'numericIdRandom')
+{
+    $value = is_string($value) ? trim($value) : '';
+    if ($value === '')
+        return $default;
+    if (in_array($value, usernameMethodKeys(), true))
+        return $value;
+    $labels = usernameMethodLabels();
+    return $labels[$value] ?? $default;
+}
 function generateAuthStr($length = 10)
 {
     $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    return substr(str_shuffle(str_repeat($characters, ceil($length / strlen($characters)))), 0, $length);
+    $max = strlen($characters) - 1;
+    $result = '';
+    for ($i = 0; $i < $length; $i++) {
+        $result .= $characters[random_int(0, $max)];
+    }
+    return $result;
 }
 function createqrcode($contents)
 {
@@ -2050,8 +2350,6 @@ function sendMessageService($panel_info, $config, $sub_link, $username_service, 
     }
     $STATUS_SEND_MESSAGE_PHOTO = $panel_info['config'] == "onconfig" && (is_array($config) ? count($config) : 0) != 1 ? false : true;
     $out_put_qrcode = "";
-    if ($panel_info['type'] == "Manualsale" || $panel_info['type'] == "ibsng" || $panel_info['type'] == "mikrotik") {
-    }
     if ($panel_info['sublink'] == "onsublink" && $panel_info['config']) {
         $out_put_qrcode = $sub_link;
     } elseif ($panel_info['sublink'] == "onsublink") {
@@ -2282,11 +2580,59 @@ function mirzaRemoveInstallerPath($path)
     return @rmdir($path) && $removed;
 }
 
+function mirzaInstallerNoticeTexts()
+{
+    global $textbotlang;
+    $lang = is_array($textbotlang) && !empty($textbotlang) ? $textbotlang : null;
+    if ($lang === null) {
+        $lang = @include __DIR__ . '/lang/fa.php';
+    }
+    $notice = is_array($lang) ? ($lang['Admin']['installerNotice'] ?? null) : null;
+    return [
+        'user' => $notice['user'] ?? 'The bot is temporarily unavailable. Please try again later.',
+        'admin' => $notice['admin'] ?? 'The install folder still exists on the server and the bot could not remove it. Delete it manually to bring the bot back.',
+    ];
+}
+
+function mirzaShouldAlertInstallerAdmin($cooldown = 3600)
+{
+    $cacheDir = __DIR__ . '/storage/cache';
+    if (!is_dir($cacheDir) && !@mkdir($cacheDir, 0775, true) && !is_dir($cacheDir)) {
+        return true;
+    }
+    $marker = $cacheDir . '/installer_notice';
+    $last = @file_get_contents($marker);
+    if ($last !== false && (time() - intval($last)) < $cooldown) {
+        return false;
+    }
+    @file_put_contents($marker, (string) time());
+    return true;
+}
+
+function mirzaNotifyInstallerBlocked()
+{
+    global $from_id, $adminnumber;
+    if (!function_exists('sendmessage')) {
+        return;
+    }
+    $texts = mirzaInstallerNoticeTexts();
+    $adminId = isset($adminnumber) ? trim((string) $adminnumber) : '';
+    $userId = isset($from_id) ? trim((string) $from_id) : '';
+    $userIsAdmin = $adminId !== '' && $userId === $adminId;
+    if ($userId !== '' && !isTelegramChatIdEmpty($userId)) {
+        sendmessage($userId, $userIsAdmin ? $texts['admin'] : $texts['user'], null, 'HTML');
+    }
+    if (!$userIsAdmin && $adminId !== '' && mirzaShouldAlertInstallerAdmin()) {
+        sendmessage($adminId, $texts['admin'], null, 'HTML');
+    }
+}
+
 function mirzaStopForInstaller($message)
 {
     error_log($message);
+    mirzaNotifyInstallerBlocked();
     if (!headers_sent()) {
-        http_response_code(503);
+        http_response_code(200);
         header('Content-Type: text/plain; charset=utf-8');
         header('Cache-Control: no-store');
     }

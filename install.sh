@@ -68,6 +68,9 @@ _step_eta() {
         "Configuring Apache virtual hosts"*) echo 6  ;;
         "Creating database & user"*)         echo 5  ;;
         "Setting Telegram webhook"*)         echo 5  ;;
+        "Backing up vpnbots"*)               echo 5  ;;
+        "Restoring vpnbots"*)                echo 5  ;;
+        "Setting vpnbot webhooks"*)          echo 10 ;;
         "Initializing database tables"*)     echo 15 ;;
         *)                                   echo 8  ;;
     esac
@@ -451,8 +454,9 @@ export -f resolve_php_ver
 # Configure MySQL root login (all output captured by run_step's log).
 setup_mysql_root() {
     sudo mkdir -p /root/confmirza || return 1
+    sudo chmod 700 /root/confmirza || return 1
     touch /root/confmirza/dbrootmirza.txt || return 1
-    sudo chmod -R 777 /root/confmirza/dbrootmirza.txt || return 1
+    sudo chmod 600 /root/confmirza/dbrootmirza.txt || return 1
     local randomdbpasstxt passs userrr RANDOM_NUMBER
     randomdbpasstxt=$(openssl rand -base64 10 | tr -dc 'a-zA-Z0-9' | cut -c1-8)
     RANDOM_NUMBER=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
@@ -1516,6 +1520,124 @@ fetch_bot_username() {
 valid_db_ident() { [[ "$1" =~ ^[A-Za-z0-9_]{1,32}$ ]]; }
 valid_db_pass()  { [[ "$1" =~ ^[A-Za-z0-9_]{6,64}$ ]]; }
 
+purge_installer_dir() {
+    local target="$1"
+    [ -z "$target" ] && return 0
+    [ -e "$target/install" ] || return 0
+    rm -rf "$target/install" 2>/dev/null
+    [ -e "$target/install" ] && sudo rm -rf "$target/install" 2>/dev/null
+    if [ -e "$target/install" ]; then
+        printf "    ${C_BAD}●${CR} ${C_BAD}Could not remove the web installer at %s/install.${CR}\n" "$target"
+        printf "    ${C_BAD}●${CR} ${C_BAD}Delete it manually - the bot refuses to answer users while it exists.${CR}\n"
+        return 1
+    fi
+    return 0
+}
+
+move_extracted_files() {
+    local src="$1" dest="$2"
+    [ -d "$src" ] && [ -d "$dest" ] || return 1
+    find "$src" -mindepth 1 -maxdepth 1 -exec mv -f -t "$dest/" {} +
+}
+
+# vpnbot instance dirs (not Default/update). update_bot wipes BOT_DIR.
+VPNBOT_BACKUP="/tmp/mirza_vpnbot_backup"
+
+vpnbot_instance_count() {
+    local dir="$1" n=0 d
+    [ -d "$dir" ] || { echo 0; return 0; }
+    for d in "$dir"/*; do
+        [ -d "$d" ] || continue
+        case "$(basename "$d")" in Default|update) continue ;; esac
+        n=$((n + 1))
+    done
+    echo "$n"
+}
+export -f vpnbot_instance_count
+
+backup_vpnbots() {
+    local bot_dir="$1"
+    local src="$bot_dir/vpnbot"
+    local d name count=0
+    mkdir -p "$VPNBOT_BACKUP" || return 1
+    [ -d "$src" ] || { echo "Backed up 0 vpnbot(s)"; return 0; }
+    for d in "$src"/*; do
+        [ -d "$d" ] || continue
+        name=$(basename "$d")
+        case "$name" in Default|update) continue ;; esac
+        rm -rf "$VPNBOT_BACKUP/$name"
+        cp -a "$d" "$VPNBOT_BACKUP/$name" || return 1
+        count=$((count + 1))
+    done
+    echo "Backed up $count vpnbot(s)"
+    return 0
+}
+export -f backup_vpnbots
+export VPNBOT_BACKUP
+
+restore_vpnbots() {
+    local bot_dir="$1"
+    local dest="$bot_dir/vpnbot"
+    local update_dir="$bot_dir/vpnbot/update"
+    local d name count=0
+    [ -d "$VPNBOT_BACKUP" ] || { echo "No vpnbot backup to restore"; return 0; }
+    mkdir -p "$dest" || return 1
+    shopt -s nullglob
+    for d in "$VPNBOT_BACKUP"/*; do
+        [ -d "$d" ] || continue
+        name=$(basename "$d")
+        case "$name" in Default|update) continue ;; esac
+        rm -rf "$dest/$name"
+        cp -a "$d" "$dest/$name" || { shopt -u nullglob; return 1; }
+        if [ -d "$update_dir" ]; then
+            find "$update_dir" -mindepth 1 -maxdepth 1 \
+                ! -name config.php ! -name product.json ! -name product_name.json ! -name data \
+                -exec cp -a {} "$dest/$name/" \;
+        fi
+        count=$((count + 1))
+    done
+    shopt -u nullglob
+    echo "Restored $count vpnbot(s)"
+    return 0
+}
+export -f restore_vpnbots
+
+set_vpnbot_webhooks() {
+    local config="$1"
+    [ -f "$config" ] || return 0
+    local dbhost dbname dbuser dbpass domain rows id user token secret hook_url fail=0
+    dbhost=$(grep '^\$dbhost' "$config" | cut -d"'" -f2)
+    dbname=$(grep '^\$dbname' "$config" | cut -d"'" -f2)
+    dbuser=$(grep '^\$usernamedb' "$config" | cut -d"'" -f2)
+    dbpass=$(grep '^\$passworddb' "$config" | cut -d"'" -f2)
+    domain=$(grep '^\$domainhosts' "$config" | cut -d"'" -f2 | cut -d'/' -f1)
+    [ -z "$dbhost" ] && dbhost="localhost"
+    [ -n "$dbname" ] && [ -n "$dbuser" ] && [ -n "$domain" ] || return 0
+    command -v mysql >/dev/null 2>&1 || return 0
+    rows=$(mysql -h "$dbhost" -u "$dbuser" -p"$dbpass" -N -B \
+        -e "SELECT id_user, username, bot_token, IFNULL(webhook_secret, '') FROM botsaz;" "$dbname" 2>/dev/null) \
+        || rows=$(mysql -h "$dbhost" -u "$dbuser" -p"$dbpass" -N -B \
+            -e "SELECT id_user, username, bot_token, '' FROM botsaz;" "$dbname" 2>/dev/null) \
+        || return 0
+    [ -n "$rows" ] || return 0
+    while IFS=$'\t' read -r id user token secret; do
+        [ -n "$id" ] && [ -n "$user" ] && [ -n "$token" ] || continue
+        if [ -z "$secret" ] || [ "$secret" = "NULL" ]; then
+            secret=$(openssl rand -hex 24)
+            mysql -h "$dbhost" -u "$dbuser" -p"$dbpass" \
+                -e "UPDATE botsaz SET webhook_secret = '$secret' WHERE bot_token = '$token';" "$dbname" >/dev/null 2>&1 \
+                || secret=""
+        fi
+        hook_url="https://${domain}/vpnbot/${id}${user}/index.php"
+        [ -n "$secret" ] && hook_url="${hook_url}?secret=${secret}"
+        curl -s --max-time 15 -o /dev/null \
+            -F "url=${hook_url}" \
+            "https://api.telegram.org/bot${token}/setWebhook" || fail=$((fail + 1))
+    done <<< "$rows"
+    [ "$fail" -eq 0 ]
+}
+export -f set_vpnbot_webhooks
+
 # Whole-server pre-flight before installing
 preflight() {
     local ok=1
@@ -1735,9 +1857,11 @@ function install_bot() {
             || { show_step_error; install_pause "Setting PHP ${PHP_VER} as default"; }
 
         echo 'phpmyadmin phpmyadmin/dbconfig-install boolean true' | sudo debconf-set-selections
-        echo 'phpmyadmin phpmyadmin/app-password-confirm password mirzahipass' | sudo debconf-set-selections
-        echo 'phpmyadmin phpmyadmin/mysql/admin-pass password mirzahipass' | sudo debconf-set-selections
-        echo 'phpmyadmin phpmyadmin/mysql/app-pass password mirzahipass' | sudo debconf-set-selections
+        local pma_pass
+        pma_pass=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9' | cut -c1-16)
+        echo "phpmyadmin phpmyadmin/app-password-confirm password ${pma_pass}" | sudo debconf-set-selections
+        echo "phpmyadmin phpmyadmin/mysql/admin-pass password ${pma_pass}" | sudo debconf-set-selections
+        echo "phpmyadmin phpmyadmin/mysql/app-pass password ${pma_pass}" | sudo debconf-set-selections
         echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | sudo debconf-set-selections
         run_step "Installing phpMyAdmin" \
             "DEBIAN_FRONTEND=noninteractive apt-get install -y phpmyadmin" \
@@ -1803,11 +1927,12 @@ function install_bot() {
             echo -e "\e[91mError: Extracted source folder not found (bad or empty download).\033[0m"
             install_pause "Locating extracted files"
         fi
-        rm -rf "$EXTRACTED_DIR/install"
-        mv "$EXTRACTED_DIR"/* "$BOT_DIR" || {
+        purge_installer_dir "$EXTRACTED_DIR"
+        move_extracted_files "$EXTRACTED_DIR" "$BOT_DIR" || {
             echo -e "\e[91mError: Failed to move extracted files.\033[0m"
             install_pause "Moving bot files"
         }
+        purge_installer_dir "$BOT_DIR"
         rm -rf "$TEMP_DIR"
         sudo chown -R www-data:www-data "$BOT_DIR"
         sudo chmod -R 755 "$BOT_DIR"
@@ -2100,11 +2225,6 @@ EOF
             }
         fi
         sleep 1
-        secrettoken="$(state_get SECRET)"
-        if [ -z "$secrettoken" ]; then
-            secrettoken=$(openssl rand -base64 10 | tr -dc 'a-zA-Z0-9' | cut -c1-8)
-            state_set SECRET "$secrettoken"
-        fi
         cat <<EOF > /var/www/html/mirzaprobotconfig/config.php
 <?php
 // This variable added for high load panels which their response time is long and bot can't communicate with online panel!
@@ -2114,12 +2234,9 @@ EOF
 \$dbname = '$dbname';
 \$usernamedb = '$dbuser';
 \$passworddb = '$dbpass';
-\$connect = mysqli_connect(\$dbhost, \$usernamedb, \$passworddb, \$dbname);
-if (\$connect->connect_error) { die("error" . \$connect->connect_error); }
-mysqli_set_charset(\$connect, "utf8mb4");
-\$options = [ PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES => false, ];
+\$options = [ PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES => false, PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci", ];
 \$dsn = "mysql:host=\$dbhost;dbname=\$dbname;charset=utf8mb4";
-try { \$pdo = new PDO(\$dsn, \$usernamedb, \$passworddb, \$options); } catch (\PDOException \$e) { error_log("Database connection failed: " . \$e->getMessage()); }
+try { \$pdo = new PDO(\$dsn, \$usernamedb, \$passworddb, \$options); } catch (\PDOException \$e) { error_log("Database connection failed: " . \$e->getMessage()); die("error: database connection failed"); }
 \$APIKEY = '${YOUR_BOT_TOKEN}';
 \$adminnumber = '${YOUR_CHAT_ID}';
 \$domainhosts = '${YOUR_DOMAIN}';
@@ -2127,9 +2244,9 @@ try { \$pdo = new PDO(\$dsn, \$usernamedb, \$passworddb, \$options); } catch (\P
 ?>
 EOF
         sudo chown www-data:www-data /var/www/html/mirzaprobotconfig/config.php 2>/dev/null
+        sudo chmod 640 /var/www/html/mirzaprobotconfig/config.php 2>/dev/null
         mark_phase CONFIG
     else
-        secrettoken="$(state_get SECRET)"
         echo -e "  ${C_OK}●${CR} ${C_DIM}config.php already written - skipping.${CR}"
     fi
     # ╰─────────────────────────────────────────────────────────────╯
@@ -2138,7 +2255,7 @@ EOF
     if ! phase_done WEBHOOK; then
         sleep 1
         run_step "Setting Telegram webhook" \
-            "curl -s -F \"url=https://${YOUR_DOMAIN}/index.php\" -F \"secret_token=${secrettoken}\" \"https://api.telegram.org/bot${YOUR_BOT_TOKEN}/setWebhook\"" \
+            "curl -s -F \"url=https://${YOUR_DOMAIN}/index.php\" \"https://api.telegram.org/bot${YOUR_BOT_TOKEN}/setWebhook\"" \
             || { show_step_error; install_pause "Setting Telegram webhook"; }
 
         MESSAGE="✅ The Mirza bot is installed! for start the bot send /start command."
@@ -2244,21 +2361,52 @@ function update_bot() {
     else
         echo -e "\e[93mWarning: config.php not found. Proceeding without backup.\033[0m"
     fi
+    LANG_OVERRIDE_BACKUP="/root/mirzapro_lang_override_backup"
+    rm -rf "$LANG_OVERRIDE_BACKUP"
+    [ -d "$BOT_DIR/lang/override" ] && cp -a "$BOT_DIR/lang/override" "$LANG_OVERRIDE_BACKUP"
+    run_step "Backing up vpnbots" "backup_vpnbots '$BOT_DIR'" \
+        || { show_step_error
+             echo -e "\e[91mError: Failed to backup vpnbots.\033[0m"
+             rm -rf "$TEMP_DIR"; sleep 2; show_menu; return 1; }
+    _vpnbot_live=$(vpnbot_instance_count "$BOT_DIR/vpnbot")
+    _vpnbot_bak=$(vpnbot_instance_count "$VPNBOT_BACKUP")
+    if [ "$_vpnbot_live" -gt 0 ] && [ "$_vpnbot_bak" -lt "$_vpnbot_live" ]; then
+        echo -e "\e[91mError: vpnbot backup incomplete ($_vpnbot_bak/$_vpnbot_live). Update aborted.\033[0m"
+        rm -rf "$TEMP_DIR"; sleep 2; show_menu; return 1
+    fi
     sudo rm -rf "$BOT_DIR" || {
         echo -e "\e[91mFailed to remove old bot files!\033[0m"
+        echo -e "\e[93mvpnbot backup: ${VPNBOT_BACKUP}\033[0m"
         exit 1
     }
     sudo mkdir -p "$BOT_DIR"
-    sudo rm -rf "$EXTRACTED_DIR/install" "$BOT_DIR/install"
-    sudo mv "$EXTRACTED_DIR"/* "$BOT_DIR/" || {
+    purge_installer_dir "$EXTRACTED_DIR"
+    purge_installer_dir "$BOT_DIR"
+    move_extracted_files "$EXTRACTED_DIR" "$BOT_DIR" || {
         echo -e "\e[91mFile transfer failed!\033[0m"
+        echo -e "\e[93mvpnbot backup: ${VPNBOT_BACKUP}\033[0m"
         exit 1
     }
+    purge_installer_dir "$BOT_DIR"
     if [ -f "$TEMP_CONFIG" ]; then
         sudo mv "$TEMP_CONFIG" "$CONFIG_PATH" || {
             echo -e "\e[91mConfig file restore failed!\033[0m"
+            echo -e "\e[93mvpnbot backup: ${VPNBOT_BACKUP}\033[0m"
             exit 1
         }
+    fi
+    if [ -d "$LANG_OVERRIDE_BACKUP" ]; then
+        sudo rm -rf "$BOT_DIR/lang/override"
+        sudo mv "$LANG_OVERRIDE_BACKUP" "$BOT_DIR/lang/override"
+    fi
+    run_step "Restoring vpnbots" "restore_vpnbots '$BOT_DIR'" \
+        || { show_step_error
+             echo -e "\e[91mError: Failed to restore vpnbots. Backup: ${VPNBOT_BACKUP}\033[0m"; }
+    _vpnbot_restored=$(vpnbot_instance_count "$BOT_DIR/vpnbot")
+    if [ "$_vpnbot_bak" -gt 0 ] && [ "$_vpnbot_restored" -lt "$_vpnbot_bak" ]; then
+        echo -e "\e[91mError: vpnbot restore incomplete ($_vpnbot_restored/$_vpnbot_bak). Backup kept at ${VPNBOT_BACKUP}\033[0m"
+    else
+        rm -rf "$VPNBOT_BACKUP"
     fi
     if [ -f "$BOT_DIR/install.sh" ]; then
         sed -i 's/\r$//' "$BOT_DIR/install.sh"
@@ -2345,6 +2493,8 @@ EOF
             run_step "Updating database tables" "curl -s 'https://$URL_PATH/table.php' > /dev/null" \
                 || echo -e "\e[91mSetup script execution failed! Check logs.\033[0m"
         fi
+        run_step "Setting vpnbot webhooks" "set_vpnbot_webhooks '$CONFIG_PATH'" \
+            || echo -e "\e[93mWarning: vpnbot webhook update failed.\033[0m"
     fi
     rm -rf "$TEMP_DIR"
     echo -e "\n\e[92mMirza Bot updated to latest version successfully!\033[0m"
@@ -2580,10 +2730,10 @@ function migrate_to_pro() {
         echo -e "\033[31mError: Extracted source folder not found. Aborting migration.\033[0m"
         rm -rf "$TEMP_DIR"; exit 1
     fi
-    rm -rf "$EXTRACTED_DIR/install"
-    mv "$EXTRACTED_DIR"/* "$NEW_BOT_DIR"
+    purge_installer_dir "$EXTRACTED_DIR"
+    move_extracted_files "$EXTRACTED_DIR" "$NEW_BOT_DIR"
+    purge_installer_dir "$NEW_BOT_DIR"
     rm -rf "$TEMP_DIR"
-    NEW_SECRET_TOKEN=$(openssl rand -base64 10 | tr -dc 'a-zA-Z0-9' | cut -c1-8)
     cat <<EOF > "$NEW_BOT_DIR/config.php"
 <?php
 // This variable added for high load panels which their response time is long and bot can't communicate with online panel!
@@ -2593,12 +2743,9 @@ function migrate_to_pro() {
 \$dbname = '$NEW_DB';
 \$usernamedb = '$NEW_DB_USER';
 \$passworddb = '$NEW_DB_PASS';
-\$connect = mysqli_connect(\$dbhost, \$usernamedb, \$passworddb, \$dbname);
-if (\$connect->connect_error) { die("error" . \$connect->connect_error); }
-mysqli_set_charset(\$connect, "utf8mb4");
-\$options = [ PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES => false, ];
+\$options = [ PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES => false, PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci", ];
 \$dsn = "mysql:host=\$dbhost;dbname=\$dbname;charset=utf8mb4";
-try { \$pdo = new PDO(\$dsn, \$usernamedb, \$passworddb, \$options); } catch (\PDOException \$e) { error_log("Database connection failed: " . \$e->getMessage()); }
+try { \$pdo = new PDO(\$dsn, \$usernamedb, \$passworddb, \$options); } catch (\PDOException \$e) { error_log("Database connection failed: " . \$e->getMessage()); die("error: database connection failed"); }
 \$APIKEY = '${OLD_API_KEY}';
 \$adminnumber = '${OLD_ADMIN_ID}';
 \$domainhosts = '${DOMAIN_NAME}';
@@ -2654,7 +2801,6 @@ EOF
     systemctl restart apache2
     echo -e "\033[33mUpdating Webhook and Tables...\033[0m"
     curl -F "url=https://${DOMAIN_NAME}/index.php" \
-         -F "secret_token=${NEW_SECRET_TOKEN}" \
          "https://api.telegram.org/bot${OLD_API_KEY}/setWebhook"
     sleep 2
     curl -k "https://${DOMAIN_NAME}/table.php" > /dev/null 2>&1

@@ -48,6 +48,11 @@ function mirza_install_group(string $group, array $items): array
 
 $action = (string) ($_POST['action'] ?? ($_GET['action'] ?? ''));
 
+$mirza_install_mutating_actions = ['auth', 'config_write', 'bootstrap', 'probe_begin', 'finish'];
+if (in_array($action, $mirza_install_mutating_actions, true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    mirza_install_json(['error' => 'POST required'], 405);
+}
+
 if ($action !== '') {
     if (mirza_install_locked() && $action !== 'state') {
         mirza_install_json(['error' => 'نصب قبلاً انجام شده است. برای اجرای مجدد فایل install/.installed را حذف کنید.'], 423);
@@ -68,12 +73,11 @@ if ($action !== '') {
     if ($action === 'auth') {
         $secret = trim((string) ($_POST['secret'] ?? ''));
         $values = mirza_install_config_values();
-        $matches = ($secret !== '' && hash_equals($values['APIKEY'], $secret))
-            || ($secret !== '' && hash_equals($values['adminnumber'], $secret));
+        $matches = $secret !== '' && hash_equals($values['APIKEY'], $secret);
 
         if (!$matches) {
             usleep(700000);
-            mirza_install_json(['ok' => false, 'error' => 'توکن ربات یا آیدی عددی مدیر نادرست است.'], 403);
+            mirza_install_json(['ok' => false, 'error' => 'توکن ربات نادرست است.'], 403);
         }
 
         $_SESSION['mirza_install_authorized'] = true;
@@ -305,8 +309,13 @@ if ($action !== '') {
 
         $values = mirza_install_config_values();
         $webhookUrl = 'https://' . $values['domainhosts'] . '/index.php';
+        $webhookSecret = mirza_install_webhook_secret($values);
+        $webhookTarget = $webhookSecret === ''
+            ? $webhookUrl
+            : $webhookUrl . '?secret=' . rawurlencode($webhookSecret);
         $reactivateUrl = 'https://' . $values['domainhosts'] . '/table.php';
 
+        @file_put_contents(mirza_install_lock_file(), (string) time());
         $deleted = mirza_install_delete_tree(__DIR__);
 
         if (!$deleted) {
@@ -328,7 +337,7 @@ if ($action !== '') {
         $steps = [['status' => 'ok', 'label' => 'حذف پوشه install', 'detail' => 'نصب‌کننده از روی هاست پاک شد و مسدودسازی ربات برداشته شد']];
 
         $webhook = mirza_install_telegram($values['APIKEY'], 'setWebhook', [
-            'url' => $webhookUrl,
+            'url' => $webhookTarget,
             'max_connections' => 40,
         ]);
         if (!$webhook['ok']) {

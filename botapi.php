@@ -14,7 +14,146 @@ function isTelegramChatIdEmpty($chat_id): bool
     }
     return is_numeric($chat_id) && (int) $chat_id === 0;
 }
-function telegram($method, $datas = [], $token = null)
+function walkKeyboardButtons($replyMarkup, callable $handler)
+{
+    if (!is_string($replyMarkup) || stripos($replyMarkup, '<tg-emoji') === false) {
+        return $replyMarkup;
+    }
+    $markup = json_decode($replyMarkup, true);
+    if (!is_array($markup)) {
+        return $replyMarkup;
+    }
+    $changed = false;
+    foreach (['keyboard', 'inline_keyboard'] as $markupKey) {
+        if (!isset($markup[$markupKey]) || !is_array($markup[$markupKey])) {
+            continue;
+        }
+        foreach ($markup[$markupKey] as $rowKey => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            foreach ($row as $btnKey => $button) {
+                if (!is_array($button) || !isset($button['text']) || !is_string($button['text'])) {
+                    continue;
+                }
+                $updated = $handler($button);
+                if ($updated !== $button) {
+                    $markup[$markupKey][$rowKey][$btnKey] = $updated;
+                    $changed = true;
+                }
+            }
+        }
+    }
+    if (!$changed) {
+        return $replyMarkup;
+    }
+    $encoded = json_encode($markup, JSON_UNESCAPED_UNICODE);
+    return $encoded === false ? $replyMarkup : $encoded;
+}
+function applyCustomEmojiToMarkup($replyMarkup)
+{
+    return walkKeyboardButtons($replyMarkup, function ($button) {
+        $label = splitCustomEmojiLabel($button['text']);
+        $button['text'] = $label['text'];
+        if ($label['icon'] !== '' && !isset($button['icon_custom_emoji_id'])) {
+            $button['icon_custom_emoji_id'] = $label['icon'];
+        }
+        return $button;
+    });
+}
+function stripCustomEmojiFromMarkup($replyMarkup)
+{
+    return walkKeyboardButtons($replyMarkup, function ($button) {
+        $button['text'] = stripCustomEmojiTags($button['text']);
+        unset($button['icon_custom_emoji_id']);
+        return $button;
+    });
+}
+function payloadHasCustomEmoji(array $datas)
+{
+    foreach (['text', 'caption', 'reply_markup'] as $key) {
+        if (isset($datas[$key]) && is_string($datas[$key]) && stripos($datas[$key], '<tg-emoji') !== false) {
+            return true;
+        }
+    }
+    return false;
+}
+function applyCustomEmojiPayload(array $datas)
+{
+    if (!payloadRendersHtml($datas)) {
+        foreach (['text', 'caption'] as $key) {
+            if (isset($datas[$key]) && is_string($datas[$key])) {
+                $datas[$key] = stripCustomEmojiTags($datas[$key]);
+            }
+        }
+    }
+    if (isset($datas['reply_markup'])) {
+        $datas['reply_markup'] = applyCustomEmojiToMarkup($datas['reply_markup']);
+    }
+    return $datas;
+}
+function stripCustomEmojiPayload(array $datas)
+{
+    foreach (['text', 'caption'] as $key) {
+        if (isset($datas[$key]) && is_string($datas[$key])) {
+            $datas[$key] = stripCustomEmojiTags($datas[$key]);
+        }
+    }
+    if (isset($datas['reply_markup'])) {
+        $datas['reply_markup'] = stripCustomEmojiFromMarkup($datas['reply_markup']);
+    }
+    return $datas;
+}
+function payloadRendersHtml(array $datas)
+{
+    $parseMode = $datas['parse_mode'] ?? '';
+    return is_string($parseMode) && strtolower($parseMode) === 'html';
+}
+function customEmojiBlocked($token = null, $block = false)
+{
+    global $APIKEY;
+
+    static $state = [];
+    $key = md5((string) ($token === null ? $APIKEY : $token));
+    $cacheDir = __DIR__ . '/storage/cache';
+    $cacheFile = null;
+    if (is_dir($cacheDir) || @mkdir($cacheDir, 0775, true) || is_dir($cacheDir)) {
+        $cacheFile = $cacheDir . '/custom_emoji.json';
+    }
+    if ($block) {
+        $state[$key] = true;
+        if ($cacheFile !== null) {
+            $stored = is_file($cacheFile) ? json_decode((string) file_get_contents($cacheFile), true) : [];
+            if (!is_array($stored)) {
+                $stored = [];
+            }
+            $now = time();
+            foreach ($stored as $storedKey => $expiresAt) {
+                if (!is_numeric($expiresAt) || $expiresAt <= $now) {
+                    unset($stored[$storedKey]);
+                }
+            }
+            $stored[$key] = $now + 21600;
+            $encoded = json_encode($stored);
+            if ($encoded !== false) {
+                @file_put_contents($cacheFile, $encoded, LOCK_EX);
+            }
+        }
+        return true;
+    }
+    if (array_key_exists($key, $state)) {
+        return $state[$key];
+    }
+    $state[$key] = false;
+    if ($cacheFile !== null && is_file($cacheFile)) {
+        $stored = json_decode((string) file_get_contents($cacheFile), true);
+        if (is_array($stored) && isset($stored[$key]) && is_numeric($stored[$key]) && $stored[$key] > time()) {
+            $state[$key] = true;
+        }
+    }
+    return $state[$key];
+}
+function telegram($method, $datas = [], $token = null, $allowEmojiFallback = true)
 {
     global $APIKEY;
 
@@ -33,6 +172,14 @@ function telegram($method, $datas = [], $token = null)
 
     if (isset($datas['message_thread_id']) && intval($datas['message_thread_id']) <= 0) {
         unset($datas['message_thread_id']);
+    }
+
+    $premiumEmojiPayload = null;
+    if (function_exists('splitCustomEmojiLabel') && payloadHasCustomEmoji($datas)) {
+        $premiumEmojiPayload = $datas;
+        $datas = customEmojiBlocked($token)
+            ? stripCustomEmojiPayload($datas)
+            : applyCustomEmojiPayload($datas);
     }
 
     $ch = curl_init($url);
@@ -87,6 +234,15 @@ function telegram($method, $datas = [], $token = null)
                 || str_contains($description, 'message to delete not found')
                 || str_contains($description, 'chat not found')
             ));
+        if ($allowEmojiFallback && $errorCode === 400 && !$silent && is_array($premiumEmojiPayload)) {
+            $retry = telegram($method, stripCustomEmojiPayload($premiumEmojiPayload), $token, false);
+            $emojiRejected = stripos($description, 'emoji') !== false
+                || stripos($description, 'entit') !== false;
+            if ($emojiRejected && (!isset($retry['ok']) || $retry['ok'])) {
+                customEmojiBlocked($token, true);
+            }
+            return $retry;
+        }
         if (!$silent) {
             error_log(json_encode($decodedResponse));
         }
@@ -267,6 +423,51 @@ $is_bot = $update['message']['from']['is_bot'] ?? false;
 $chat_member = $update['chat_member'] ?? null;
 $Chat_type = $update["message"]["chat"]["type"] ?? $update['callback_query']['message']['chat']['type'] ?? '';
 $text = $update["message"]["text"]  ?? '';
+$entities = $update['message']['entities'] ?? null;
+if ($text !== '' && is_array($entities)) {
+    $customEmojis = [];
+    foreach ($entities as $entity) {
+        if (($entity['type'] ?? null) === 'custom_emoji' && isset($entity['custom_emoji_id'])) {
+            $customEmojis[] = $entity;
+        }
+    }
+
+    if ($customEmojis) {
+        usort($customEmojis, fn($a, $b) => $a['offset'] <=> $b['offset']);
+
+        $utf16 = mb_convert_encoding($text, 'UTF-16LE', 'UTF-8');
+        $utf16Length = strlen($utf16);
+        $tagOpen = mb_convert_encoding('<tg-emoji emoji-id="', 'UTF-16LE', 'UTF-8');
+        $tagOpenEnd = mb_convert_encoding('">', 'UTF-16LE', 'UTF-8');
+        $tagClose = mb_convert_encoding('</tg-emoji>', 'UTF-16LE', 'UTF-8');
+
+        $result = '';
+        $cursor = 0;
+        foreach ($customEmojis as $entity) {
+            $start = ((int) $entity['offset']) * 2;
+            $length = ((int) $entity['length']) * 2;
+            if ($start < $cursor || $length <= 0 || $start + $length > $utf16Length) {
+                continue;
+            }
+
+            $emojiId = mb_convert_encoding(
+                htmlspecialchars((string) $entity['custom_emoji_id'], ENT_QUOTES, 'UTF-8'),
+                'UTF-16LE',
+                'UTF-8'
+            );
+
+            $result .= substr($utf16, $cursor, $start - $cursor)
+                . $tagOpen . $emojiId . $tagOpenEnd
+                . substr($utf16, $start, $length)
+                . $tagClose;
+            $cursor = $start + $length;
+        }
+
+        if ($cursor > 0) {
+            $text = mb_convert_encoding($result . substr($utf16, $cursor), 'UTF-8', 'UTF-16LE');
+        }
+    }
+}
 if(isset($update['pre_checkout_query'])){
     $Chat_type = "private";
     $from_id = $update['pre_checkout_query']['from']['id'];

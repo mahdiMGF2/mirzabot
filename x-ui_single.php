@@ -96,8 +96,6 @@ function ResetUserDataUsagex_uisin($usernamepanel, $panel)
 }
 function removeClient($panel, $username)
 {
-    $data_user = get_clinets($username, $panel);
-    $data_user = json_decode($data_user['body'], true)['obj'];
     $url = $panel['url_panel'] . "/panel/api/clients/del/" . $username;
     $headers = array(
         'Accept: application/json',
