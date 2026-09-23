@@ -2683,7 +2683,7 @@ elseif ($datain == "systemsms") {
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['varizaWebhookSecret'] && $adminrulecheck['rule'] == "administrator") {
     $PaySetting = select("PaySetting", "ValuePay", "NamePay", "variza_webhook_secret")['ValuePay'];
-    $msg = sprintf($textbotlang['Admin']['gateway']['askVarizaWebhookSecret'], $PaySetting);
+    $msg = sprintf($textbotlang['Admin']['gateway']['askVarizaWebhookSecret'], $PaySetting, 'https://' . $domainhosts . '/payment/variza_webhook.php');
     sendmessage($from_id, $msg, $backadmin, 'HTML');
     step('variza_webhook_secret', $from_id);
 } elseif ($user['step'] == "variza_webhook_secret") {

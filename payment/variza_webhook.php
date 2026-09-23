@@ -21,6 +21,8 @@ require_once __DIR__ . '/../keyboard.php';
 require_once __DIR__ . '/../jdf.php';
 require __DIR__ . '/../vendor/autoload.php';
 
+$ManagePanel = new ManagePanel();
+
 $textbotlang = languagechange();
 
 function variza_webhook_respond(int $code, string $msg): never

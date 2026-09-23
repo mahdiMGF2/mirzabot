@@ -1828,7 +1828,10 @@ Your current merchant code: %s',
 Current key: <code>%s</code>',
                         'askVarizaWebhookSecret' => '🔐 Enter your Variza webhook secret from Variza panel (Profile → Webhook)
 
-Current key: <code>%s</code>',
+Current key: <code>%s</code>
+
+🔗 Webhook URL to register in your Variza profile:
+<code>%s</code>',
                         'askMerchant' => '💳 Obtain your merchant code and enter it in this section
         
 Your current merchant code: %s',

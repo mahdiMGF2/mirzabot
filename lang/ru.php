@@ -1825,7 +1825,10 @@ nowpayments.io
 Текущий ключ: <code>%s</code>',
                         'askVarizaWebhookSecret' => '🔐 Введите секретный ключ вебхука Variza из панели Variza (Профиль → Вебхук)
 
-Текущий ключ: <code>%s</code>',
+Текущий ключ: <code>%s</code>
+
+🔗 URL вебхука для регистрации в профиле Variza:
+<code>%s</code>',
                         'askZarinpalMerchant' => '💳 Получите ваш код продавца от ZarinPal и введите его в этом разделе
         
 Ваш текущий код продавца: %s',
