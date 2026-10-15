@@ -66,6 +66,7 @@ $backmenu_register(["apiiranpay4", "endpointiranpay4", "getcashiranpay4", "getda
 $backmenu_register(["getmaindigitaltron", "getmaxdigitaltron", "helpofflinearze"], $tronnowpayments);
 $backmenu_register(["chashbackstar", "gethelpstar", "getmainaqstar", "maxbalancestar"], $Startelegram);
 $backmenu_register(["variza_api_token", "variza_webhook_secret", "getcashvariza", "getmainvariza", "getmaaxvariza", "helpvariza"], $keyboardvariza);
+$backmenu_register(["rentopay_api_key", "rentopay_secret_key", "rentopay_fee_split", "getcashrentopay", "getmainrentopay", "getmaaxrentopay", "helprentopay"], $keyboardrentopay);
 $backmenu_register([
     "addchannelid", "limit_usertest_allusers", "getimagebackgroundqr", "getpricereqagent",
     "getcronvolumere", "on_hold_day", "getdaycron", "getvolumewarn", "getdaywarn", "getlowbalancealert"
@@ -2484,6 +2485,42 @@ elseif ($datain == "systemsms") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $keyboardvariza, 'HTML');
     update("PaySetting", "ValuePay", trim($text), "NamePay", "variza_webhook_secret");
     step('home', $from_id);
+} elseif ($text == $textbotlang['keyboard']['rentopayApiKey'] && $adminrulecheck['rule'] == "administrator") {
+    $PaySetting = select("PaySetting", "ValuePay", "NamePay", "rentopay_api_key")['ValuePay'];
+    $msg = sprintf($textbotlang['Admin']['gateway']['askRentopayApiKey'], $PaySetting);
+    sendmessage($from_id, $msg, $backadmin, 'HTML');
+    step('rentopay_api_key', $from_id);
+} elseif ($user['step'] == "rentopay_api_key") {
+    sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $keyboardrentopay, 'HTML');
+    update("PaySetting", "ValuePay", trim($text), "NamePay", "rentopay_api_key");
+    step('home', $from_id);
+} elseif ($text == $textbotlang['keyboard']['rentopaySecretKey'] && $adminrulecheck['rule'] == "administrator") {
+    $PaySetting = select("PaySetting", "ValuePay", "NamePay", "rentopay_secret_key")['ValuePay'];
+    $msg = sprintf($textbotlang['Admin']['gateway']['askRentopaySecretKey'], $PaySetting, 'https://' . $domainhosts . '/payment/rentopay_webhook.php');
+    sendmessage($from_id, $msg, $backadmin, 'HTML');
+    step('rentopay_secret_key', $from_id);
+} elseif ($user['step'] == "rentopay_secret_key") {
+    sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $keyboardrentopay, 'HTML');
+    update("PaySetting", "ValuePay", trim($text), "NamePay", "rentopay_secret_key");
+    step('home', $from_id);
+} elseif ($text == $textbotlang['keyboard']['rentopayFeeSplit'] && $adminrulecheck['rule'] == "administrator") {
+    $currentSplit = select("PaySetting", "ValuePay", "NamePay", "rentopay_payer_split_percent")['ValuePay'] ?? 'default';
+    $msg = sprintf($textbotlang['Admin']['gateway']['askRentopayFeeSplit'], $currentSplit);
+    sendmessage($from_id, $msg, $backadmin, 'HTML');
+    step('rentopay_fee_split', $from_id);
+} elseif ($user['step'] == "rentopay_fee_split") {
+    $val = strtolower(trim($text));
+    if ($val === 'default') {
+        update("PaySetting", "ValuePay", "default", "NamePay", "rentopay_payer_split_percent");
+        sendmessage($from_id, $textbotlang['Admin']['gateway']['saveRentopayFeeSplit'], $keyboardrentopay, 'HTML');
+        step('home', $from_id);
+    } elseif (is_numeric($val) && floatval($val) >= 0 && floatval($val) <= 100) {
+        update("PaySetting", "ValuePay", (string) floatval($val), "NamePay", "rentopay_payer_split_percent");
+        sendmessage($from_id, $textbotlang['Admin']['gateway']['saveRentopayFeeSplit'], $keyboardrentopay, 'HTML');
+        step('home', $from_id);
+    } else {
+        sendmessage($from_id, $textbotlang['Admin']['gateway']['errorRentopayFeeSplit'], $backadmin, 'HTML');
+    }
 } elseif ($text == $textbotlang['Admin']['btnKeyboard']['managementPanel'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['managepanel']['getLoc'], $json_list_marzban_panel, 'HTML');
     step('GetLocationEdit', $from_id);
@@ -5880,6 +5917,17 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $keyboardvariza, 'HTML');
     step("home", $from_id);
     update("PaySetting", "ValuePay", $text, "NamePay", "chashbackvariza");
+} elseif ($text == $textbotlang['keyboard']['cashbackRentopay']) {
+    sendmessage($from_id, $textbotlang['Admin']['price']['askPaymentCashback'], $backadmin, 'HTML');
+    step("getcashrentopay", $from_id);
+} elseif ($user['step'] == "getcashrentopay") {
+    if (!ctype_digit($text)) {
+        sendmessage($from_id, $textbotlang['common']['invalidInput'], $backadmin, 'HTML');
+        return;
+    }
+    sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $keyboardrentopay, 'HTML');
+    step("home", $from_id);
+    update("PaySetting", "ValuePay", $text, "NamePay", "chashbackrentopay");
 } elseif ($text == $textbotlang['keyboard']['addConfig']) {
     $product = [];
     $stmt = $pdo->prepare("SELECT * FROM product WHERE Location = :text or Location = '/all' ");
@@ -6432,6 +6480,28 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $keyboardvariza, 'HTML');
     step("home", $from_id);
     update("PaySetting", "ValuePay", $text, "NamePay", "maxbalancevariza");
+} elseif ($text == $textbotlang['keyboard']['minAmountRentopay']) {
+    sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
+    step("getmainrentopay", $from_id);
+} elseif ($user['step'] == "getmainrentopay") {
+    if (!ctype_digit($text)) {
+        sendmessage($from_id, $textbotlang['common']['invalidInput'], $backadmin, 'HTML');
+        return;
+    }
+    sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $keyboardrentopay, 'HTML');
+    step("home", $from_id);
+    update("PaySetting", "ValuePay", $text, "NamePay", "minbalancerentopay");
+} elseif ($text == $textbotlang['keyboard']['maxAmountRentopay']) {
+    sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
+    step("getmaaxrentopay", $from_id);
+} elseif ($user['step'] == "getmaaxrentopay") {
+    if (!ctype_digit($text)) {
+        sendmessage($from_id, $textbotlang['common']['invalidInput'], $backadmin, 'HTML');
+        return;
+    }
+    sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $keyboardrentopay, 'HTML');
+    step("home", $from_id);
+    update("PaySetting", "ValuePay", $text, "NamePay", "maxbalancerentopay");
 } elseif ($datain == "walletaddress") {
     $PaySetting = select("PaySetting", "ValuePay", "NamePay", "walletaddress", "select");
     $texttronseller = sprintf($textbotlang['Admin']['gateway']['askTronWallet'], $PaySetting['ValuePay']);
@@ -6939,7 +7009,41 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         return;
     }
     step('home', $from_id);
-    sendmessage($from_id, $textbotlang['Admin']['Help']['tutorialSaved'], $CartManage, 'HTML');
+    sendmessage($from_id, $textbotlang['Admin']['Help']['tutorialSaved'], $keyboardvariza, 'HTML');
+} elseif ($text == $textbotlang['keyboard']['setEducationRentopay'] && $adminrulecheck['rule'] == "administrator") {
+    sendmessage($from_id, $textbotlang['Admin']['Help']['askTutorialMedia'], $backadmin, 'HTML');
+    step("helprentopay", $from_id);
+} elseif ($user['step'] == "helprentopay") {
+    if ($text) {
+        if (intval($text) == 2) {
+            update("PaySetting", "ValuePay", "0", "NamePay", "helprentopay");
+        } else {
+            $data = json_encode(array(
+                'type' => "text",
+                'text' => $text
+            ));
+            update("PaySetting", "ValuePay", $data, "NamePay", "helprentopay");
+        }
+    } elseif ($photo) {
+        $data = json_encode(array(
+            'type' => "photo",
+            'text' => $caption,
+            'photoid' => $photoid
+        ));
+        update("PaySetting", "ValuePay", $data, "NamePay", "helprentopay");
+    } elseif ($video) {
+        $data = json_encode(array(
+            'type' => "video",
+            'text' => $caption,
+            'videoid' => $videoid
+        ));
+        update("PaySetting", "ValuePay", $data, "NamePay", "helprentopay");
+    } else {
+        sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
+        return;
+    }
+    step('home', $from_id);
+    sendmessage($from_id, $textbotlang['Admin']['Help']['tutorialSaved'], $keyboardrentopay, 'HTML');
 } elseif ($text == $textbotlang['keyboard']['setEducationCryptoOffline'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['Help']['askTutorialMedia'], $backadmin, 'HTML');
     step("helpofflinearze", $from_id);

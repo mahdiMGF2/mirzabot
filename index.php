@@ -4647,7 +4647,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     update("user", "Processing_value", $balancelast, "id", $from_id);
     sendmessage($from_id, $textbotlang['users']['Balance']['selectPayment'], $step_payment, 'HTML');
     step('get_step_payment', $from_id);
-} elseif ($user['step'] == "get_step_payment" && in_array($datain, ["cart_to_offline", "aqayepardakht", "zarinpal", "variza", "plisio", "nowpayment", "iranpay1", "iranpay2", "iranpay4", "iranpay3", "digitaltron", "startelegrams"])) {
+} elseif ($user['step'] == "get_step_payment" && in_array($datain, ["cart_to_offline", "aqayepardakht", "zarinpal", "variza", "rentopay", "plisio", "nowpayment", "iranpay1", "iranpay2", "iranpay4", "iranpay3", "digitaltron", "startelegrams"])) {
     if ($datain == "cart_to_offline") {
         $mainbalance = select("PaySetting", "ValuePay", "NamePay", "minbalancecart", "select")['ValuePay'];
         $maxbalance = select("PaySetting", "ValuePay", "NamePay", "maxbalancecart", "select")['ValuePay'];
@@ -4901,6 +4901,70 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         $price_format = number_format($user['Processing_value'], 0);
         $textnowpayments = sprintf($textbotlang['users']['Balance']['invoiceCreated2'], $randomString, $price_format);
         $gethelp = select("PaySetting", "ValuePay", "NamePay", "helpvariza", "select")['ValuePay'];
+        if ($gethelp != 2) {
+            $data = json_decode($gethelp, true);
+            if ($data['type'] == "text") {
+                sendmessage($from_id, $data['text'], null, 'HTML');
+            } elseif ($data['type'] == "photo") {
+                sendphoto($from_id, $data['photoid'], null);
+            } elseif ($data['type'] == "video") {
+                sendvideo($from_id, $data['videoid'], null);
+            }
+        }
+        $message_id = sendmessage($from_id, $textnowpayments, $paymentkeyboard, 'HTML');
+        updatePaymentMessageId($message_id, $randomString);
+    } elseif ($datain == "rentopay") {
+        if ($user['Processing_value'] < 10000) {
+            sendmessage($from_id, $textbotlang['users']['Balance']['rentopay'], null, 'HTML');
+            return;
+        }
+        if ($user['Processing_value'] % 1000 !== 0) {
+            sendmessage($from_id, $textbotlang['users']['Balance']['rentopayMultiple'], null, 'HTML');
+            return;
+        }
+        $mainbalance = select("PaySetting", "ValuePay", "NamePay", "minbalancerentopay", "select")['ValuePay'];
+        $maxbalance = select("PaySetting", "ValuePay", "NamePay", "maxbalancerentopay", "select")['ValuePay'];
+        if ($user['Processing_value'] < $mainbalance || $user['Processing_value'] > $maxbalance) {
+            $mainbalance = number_format($mainbalance);
+            $maxbalance = number_format($maxbalance);
+            sendmessage($from_id, strtr($textbotlang['users']['Balance']['depositRange'], ['{mainbalance}' => $mainbalance, '{maxbalance}' => $maxbalance]), null, 'HTML');
+            return;
+        }
+        deletemessage($from_id, $message_id);
+        sendmessage($from_id, $textbotlang['users']['Balance']['linkpayments'], $keyboard, 'HTML');
+        $randomString = bin2hex(random_bytes(5));
+        $pay = createPayRentopay($user['Processing_value'], $randomString);
+        if (!isset($pay['payment_url']) || empty($pay['payment_url'])) {
+            $text_error = isset($pay['error']) ? $pay['error'] : json_encode($pay);
+            sendmessage($from_id, $textbotlang['users']['Balance']['errorLinkPayment'], $keyboard, 'HTML');
+            step('home', $from_id);
+            $ErrorsLinkPayment = sprintf($textbotlang['Admin']['reportgroup']['errorZarinpalLink'] ?? 'RentoPay link error: %s user %s', $text_error, $from_id);
+            if (strlen($setting['Channel_Report']) > 0) {
+                telegram('sendmessage', [
+                    'chat_id' => $setting['Channel_Report'],
+                    'message_thread_id' => $errorreport,
+                    'text' => $ErrorsLinkPayment,
+                    'parse_mode' => "HTML"
+                ]);
+            }
+            return;
+        }
+        $invoice = "{$user['Processing_value_tow']}|{$user['Processing_value_one']}";
+        $dateacc = date('Y/m/d H:i:s');
+        $stmt = $pdo->prepare("INSERT INTO Payment_report (id_user,id_order,time,price,payment_Status,Payment_Method,id_invoice,dec_not_confirmed) VALUES (?,?,?,?,?,?,?,?)");
+        $payment_Status = "Unpaid";
+        $Payment_Method = "rentopay";
+        $stmt->execute([$from_id, $randomString, $dateacc, $user['Processing_value'], $payment_Status, $Payment_Method, $invoice, $pay['token'] ?? $randomString]);
+        $paymentkeyboard = json_encode([
+            'inline_keyboard' => [
+                [
+                    ['text' => $textbotlang['users']['Balance']['payments'], 'url' => $pay['payment_url']],
+                ]
+            ]
+        ]);
+        $price_format = number_format($user['Processing_value'], 0);
+        $textnowpayments = sprintf($textbotlang['users']['Balance']['invoiceCreated2'], $randomString, $price_format);
+        $gethelp = select("PaySetting", "ValuePay", "NamePay", "helprentopay", "select")['ValuePay'];
         if ($gethelp != 2) {
             $data = json_decode($gethelp, true);
             if ($data['type'] == "text") {

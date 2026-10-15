@@ -247,6 +247,10 @@ To enable it, the bot owner needs a Telegram Premium subscription, or the bot mu
     The minimum amount for payment via this gateway is 5000 Toman.',
                         'variza' => '❌ Error 
     The minimum amount for payment via this gateway is 5000 Toman.',
+                        'rentopay' => '❌ Error 
+    The minimum amount for payment via this gateway is 10000 Toman.',
+                        'rentopayMultiple' => '❌ Error 
+    The payment amount in RentoPay must be a multiple of 1,000 Tomans (10,000 Rials).',
                         'cardEnabledNotice' => '💳 Dear user, the card number has been activated for you; you can now make your purchase.',
                         'cardInstructionAlt' => 'To pay, deposit the amount to the card number below',
                         'giftDepositAlt' => '🎁 Dear user, the amount of %s Toman has been deposited into your account as a gift.',
@@ -1832,6 +1836,26 @@ Current key: <code>%s</code>
 
 🔗 Webhook URL to register in your Variza profile:
 <code>%s</code>',
+                        'askRentopayApiKey' => '💳 Enter your RentoPay API key (X-API-KEY):
+
+Current key: <code>%s</code>',
+                        'askRentopaySecretKey' => '🔐 Enter your RentoPay Webhook Secret Key:
+
+Current key: <code>%s</code>
+
+🔗 Webhook URL to register in RentoPay panel:
+<code>%s</code>',
+                        'askRentopayFeeSplit' => '⚙️ Configure buyer fee share for RentoPay:
+
+Current buyer share: <b>%s</b>
+
+Enter a number between 0 and 100:
+• <code>0</code>: 100%% merchant paid
+• <code>50</code>: shared equally (50/50)
+• <code>100</code>: 100%% buyer paid
+• Or send <code>default</code> to use default settings from the RentoPay dashboard.',
+                        'saveRentopayFeeSplit' => '✅ RentoPay fee share setting saved successfully.',
+                        'errorRentopayFeeSplit' => '❌ Error: Please enter a number between 0 and 100 or the word default.',
                         'askMerchant' => '💳 Obtain your merchant code and enter it in this section
         
 Your current merchant code: %s',
@@ -3724,6 +3748,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'wheelLuck' => '🎲 Wheel of fortune',
                 'zarinPal' => '🟡 ZarinPal',
                 'variza' => '💳 Variza (auto card-to-card)',
+                'rentopay' => '💳 RentoPay (Card to Card)',
         ],
         'keyboard' => [
                 'acceptRules' => '✅ I accept the rules',
@@ -4177,6 +4202,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'yesterday' => '☀️ Yesterday',
                 'zarinPalGateway' => 'ZarinPal',
                 'varizaGateway' => 'Variza',
+                'rentopayGateway' => 'RentoPay',
                 'zarinPalMerchant' => 'ZarinPal merchant',
                 'varizaApiToken' => 'Variza API token',
                 'varizaWebhookSecret' => 'Variza webhook secret',
@@ -4184,6 +4210,13 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'minAmountVariza' => 'Variza min amount',
                 'maxAmountVariza' => 'Variza max amount',
                 'setEducationVariza' => 'Variza tutorial',
+                'rentopayApiKey' => 'RentoPay API key',
+                'rentopaySecretKey' => 'RentoPay Secret Key',
+                'rentopayFeeSplit' => 'RentoPay fee share',
+                'cashbackRentopay' => 'RentoPay cashback',
+                'minAmountRentopay' => 'RentoPay minimum',
+                'maxAmountRentopay' => 'RentoPay maximum',
+                'setEducationRentopay' => 'RentoPay guide',
                 'zeroBalance' => '0️⃣ Reset balance to zero',
                 'panelSetting' => '🎛 Panel Settings',
                 'mirzaAgentPanel' => 'Mirza Agent',
@@ -4407,6 +4440,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'paymentMethodRialGateway3' => 'Rial gateway 3',
                 'paymentMethodTelegramStar' => 'Telegram Stars',
                 'paymentMethodVariza' => 'Variza',
+                'paymentMethodRentopay' => 'RentoPay',
                 'paymentMethodZarinpal' => 'ZarinPal',
                 'paymentSearchBtn' => 'Total count',
                 'paymentSearchTransactionPlaceholder' => 'User ID or transaction number...',
@@ -4802,6 +4836,14 @@ Payment method : First Rial currency',
 - 🧾 Order ID : %s
 - 🔗 Variza payment slug : %s
 - 💳 Payment method : Variza',
+                'reportRentopay' => '💵 New payment
+- 👤 User username : @%s
+- 🆔 User numeric ID : %s
+- 💸 Transaction amount : %s Toman
+- 🧾 Order ID : %s
+- 🔗 RentoPay Token : %s
+- 💳 Payment method : RentoPay (Card to Card)',
+                'defaultRejectionReason' => 'Payment receipt was rejected by gateway administration.',
                 'invoiceTitle' => 'Payment invoice',
                 'invoiceTransactionNo' => 'Transaction number:',
                 'invoiceAmount' => 'Paid amount:',

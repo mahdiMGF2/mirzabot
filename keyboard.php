@@ -228,6 +228,15 @@ $keyboardvariza = json_encode([
         [['text' => $textbotlang['keyboard']['backToGateways'], 'callback_data' => "paygwlist"]],
     ]
 ]);
+$keyboardrentopay = json_encode([
+    'inline_keyboard' => [
+        [['text' => $textbotlang['keyboard']['rentopayApiKey'], 'callback_data' => "paygwopt-rentopayApiKey"], ['text' => $textbotlang['keyboard']['rentopaySecretKey'], 'callback_data' => "paygwopt-rentopaySecretKey"]],
+        [['text' => $textbotlang['keyboard']['cashbackRentopay'], 'callback_data' => "paygwopt-cashbackRentopay"], ['text' => $textbotlang['keyboard']['rentopayFeeSplit'], 'callback_data' => "paygwopt-rentopayFeeSplit"]],
+        [['text' => $textbotlang['keyboard']['minAmountRentopay'], 'callback_data' => "paygwopt-minAmountRentopay"], ['text' => $textbotlang['keyboard']['maxAmountRentopay'], 'callback_data' => "paygwopt-maxAmountRentopay"]],
+        [['text' => $textbotlang['keyboard']['setEducationRentopay'], 'callback_data' => "paygwopt-setEducationRentopay"]],
+        [['text' => $textbotlang['keyboard']['backToGateways'], 'callback_data' => "paygwlist"]],
+    ]
+]);
 $aqayepardakht = json_encode([
     'inline_keyboard' => [
         [['text' => $textbotlang['keyboard']['setAqayePardakhtMerchant'], 'callback_data' => "paygwopt-setAqayePardakhtMerchant"], ['text' => $textbotlang['keyboard']['cashbackAqayePardakht'], 'callback_data' => "paygwopt-cashbackAqayePardakht"]],
@@ -355,6 +364,16 @@ if (
 ) {
     $step_payment['inline_keyboard'][] = [
         ['text' => $textbotlang['textbot']['variza'], 'callback_data' => "variza"]
+    ];
+}
+$rentopay = getPaySettingValue("rentopay_status", "offrentopay");
+if (
+    $rentopay == "onrentopay"
+    && trim((string) getPaySettingValue("rentopay_api_key", "")) !== ""
+    && trim((string) getPaySettingValue("rentopay_api_key", "")) !== "0"
+) {
+    $step_payment['inline_keyboard'][] = [
+        ['text' => $textbotlang['textbot']['rentopay'], 'callback_data' => "rentopay"]
     ];
 }
 if ($paymentstatussnotverify == "onverifypay") {
@@ -1532,6 +1551,7 @@ $paymentGateways = [
     'aqayepardakht' => ['label' => $textbotlang['keyboard']['aqayePardakhtGateway'], 'setting' => 'statusaqayepardakht', 'on' => 'onaqayepardakht', 'off' => 'offaqayepardakht', 'keyboard' => $aqayepardakht],
     'zarinpal' => ['label' => $textbotlang['keyboard']['zarinPalGateway'], 'setting' => 'zarinpalstatus', 'on' => 'onzarinpal', 'off' => 'offzarinpal', 'keyboard' => $keyboardzarinpal],
     'variza' => ['label' => $textbotlang['keyboard']['varizaGateway'], 'setting' => 'variza_status', 'on' => 'onvariza', 'off' => 'offvariza', 'keyboard' => $keyboardvariza],
+    'rentopay' => ['label' => $textbotlang['keyboard']['rentopayGateway'], 'setting' => 'rentopay_status', 'on' => 'onrentopay', 'off' => 'offrentopay', 'keyboard' => $keyboardrentopay],
     'digi' => ['label' => $textbotlang['keyboard']['cryptoOfflinePayment'], 'setting' => 'digistatus', 'on' => 'ondigi', 'off' => 'offdigi', 'keyboard' => $tronnowpayments],
     'star' => ['label' => 'Star Telegram', 'setting' => 'statusstar', 'on' => '1', 'off' => '0', 'keyboard' => $Startelegram],
 ];

@@ -247,6 +247,10 @@ return [
     通过此网关支付的最低金额为 5000 托曼。',
                         'variza' => '❌ 错误 
     通过此网关支付的最低金额为 5000 托曼。',
+                        'rentopay' => '❌ 错误 
+    通过此网关支付的最低金额为 10000 托曼。',
+                        'rentopayMultiple' => '❌ 错误 
+    RentoPay 支付金额必须是 1,000 图曼（10,000 里亚尔）的倍数。',
                         'cardEnabledNotice' => '💳 尊敬的用户，卡号已为您激活；现在您可以进行购买。',
                         'cardInstructionAlt' => '如需付款，请将金额存入下方卡号',
                         'giftDepositAlt' => '🎁 尊敬的用户，%s 托曼已作为礼物存入您的账户。',
@@ -1829,6 +1833,26 @@ nowpayments.io
 
 🔗 请在 Variza 个人资料中注册的 Webhook 地址：
 <code>%s</code>',
+                        'askRentopayApiKey' => '💳 请输入您的 RentoPay API 密钥（X-API-KEY）：
+
+当前密钥：<code>%s</code>',
+                        'askRentopaySecretKey' => '🔐 请输入您的 RentoPay Webhook 密钥（Secret Key）：
+
+当前密钥：<code>%s</code>
+
+🔗 在 RentoPay 面板中注册的 Webhook URL：
+<code>%s</code>',
+                        'askRentopayFeeSplit' => '⚙️ 设置 RentoPay 买家手续费分摊比例：
+
+当前买家分摊比例：<b>%s</b>
+
+请输入 0 到 100 之间的数字：
+• <code>0</code>：商户承担 100%% 手续费
+• <code>50</code>：各承担 50%%
+• <code>100</code>：买家承担 100%% 手续费
+• 或发送 <code>default</code> 使用 RentoPay 控制台默认设置。',
+                        'saveRentopayFeeSplit' => '✅ RentoPay 手续费分摊设置已成功保存。',
+                        'errorRentopayFeeSplit' => '❌ 错误：请输入 0 到 100 之间的数字或单词 default。',
                         'askZarinpalMerchant' => '💳 从 ZarinPal 获取您的商户代码并在此部分输入
         
 您当前的商户代码：%s',
@@ -3724,6 +3748,7 @@ f,n.n2',
                 'wheelLuck' => '🎲 幸运转盘',
                 'zarinPal' => '🟡 ZarinPal',
                 'variza' => '💳 Variza（自动点对点转账',
+                'rentopay' => '💳 RentoPay（卡对卡）',
         ],
         'keyboard' => [
                 'acceptRules' => '✅ 我接受规则',
@@ -4177,12 +4202,20 @@ f,n.n2',
                 'yesterday' => '☀️ 昨天',
                 'zarinPalGateway' => 'ZarinPal',
                 'varizaGateway' => 'Variza',
+                'rentopayGateway' => 'RentoPay',
 'varizaApiToken' => 'Variza API 令牌',
 'varizaWebhookSecret' => 'Variza Webhook 密钥',
 'cashbackVariza' => 'Variza 返现',
 'minAmountVariza' => 'Variza 最低金额',
 'maxAmountVariza' => 'Variza 最高金额',
 'setEducationVariza' => 'Variza 教程',
+'rentopayApiKey' => 'RentoPay API 密钥',
+'rentopaySecretKey' => 'RentoPay Webhook 密钥',
+'rentopayFeeSplit' => 'RentoPay 手续费分摊',
+'cashbackRentopay' => 'RentoPay 返现',
+'minAmountRentopay' => 'RentoPay 最低金额',
+'maxAmountRentopay' => 'RentoPay 最高金额',
+'setEducationRentopay' => 'RentoPay 教程',
                 'zarinPalMerchant' => 'ZarinPal 商户',
                 'zeroBalance' => '0️⃣ 余额清零',
                 'panelSetting' => '🎛 面板设置',
@@ -4407,6 +4440,7 @@ f,n.n2',
                 'paymentMethodRialGateway3' => '里亚尔网关 3',
                 'paymentMethodTelegramStar' => 'Telegram Stars',
                 'paymentMethodVariza' => 'Variza',
+                'paymentMethodRentopay' => 'RentoPay',
                 'paymentMethodZarinpal' => 'ZarinPal',
                 'paymentSearchBtn' => '总数',
                 'paymentSearchTransactionPlaceholder' => '用户 ID 或交易编号...',
@@ -4802,6 +4836,14 @@ f,n.n2',
 - 🧾 订单 ID：%s
 - 🔗 Variza 支付标识：%s
 - 💳 支付方式：Variza',
+                'reportRentopay' => '💵 新付款
+- 👤 用户名 : @%s
+- 🆔 用户 ID : %s
+- 💸 交易金额 : %s 托曼
+- 🧾 订单编号 : %s
+- 🔗 RentoPay 标识 : %s
+- 💳 支付方式 : RentoPay（卡对卡）',
+                'defaultRejectionReason' => '支付凭证已被网关管理员拒绝。',
                 'invoiceTitle' => '付款发票',
                 'invoiceTransactionNo' => '交易编号：',
                 'invoiceAmount' => '支付金额：',

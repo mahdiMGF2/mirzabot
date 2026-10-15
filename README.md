@@ -114,6 +114,8 @@ Mirza Bot integrates with the most popular VPN and network management panels:
 | 🇮🇷 **Zarinpal** | Online gateway |
 | 🇮🇷 **Aqayepardakht** | Online gateway |
 | 🇮🇷 **IranPay** | Online gateway |
+| 🇮🇷 **Variza** | Automated card-to-card |
+| 🇮🇷 **RentoPay** | Automated card-to-card |
 
 ---
 

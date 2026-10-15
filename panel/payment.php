@@ -58,6 +58,7 @@ $methodMap = [
   'aqayepardakht' => $textbotlang['panel']['paymentMethodAqayePardakht'],
   'zarinpal' => $textbotlang['panel']['paymentMethodZarinpal'],
   'variza' => $textbotlang['panel']['paymentMethodVariza'],
+  'rentopay' => $textbotlang['panel']['paymentMethodRentopay'] ?? 'RentoPay',
   'plisio' => 'Plisio',
   'arze digital offline' => $textbotlang['panel']['paymentMethodCryptoOffline'],
   'Star Telegram' => $textbotlang['panel']['paymentMethodTelegramStar'],

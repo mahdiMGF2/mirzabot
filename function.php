@@ -2643,6 +2643,132 @@ function createPayVariza($price, $order_id)
     }
     return $decoded;
 }
+function createPayRentopay($price, $order_id)
+{
+    global $domainhosts;
+    $api_key = trim((string) getPaySettingValue('rentopay_api_key', ''));
+    if ($api_key === '' || $api_key === '0') {
+        return ['error' => 'rentopay_api_key not set'];
+    }
+
+    $price_tomans = max(10000, intval($price));
+    if ($price_tomans % 1000 !== 0) {
+        $price_tomans = (int) (ceil($price_tomans / 1000) * 1000);
+    }
+    $amount_rials = $price_tomans * 10;
+
+    $payload = [
+        'amount' => $amount_rials,
+        'order_id' => (string) $order_id,
+        'callback_url' => 'https://' . $domainhosts . '/payment/rentopay_webhook.php',
+        'expires_in_minutes' => 60,
+    ];
+
+    $splitPercent = getPaySettingValue('rentopay_payer_split_percent', 'default');
+    if ($splitPercent !== '' && $splitPercent !== 'default' && is_numeric($splitPercent)) {
+        $splitVal = floatval($splitPercent);
+        if ($splitVal >= 0 && $splitVal <= 100) {
+            $payload['payer_split_percent'] = $splitVal;
+        }
+    }
+
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://rentopay.bid/api/v1/payments',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'Accept: application/json',
+            'X-API-KEY: ' . $api_key,
+        ],
+        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+    ]);
+    $response = curl_exec($curl);
+    if ($response === false) {
+        $err = curl_error($curl);
+        curl_close($curl);
+        return ['error' => 'curl: ' . $err];
+    }
+    $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    curl_close($curl);
+    $decoded = json_decode($response, true);
+    if (!is_array($decoded)) {
+        return ['error' => 'invalid json', 'raw' => $response, 'http_code' => $httpCode];
+    }
+    if ($httpCode < 200 || $httpCode >= 300) {
+        return ['error' => $decoded['error'] ?? ('http ' . $httpCode), 'raw' => $response, 'decoded' => $decoded, 'http_code' => $httpCode];
+    }
+    return $decoded;
+}
+function inquiryPayRentopay($token)
+{
+    $token = trim((string) $token);
+    if ($token === '') {
+        return ['success' => false, 'error' => 'token is empty'];
+    }
+
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://rentopay.bid/api/v1/payments/' . rawurlencode($token),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 25,
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_HTTPHEADER => [
+            'Accept: application/json',
+        ],
+    ]);
+    $response = curl_exec($curl);
+    if ($response === false) {
+        $err = curl_error($curl);
+        curl_close($curl);
+        return ['success' => false, 'error' => 'curl: ' . $err];
+    }
+    $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    curl_close($curl);
+    $decoded = json_decode($response, true);
+    if (!is_array($decoded)) {
+        return ['success' => false, 'error' => 'invalid json', 'raw' => $response, 'http_code' => $httpCode];
+    }
+    return $decoded;
+}
+function verifyPayRentopay($token)
+{
+    $api_key = trim((string) getPaySettingValue('rentopay_api_key', ''));
+    if ($api_key === '' || $api_key === '0' || empty($token)) {
+        return ['success' => false, 'error' => 'not configured'];
+    }
+
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://rentopay.bid/api/v1/payments/verify',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 25,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'Accept: application/json',
+            'X-API-KEY: ' . $api_key,
+        ],
+        CURLOPT_POSTFIELDS => json_encode([
+            'token' => (string) $token,
+        ], JSON_UNESCAPED_UNICODE),
+    ]);
+    $response = curl_exec($curl);
+    if ($response === false) {
+        $err = curl_error($curl);
+        curl_close($curl);
+        return ['success' => false, 'error' => 'curl: ' . $err];
+    }
+    curl_close($curl);
+    $decoded = json_decode($response, true);
+    return is_array($decoded) ? $decoded : ['success' => false, 'error' => 'invalid json'];
+}
 function createPayaqayepardakht($price, $order_id)
 {
     global $domainhosts;
