@@ -410,6 +410,25 @@ return [
 ❌ 此交易有效期为一天；之后无法对此交易进行付款。        
 
 ✅ 如有问题，您可以联系客服',
+                        'abangatewayCardInvoice' => '✅ 您的交易已创建
+
+🛒 跟踪码：<code>%1$s</code>
+
+💳 卡号：
+<code>%2$s</code>
+👤 持卡人：%3$s
+
+💰 准确金额：<b>%4$s 托曼</b>
+里亚尔：<code>%5$s</code>
+托曼：<code>%6$s</code>
+
+⏳ 付款期限：%7$s 分钟
+
+⚠️ 请准确转账此金额，不多也不少；系统依据该金额自动确认付款。
+💡 如需使用付款页面，请点击「支付」。',
+                        'abangatewayCopyCard' => '📋 复制卡号',
+                        'abangatewayCopyRial' => '📋 复制金额（里亚尔）',
+                        'abangatewayCopyToman' => '📋 复制金额（托曼）',
                         'transactionCreatedStar' => '✅ 您的交易已创建
 
 🛒 跟踪码：<code>%s</code>

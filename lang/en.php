@@ -410,6 +410,25 @@ Use the button below to pay👇🏻',
 ❌ This transaction is valid for one day; after that, payment for this transaction is not possible.        
 
 ✅ If you have a problem, you can contact support',
+                        'abangatewayCardInvoice' => '✅ Your transaction was created
+
+🛒 Tracking code: <code>%1$s</code>
+
+💳 Card number:
+<code>%2$s</code>
+👤 Card holder: %3$s
+
+💰 Exact amount: <b>%4$s Toman</b>
+In Rial: <code>%5$s</code>
+In Toman: <code>%6$s</code>
+
+⏳ Payment deadline: %7$s minutes
+
+⚠️ Transfer exactly this amount, no more and no less; the automatic confirmation relies on it.
+💡 If you prefer the payment page, tap «Payment».',
+                        'abangatewayCopyCard' => '📋 Copy card number',
+                        'abangatewayCopyRial' => '📋 Copy amount in Rial',
+                        'abangatewayCopyToman' => '📋 Copy amount in Toman',
                         'transactionCreatedStar' => '✅ Your transaction was created
 
 🛒 Tracking code: <code>%s</code>
