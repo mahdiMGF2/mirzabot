@@ -1519,6 +1519,7 @@ function import_bot() {
 }
 
 function show_menu() {
+    while true; do
     show_logo
     local m2="" m4="" m5=""
     [ "$DASH_UPDATE" = 1 ] && m2=" ${C_KEY}●${CR}"
@@ -1539,7 +1540,7 @@ function show_menu() {
     fi
     _rule
     printf " ${C_PROMPT}❯${CR} Select ${C_DIM}[0-9]${CR}: "
-    read -r option
+    read -r option || exit 0
     case $option in
         1) install_bot ;;
         2) update_bot ;;
@@ -1551,8 +1552,9 @@ function show_menu() {
         8) show_help_screen ;;
         9) import_bot ;;
         0) echo -e "\n${C_OK}Exiting...${CR}"; exit 0 ;;
-        *) echo -e "\n${C_BAD}Invalid option. Please try again.${CR}"; sleep 1; show_menu ;;
+        *) echo -e "\n${C_BAD}Invalid option. Please try again.${CR}"; sleep 1; continue ;;
     esac
+    done
 }
 
 function update_php() {
