@@ -226,19 +226,74 @@ class XuiSinglePanelDriver extends BasePanelDriver
                 'msg' => $data_user['msg'] ?? ''
             );
         }
-        $data = array(
-            "email" => $username,
-            "totalGB" => isset($config['totalGB']) ? $config['totalGB'] : $data_user['data_limit'],
-            "expiryTime" => isset($config['expiryTime']) ? $config['expiryTime'] : $data_user['expiry_time'],
-            "tgId" => 0,
-            "enable" => isset($config['enable']) ? $config['enable'] : true,
-        );
+        // Read the full current client so that fields this bot does not manage
+        // (flow, comment, limitIp, HWID limit, tgId, reset, ...) are sent back
+        // unchanged instead of being wiped by the update call.
+        $current = get_clinets($username, $Get_Data_Panel);
+        if (!empty($current['error'])) {
+            return array(
+                'status' => false,
+                'msg' => $current['error']
+            );
+        } elseif (!empty($current['status']) && $current['status'] != 200) {
+            return array(
+                'status' => false,
+                'msg' => 'error code : ' . $current['status']
+            );
+        }
+        $current = json_decode($current['body'], true);
+        $client = $current['obj']['client'] ?? null;
+        if (!is_array($client)) {
+            return array(
+                'status' => false,
+                'msg' => 'client data not found'
+            );
+        }
+        // Live traffic counters and timestamps are managed by the panel itself;
+        // never send stale values back.
+        foreach (['up', 'down', 'allTime', 'lastOnline', 'createdAt', 'updatedAt', 'created_at', 'updated_at'] as $volatileKey) {
+            unset($client[$volatileKey]);
+        }
+        // The GET response carries the panel's numeric database row id, but the
+        // update endpoint only accepts a string id (the client UUID). Sending the
+        // number back makes the panel reject the whole request.
+        if (isset($client['id']) && !is_string($client['id'])) {
+            unset($client['id']);
+        }
+        $data = $client;
+        $data["email"] = $username;
+        $data["totalGB"] = isset($config['totalGB']) ? $config['totalGB'] : $data_user['data_limit'];
+        $data["expiryTime"] = isset($config['expiryTime']) ? $config['expiryTime'] : $data_user['expiry_time'];
+        $data["enable"] = isset($config['enable']) ? $config['enable'] : true;
         if (!empty($config['id']))
             $data['id'] = $config['id'];
         if (!empty($config['subId']))
             $data['subId'] = $config['subId'];
 
         $modify = updateClient($Get_Data_Panel, $username, $data);
+        $decoded = is_array($modify) && isset($modify['body']) ? json_decode($modify['body'], true) : null;
+        if (empty($modify['error']) && is_array($decoded) && empty($decoded['success'])) {
+            // The panel rejected the full client (unexpected field type). Retry
+            // with only the fields this bot manages so that renewals never break.
+            error_log('x-ui update with full client failed for ' . $username . ': ' . ($decoded['msg'] ?? '') . ' - retrying minimal');
+            $minimal = array(
+                "email" => $data["email"],
+                "totalGB" => $data["totalGB"],
+                "expiryTime" => $data["expiryTime"],
+                "tgId" => $client['tgId'] ?? 0,
+                "enable" => $data["enable"],
+            );
+            foreach (['comment', 'limitIp', 'flow', 'subId', 'reset'] as $keepKey) {
+                if (array_key_exists($keepKey, $client) && !is_array($client[$keepKey])) {
+                    $minimal[$keepKey] = $client[$keepKey];
+                }
+            }
+            if (!empty($data['id']))
+                $minimal['id'] = $data['id'];
+            if (!empty($data['subId']))
+                $minimal['subId'] = $data['subId'];
+            $modify = updateClient($Get_Data_Panel, $username, $minimal);
+        }
         attach_service($Get_Data_Panel, $username, json_encode(['inboundIds' => json_decode($Get_Data_Panel['inbounds'], true)]));
         if (!empty($modify['error'])) {
             return array(
