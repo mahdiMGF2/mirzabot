@@ -5382,7 +5382,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         $Payment_Method = "AbanGateway";
         $stmt->execute([$from_id, $randomString, $dateacc, $user['Processing_value'], "Unpaid", $Payment_Method]);
 
-        $pay = createPayiranpay4($user['Processing_value'], $randomString);
+        $pay = createPayiranpay4($user['Processing_value'], $randomString, $from_id);
         if (empty($pay['success']) || empty($pay['payment_link'])) {
             $text_error = json_encode($pay);
             sendmessage($from_id, $textbotlang['users']['Balance']['errorLinkPayment'], $keyboard, 'HTML');
@@ -5409,7 +5409,11 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
             ]
         ]);
         $textiranpay4 = sprintf($textbotlang['users']['Balance']['transactionCreated3'], $randomString, $pricetoman);
-        $message_id = sendmessage($from_id, $textiranpay4, $paymentkeyboard, 'HTML');
+        $cardInvoice = abangatewayCardInvoice($pay, $randomString);
+        $message_id = $cardInvoice === null ? null : sendmessage($from_id, $cardInvoice['text'], $cardInvoice['keyboard'], 'HTML');
+        if (empty($message_id['ok'])) {
+            $message_id = sendmessage($from_id, $textiranpay4, $paymentkeyboard, 'HTML');
+        }
         updatePaymentMessageId($message_id, $randomString);
         step('home', $from_id);
     } elseif ($datain == "iranpay3") {
