@@ -1664,8 +1664,22 @@ function outtypepanel($typepanel, $message)
     }
 }
 
+// The admin-uploaded QR background is stored as custom.jpg (never tracked by git), while images.jpg is the
+// default shipped with the code and is overwritten on every update. Prefer custom.jpg when it exists.
+function qrBackgroundPath($backgroundPath)
+{
+    $custom = __DIR__ . '/custom.jpg';
+    if (is_file($custom) && basename((string) $backgroundPath) === 'images.jpg') {
+        $dir = realpath(dirname((string) $backgroundPath));
+        if ($dir !== false && $dir === realpath(__DIR__)) {
+            return $custom;
+        }
+    }
+    return $backgroundPath;
+}
 function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
 {
+    $backgroundPath = qrBackgroundPath($backgroundPath);
     if (!file_exists($backgroundPath)) {
         error_log("addBackgroundImage: File not found at $backgroundPath");
         file_put_contents($urlimage, $qrCodeResult->getString());
