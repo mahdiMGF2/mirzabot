@@ -145,12 +145,7 @@ function mirza_install_required_extensions(): array
         'json' => 'پردازش پاسخ‌های API',
         'openssl' => 'ارتباط امن HTTPS',
         'gd' => 'ساخت تصویر QR Code',
-        'zip' => 'خروجی اکسل و پشتیبان‌گیری',
-        'dom' => 'موردنیاز PhpSpreadsheet',
-        'simplexml' => 'موردنیاز PhpSpreadsheet',
-        'xml' => 'موردنیاز PhpSpreadsheet',
-        'xmlwriter' => 'موردنیاز PhpSpreadsheet',
-        'xmlreader' => 'موردنیاز PhpSpreadsheet',
+        'zip' => 'پشتیبان‌گیری',
         'fileinfo' => 'تشخیص نوع فایل‌های ارسالی',
         'iconv' => 'تبدیل انکودینگ',
         'ctype' => 'اعتبارسنجی ورودی',
@@ -163,7 +158,6 @@ function mirza_install_required_extensions(): array
 function mirza_install_optional_extensions(): array
 {
     return [
-        'intl' => 'قالب‌بندی عدد و تاریخ در خروجی اکسل',
         'bcmath' => 'محاسبات دقیق مالی',
         'mysqli' => 'سازگاری با نصب‌های قدیمی‌تر',
         'sodium' => 'رمزنگاری مدرن',

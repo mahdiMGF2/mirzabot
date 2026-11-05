@@ -6,8 +6,7 @@
     "homepage": "https://github.com/mahdiMGF2/mirzabot",
     "require": {
         "php": ">=8.2",
-        "endroid/qr-code": "^6.0",
-        "phpoffice/phpspreadsheet": "^5.8"
+        "endroid/qr-code": "^6.0"
     },
     "config": {
         "optimize-autoloader": true,
