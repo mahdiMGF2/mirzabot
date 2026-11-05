@@ -412,23 +412,20 @@ Use the button below to pay👇🏻',
 ✅ If you have a problem, you can contact support',
                         'abangatewayCardInvoice' => '✅ Your transaction was created
 
-🛒 Tracking code: <code>%1$s</code>
+🛒 Tracking code: <code>%s</code>
 
 💳 Card number:
-<code>%2$s</code>
-👤 Card holder: %3$s
+<code>%s</code>
+👤 Card holder: %s
 
-💰 Exact amount: <b>%4$s Toman</b>
-In Rial: <code>%5$s</code>
-In Toman: <code>%6$s</code>
+💰 Exact amount: <b>%s Toman</b>
+In Rial: <code>%s</code>
+In Toman: <code>%s</code>
 
-⏳ Payment deadline: %7$s minutes
+⏳ Payment deadline: %s minutes
 
 ⚠️ Transfer exactly this amount, no more and no less; the automatic confirmation relies on it.
 💡 If you prefer the payment page, tap «Payment».',
-                        'abangatewayCopyCard' => '📋 Copy card number',
-                        'abangatewayCopyRial' => '📋 Copy amount in Rial',
-                        'abangatewayCopyToman' => '📋 Copy amount in Toman',
                         'transactionCreatedStar' => '✅ Your transaction was created
 
 🛒 Tracking code: <code>%s</code>
@@ -3739,6 +3736,8 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'variza' => '💳 Variza (auto card-to-card)',
         ],
         'keyboard' => [
+                'abangatewayCopyRial' => 'Copy amount in Rial',
+                'abangatewayCopyToman' => 'Copy amount in Toman',
                 'acceptRules' => '✅ I accept the rules',
                 'accountCreateLimit' => '🚨 Account creation limit',
                 'activateAccount' => '💡 Turn on account',

@@ -804,10 +804,10 @@ function abangatewayCardInvoice($pay, $order_id)
         'text' => sprintf($lang['abangatewayCardInvoice'], $order_id, $number, $holder, number_format($toman), $rial, $toman, $minutes),
         'keyboard' => json_encode([
             'inline_keyboard' => [
-                [['text' => $lang['abangatewayCopyCard'], 'copy_text' => ['text' => $number]]],
+                [['text' => $textbotlang['keyboard']['copyCardNumber'], 'copy_text' => ['text' => $number]]],
                 [
-                    ['text' => $lang['abangatewayCopyRial'], 'copy_text' => ['text' => (string) $rial]],
-                    ['text' => $lang['abangatewayCopyToman'], 'copy_text' => ['text' => (string) $toman]],
+                    ['text' => $textbotlang['keyboard']['abangatewayCopyRial'], 'copy_text' => ['text' => (string) $rial]],
+                    ['text' => $textbotlang['keyboard']['abangatewayCopyToman'], 'copy_text' => ['text' => (string) $toman]],
                 ],
                 [['text' => $lang['payments'], 'url' => $pay['payment_link']]],
             ],
