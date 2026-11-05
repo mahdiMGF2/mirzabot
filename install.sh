@@ -5,6 +5,14 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+# Debian minimal images (13 in particular) ship neither curl nor wget; the
+# self-update below needs one of them before anything else can run.
+if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+    apt-get update -o DPkg::Lock::Timeout=180 >/dev/null 2>&1
+    apt-get install -y -o DPkg::Lock::Timeout=180 curl ca-certificates >/dev/null 2>&1 \
+        || { echo -e "\033[31m[ERROR]\033[0m Neither curl nor wget is available and apt install failed. Install curl manually and re-run."; exit 1; }
+fi
+
 INSTALL_LOG="/tmp/mirza_install.log"
 
 export DEBIAN_FRONTEND=noninteractive
@@ -466,12 +474,25 @@ os_major() {
 }
 export -f os_major
 
+# Database engine per distro: Ubuntu ships MySQL, Debian ships MariaDB.
+# Exported so run_step's `bash -c` subshells see them.
+set_db_vars() {
+    detect_os
+    if [ "$OS_ID" = "debian" ]; then
+        DB_PKG=mariadb-server; DB_SERVICE=mariadb
+    else
+        DB_PKG=mysql-server; DB_SERVICE=mysql
+    fi
+    export DB_PKG DB_SERVICE
+}
+
+# Check a repo publishes the given series. $1=series, $2=repo base (default: ondrej PPA).
 php_ppa_has_series() {
     [ -n "$1" ] || return 1
-    local try
+    local base="${2:-https://ppa.launchpadcontent.net/ondrej/php/ubuntu}" try
     for try in 1 2 3; do
         curl -fsSL --max-time 10 -o /dev/null \
-            "https://ppa.launchpadcontent.net/ondrej/php/ubuntu/dists/$1/Release" 2>/dev/null && return 0
+            "$base/dists/$1/Release" 2>/dev/null && return 0
         sleep 2
     done
     return 1
@@ -480,7 +501,8 @@ export -f php_ppa_has_series
 
 php_repo_disable() {
     local f n=0
-    for f in /etc/apt/sources.list.d/*ondrej*php*.sources /etc/apt/sources.list.d/*ondrej*php*.list; do
+    for f in /etc/apt/sources.list.d/*ondrej*php*.sources /etc/apt/sources.list.d/*ondrej*php*.list \
+             /etc/apt/sources.list.d/*sury*php*.sources /etc/apt/sources.list.d/*sury*php*.list; do
         [ -f "$f" ] || continue
         mv -f "$f" "$f.disabled-by-mirza" && n=$((n + 1))
     done
@@ -491,6 +513,25 @@ export -f php_repo_disable
 setup_php_repo() {
     detect_os
     export DEBIAN_FRONTEND=noninteractive
+    if [ "$OS_ID" = "debian" ]; then
+        # On Debian: packages.sury.org (same maintainer as the Ubuntu PPA,
+        # which builds PHP 8.5 for bookworm + trixie). PPAs don't exist there.
+        apt-get update -o DPkg::Lock::Timeout=180 >/dev/null 2>&1
+        apt-get install -y ca-certificates curl gnupg -o DPkg::Lock::Timeout=180 || return 1
+        # Does sury actually build for this release? If not, fall back to the
+        # PHP shipped with this Debian release.
+        if [ -n "$OS_CODENAME" ] && ! php_ppa_has_series "$OS_CODENAME" https://packages.sury.org/php; then
+            echo "sury/php publishes no packages for '$OS_CODENAME' - disabling the repo and using the PHP shipped with $OS_PRETTY."
+            php_repo_disable || echo "Warning: no sury/php source file found to disable."
+            return 0
+        fi
+        mkdir -p /etc/apt/keyrings
+        curl -fsSL --max-time 30 https://packages.sury.org/php/apt.gpg \
+            -o /etc/apt/keyrings/deb.sury.org-php.gpg || return 1
+        printf 'Types: deb\nURIs: https://packages.sury.org/php/\nSuites: %s\nComponents: main\nSigned-By: /etc/apt/keyrings/deb.sury.org-php.gpg\n' "${OS_CODENAME:-bookworm}" \
+            > /etc/apt/sources.list.d/sury-php.sources
+        return 0
+    fi
     # add-apt-repository lives in software-properties-common - minimal cloud
     # images (and the 26.04 minimal image in particular) do not ship it.
     if ! command -v add-apt-repository >/dev/null 2>&1; then
@@ -545,8 +586,10 @@ _apache_php_ver() {
 export -f _apache_php_ver
 
 upgrade_php_if_needed() {
-    local V="$PHP_TARGET_VER" current apache_ver apache_short cand cand_short source="Ubuntu archive"
+    local V="$PHP_TARGET_VER" current apache_ver apache_short cand cand_short source
     local old_pkgs old_vers old_count pma_installed _ans activate_cmd n=3 now_cli now_apache
+    detect_os
+    source="Ubuntu archive"; [ "$OS_ID" = "debian" ] && source="sury/php archive"
     current=$(php -r 'echo PHP_VERSION;' 2>/dev/null)
     apache_ver=$(_apache_php_ver)
     apache_short=${apache_ver#*:}; apache_short=${apache_short%%[-+~]*}
@@ -556,13 +599,16 @@ upgrade_php_if_needed() {
         return 0
     fi
 
-    run_step "Adding PHP repository (ondrej/php)" \
+    run_step "Adding PHP repository" \
         "setup_php_repo && apt-get update --allow-releaseinfo-change -o DPkg::Lock::Timeout=180" \
         || { show_step_error; return 1; }
     cand=$(apt-cache policy "php$V" 2>/dev/null | awk '/Candidate:/{print $2; exit}')
     [ "$cand" = "(none)" ] && cand=""
     cand_short=${cand#*:}; cand_short=${cand_short%%[-+~]*}
-    apt-cache policy "php$V" 2>/dev/null | grep -q 'ondrej' && source="ondrej/php"
+    case "$OS_ID" in
+        debian) apt-cache policy "php$V" 2>/dev/null | grep -q 'sury' && source="sury/php" ;;
+        *)      apt-cache policy "php$V" 2>/dev/null | grep -q 'ondrej' && source="ondrej/php" ;;
+    esac
     old_pkgs=$(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 2>/dev/null \
         | awk -v keep="$V" '$1 ~ /^.i/ && match($2, /php[0-9]+\.[0-9]+/) { if (substr($2, RSTART + 3, RLENGTH - 3) != keep) print $2 }')
     old_vers=$(echo "$old_pkgs" | grep -oE 'php[0-9]+\.[0-9]+' | sort -u | tr '\n' ' ')
@@ -677,7 +723,7 @@ setup_mysql_root() {
     [ -n "$dropin_dir" ] || return 1
     local dropin="$dropin_dir/zz-mirza-recovery.cnf"
     printf '[mysqld]\nskip-grant-tables\n' | sudo tee "$dropin" >/dev/null || return 1
-    sudo systemctl restart mysql
+    sudo systemctl restart "${DB_SERVICE:-mysql}"
     sudo mysql <<EOF
 FLUSH PRIVILEGES;
 DROP USER IF EXISTS 'root'@'localhost';
@@ -688,7 +734,7 @@ EOF
     sudo rm -f "$dropin"
     # Older installer versions appended the option to mysqld.cnf directly.
     sudo sed -i '/^skip-grant-tables/d' /etc/mysql/mysql.conf.d/mysqld.cnf 2>/dev/null
-    sudo systemctl restart mysql
+    sudo systemctl restart "${DB_SERVICE:-mysql}"
     echo "SELECT 1" | mysql -u"$userrr" -p"$passs" >/dev/null 2>&1 || return 1
     return 0
 }
@@ -888,7 +934,7 @@ precheck_fresh_server() {
         local f
         for f in "${found[@]}"; do printf "      ${C_WARN}-${CR} ${C_TXT}%s${CR}\n" "$f"; done
         echo ""
-        printf " ${C_TXT}Use a clean Ubuntu 22.04/24.04/26.04 server (no web server, database, or panel)${CR}\n"
+        printf " ${C_TXT}Use a clean Ubuntu 22.04/24.04/26.04 or Debian 12/13 server (no web server, database, or panel)${CR}\n"
         printf " ${C_TXT}or reinstall the OS, then run the installer again.${CR}\n"
         return 1
     fi
@@ -898,15 +944,15 @@ precheck_fresh_server() {
 
 repair_mysql() {
     export DEBIAN_FRONTEND=noninteractive
-    systemctl stop mysql 2>/dev/null
+    systemctl stop "${DB_SERVICE:-mysql}" 2>/dev/null
     # 1) Gentle fix first
     dpkg --configure -a >/dev/null 2>&1
     apt-get install -f -y >/dev/null 2>&1
-    if dpkg-query -W -f='${Package} ${Status}\n' 'mysql-server-[0-9]*' 2>/dev/null | grep -q 'install ok installed'; then
+    if dpkg-query -W -f='${Package} ${Status}\n' 'mysql-server-[0-9]*' 'mariadb-server-[0-9]*' 2>/dev/null | grep -q 'install ok installed'; then
         return 0
     fi
-    # 2) Hard reset: purge MySQL and wipe its (empty) data dir, then reinstall fresh
-    apt-get purge -y 'mysql-server*' 'mysql-client*' 'mysql-community*' mysql-common >/dev/null 2>&1
+    # 2) Hard reset: purge MySQL/MariaDB and wipe its (empty) data dir, then reinstall fresh
+    apt-get purge -y 'mysql-server*' 'mysql-client*' 'mysql-community*' 'mariadb-server*' mysql-common >/dev/null 2>&1
     apt-get autoremove -y >/dev/null 2>&1
     rm -rf /var/lib/mysql /var/log/mysql /etc/mysql
     dpkg --configure -a >/dev/null 2>&1
@@ -1329,6 +1375,7 @@ function backup_bot() {
     clear
     banner
     _sec "Backup Database"
+    set_db_vars
 
     CONFIG_PATH="/var/www/html/mirzaprobotconfig/config.php"
     if [ ! -f "$CONFIG_PATH" ]; then
@@ -1367,8 +1414,11 @@ function backup_bot() {
     backup_date=$(date +"%Y-%m-%d_%H-%M-%S")
     local backup_file="/root/mirza_backup_${backup_date}.sql"
 
+    # MariaDB's dump has no --ssl-mode; --skip-ssl is its equivalent.
+    local _dump_ssl="--ssl-mode=DISABLED"
+    [ "$DB_SERVICE" = "mariadb" ] && _dump_ssl="--skip-ssl"
     run_step "Exporting database (${dbname})" \
-        "mysqldump -h '$dbhost' -u '$dbuser' -p'$dbpass' --no-tablespaces --ssl-mode=DISABLED '$dbname' > '$backup_file'" \
+        "mysqldump -h '$dbhost' -u '$dbuser' -p'$dbpass' --no-tablespaces $_dump_ssl '$dbname' > '$backup_file'" \
         || { show_step_error; echo -e "\n ${C_BAD}●${CR} ${C_BAD}Backup failed. See details above.${CR}"; echo ""; printf " ${C_PROMPT}❯${CR} Press Enter to return to the menu... "; read -r _; show_menu; return 1; }
 
     local file_size
@@ -1610,13 +1660,70 @@ function show_help_screen() {
     read -r _
     show_menu
 }
+# Debian: rewrite apt sources (deb822 default since bookworm) against the
+# deb.debian.org CDN. Security lives in its own suite URI.
+_fix_debian_mirrors() {
+    local DEB822=/etc/apt/sources.list.d/debian.sources
+    local LEGACY=/etc/apt/sources.list
+    local target="" fmt=""
+    if [ -f "$DEB822" ]; then target="$DEB822"; fmt="deb822"
+    else target="$LEGACY"; fmt="legacy"; fi
+    [ -f "$target" ] && cp "$target" "$target.mirzabackup"
+
+    local MIRRORS=("deb.debian.org" "mirrors.kernel.org")
+    local mirror
+    for mirror in "${MIRRORS[@]}"; do
+        echo -e "\e[33mTrying mirror: $mirror\033[0m"
+        if [ "$fmt" = "deb822" ]; then
+            cat > "$target" << EOF
+Types: deb
+URIs: http://$mirror/debian
+Suites: $OS_CODENAME $OS_CODENAME-updates $OS_CODENAME-backports
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: http://deb.debian.org/debian-security
+Suites: $OS_CODENAME-security
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+EOF
+        else
+            cat > "$target" << EOF
+deb http://$mirror/debian $OS_CODENAME main contrib non-free non-free-firmware
+deb http://$mirror/debian $OS_CODENAME-updates main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian-security $OS_CODENAME-security main contrib non-free non-free-firmware
+EOF
+        fi
+        # apt-get exits 0 even when a source fails to fetch; --error-on=any
+        # makes this mirror check meaningful.
+        if apt-get update --allow-releaseinfo-change --error-on=any 2>/dev/null; then
+            echo -e "\e[32mSuccessfully updated using mirror: $mirror\033[0m"
+            rm -f "$target.mirzabackup"
+            return 0
+        fi
+    done
+    if [ -f "$target.mirzabackup" ]; then
+        mv "$target.mirzabackup" "$target"
+    else
+        rm -f "$target"
+    fi
+    echo -e "\e[91mAll mirrors failed. Restored original apt sources\033[0m"
+    return 1
+}
+
 function fix_update_issues() {
     echo -e "\e[33mTrying to fix update issues by changing mirrors...\033[0m"
     # Broken apt mirrors are often a DNS problem - fix DNS first
     ensure_dns
     if ! detect_os || [ -z "$OS_CODENAME" ]; then
-        echo -e "\e[91mCould not detect Ubuntu version.\033[0m"
+        echo -e "\e[91mCould not detect OS version.\033[0m"
         return 1
+    fi
+
+    if [ "$OS_ID" = "debian" ]; then
+        _fix_debian_mirrors
+        return $?
     fi
 
     # Ubuntu 24.04+ (and 26.04) ship the deb822 file and often have no
@@ -1876,8 +1983,9 @@ preflight() {
         _kv "Package mgr" "$(_dot bad) ${C_BAD}apt not found (Ubuntu/Debian required)${CR}"; ok=0
     fi
 
-    # Supported: Ubuntu 22.04 / 24.04 / 26.04 (newer releases pass with a note).
+    # Supported: Ubuntu 22.04 / 24.04 / 26.04 and Debian 12 / 13.
     detect_os
+    set_db_vars
     local maj; maj=$(os_major)
     if [ "$OS_ID" = "ubuntu" ]; then
         case "$OS_VERSION_ID" in
@@ -1896,7 +2004,19 @@ preflight() {
                 ;;
         esac
     elif [ "$OS_ID" = "debian" ]; then
-        _kv "OS" "$(_dot warn) ${C_WARN}${OS_PRETTY} (untested; Ubuntu 22.04/24.04/26.04 recommended)${CR}"
+        case "$OS_VERSION_ID" in
+            12|13) _kv "OS" "$(_dot ok) ${C_OK}${OS_PRETTY}${CR}" ;;
+            *)
+                if [ "$maj" -ge 14 ]; then
+                    _kv "OS" "$(_dot ok) ${C_OK}${OS_PRETTY}${CR} ${C_DIM}(newer than tested)${CR}"
+                elif [ "$maj" -eq 0 ]; then
+                    # No usable VERSION_ID (dev snapshot, trimmed image): warn, don't block.
+                    _kv "OS" "$(_dot warn) ${C_WARN}${OS_PRETTY} (version unknown; Debian 12/13 recommended)${CR}"
+                else
+                    _kv "OS" "$(_dot bad) ${C_BAD}${OS_PRETTY} (too old; use Debian 12 or 13)${CR}"; ok=0
+                fi
+                ;;
+        esac
     else
         _kv "OS" "$(_dot warn) ${C_WARN}${OS_PRETTY:-unknown} (untested)${CR}"
     fi
@@ -2044,7 +2164,7 @@ function install_bot() {
         run_step "Preparing package manager (clearing stale apt locks)" "apt_recover" \
             || { show_step_error; install_pause "Preparing package manager"; }
 
-        if ! run_step "Adding PHP repository (ondrej/php)" "setup_php_repo"; then
+        if ! run_step "Adding PHP repository" "setup_php_repo"; then
             if ! run_step "Retrying PHP repository with locale override" "LC_ALL=C.UTF-8 setup_php_repo"; then
                 show_step_error
                 install_pause "Adding PHP repository"
@@ -2063,8 +2183,12 @@ function install_bot() {
             fi
         fi
 
+        # software-properties-common (only pulled for add-apt-repository) was
+        # dropped in Debian 13 and the Debian branch never uses it.
+        local _base_tools="software-properties-common git unzip curl wget jq sudo"
+        [ "$OS_ID" = "debian" ] && _base_tools="git unzip curl wget jq sudo"
         run_step "Installing base tools (git, curl, wget, unzip, jq)" \
-            "apt-get install -y software-properties-common git unzip curl wget jq" \
+            "apt-get install -y $_base_tools" \
             || { show_step_error; install_pause "Installing base tools"; }
 
         PHP_VER="$PHP_TARGET_VER"
@@ -2087,7 +2211,7 @@ function install_bot() {
             install_pause "PHP version below ${PHP_MIN_VERSION}"
         fi
 
-        WEBSTACK_CMD="DEBIAN_FRONTEND=noninteractive apt install -y mysql-server apache2 libapache2-mod-php${PHP_VER} php${PHP_VER}-mbstring php${PHP_VER}-zip php${PHP_VER}-gd php${PHP_VER}-curl php${PHP_VER}-intl php${PHP_VER}-xml php${PHP_VER}-bcmath"
+        WEBSTACK_CMD="DEBIAN_FRONTEND=noninteractive apt install -y $DB_PKG apache2 libapache2-mod-php${PHP_VER} php${PHP_VER}-mbstring php${PHP_VER}-zip php${PHP_VER}-gd php${PHP_VER}-curl php${PHP_VER}-intl php${PHP_VER}-xml php${PHP_VER}-bcmath"
         if ! run_step "Installing web stack (Apache, MySQL, PHP modules)" "$WEBSTACK_CMD"; then
             run_step "Repairing broken MySQL installation" "repair_mysql" \
                 || { show_step_error; install_pause "Repairing MySQL"; }
@@ -2122,16 +2246,22 @@ function install_bot() {
             install_pause "phpMyAdmin symlink"
         }
 
-        run_step "Installing extra modules (php-soap, php-ssh2, libssh2)" \
-            "DEBIAN_FRONTEND=noninteractive apt-get install -y php${PHP_VER}-soap php${PHP_VER}-ssh2 libssh2-1-dev libssh2-1" \
+        # libssh2-1 is libssh2-1t64 in Debian 13 - php-ssh2 pulls the right
+        # runtime lib itself, so only pin it explicitly on Ubuntu.
+        local _libssh2="libssh2-1-dev libssh2-1"
+        [ "$OS_ID" = "debian" ] && _libssh2=""
+        run_step "Installing extra modules (php-soap, php-ssh2)" \
+            "DEBIAN_FRONTEND=noninteractive apt-get install -y php${PHP_VER}-soap php${PHP_VER}-ssh2 $_libssh2" \
             || { show_step_error; install_pause "Installing extra PHP modules"; }
 
-        run_step "Enabling & starting services (MySQL, Apache)" \
-            "systemctl enable mysql.service && systemctl start mysql.service && systemctl enable apache2 && systemctl start apache2" \
+        run_step "Enabling & starting services ($([ "$DB_SERVICE" = "mariadb" ] && echo MariaDB || echo MySQL), Apache)" \
+            "systemctl enable $DB_SERVICE.service && systemctl start $DB_SERVICE.service && systemctl enable apache2 && systemctl start apache2" \
             || { show_step_error; install_pause "Enabling core services"; }
 
+        # Port rules, not the 'Apache' UFW profile: Debian's apache2 ships no
+        # app profile (Ubuntu's does), so `ufw allow 'Apache'` fails there.
         run_step "Configuring firewall (UFW + Apache)" \
-            "apt-get install -y ufw && ufw allow 'Apache'" \
+            "apt-get install -y ufw && ufw allow 80/tcp && ufw allow 443/tcp" \
             || { show_step_error; install_pause "Configuring UFW"; }
         run_step "Restarting Apache" "systemctl restart apache2" \
             || { show_step_error; install_pause "Restarting Apache"; }
@@ -2243,11 +2373,13 @@ function install_bot() {
         if [ -f "/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem" ]; then
             echo -e " ${C_OK}●${CR} ${C_DIM}SSL certificate for ${DOMAIN_NAME} already exists - skipping issuance.${CR}"
         else
-            run_step "Opening firewall ports 80 & 443" "ufw allow 80 && ufw allow 443" \
+            run_step "Opening firewall ports 80 & 443" "ufw allow 80/tcp && ufw allow 443/tcp" \
                 || { show_step_error; install_pause "Opening firewall ports"; }
             run_step "Stopping Apache for certificate issuance" "systemctl stop apache2 && systemctl disable apache2" \
                 || { show_step_error; install_pause "Stopping Apache"; }
-            run_step "Installing Let's Encrypt (certbot)" "apt install letsencrypt -y && systemctl enable certbot.timer" \
+            # Debian's certbot only Suggests the apache plugin; menu renew uses --apache.
+            local _cb_pkg=letsencrypt; [ "$OS_ID" = "debian" ] && _cb_pkg="certbot python3-certbot-apache"
+            run_step "Installing Let's Encrypt (certbot)" "apt install $_cb_pkg -y && systemctl enable certbot.timer" \
                 || { show_step_error; install_pause "Installing certbot"; }
 
             run_step "Requesting SSL certificate (Let's Encrypt)" \
@@ -2396,11 +2528,20 @@ EOF
         install_pause "MySQL connection"
     }
 
-    MYSQL_AUTH_PLUGIN="mysql_native_password"
-    if ! mysql -u"$ROOT_USER" -p"$ROOT_PASSWORD" -N -B -e \
-        "SELECT PLUGIN_STATUS FROM INFORMATION_SCHEMA.PLUGINS WHERE PLUGIN_NAME='mysql_native_password';" 2>/dev/null \
-        | grep -qi ACTIVE; then
-        MYSQL_AUTH_PLUGIN="caching_sha2_password"
+    if [ "${DB_SERVICE:-mysql}" = "mariadb" ]; then
+        # MariaDB rejects the MySQL `IDENTIFIED WITH plugin BY` form; its
+        # default plugin for new users is already mysql_native_password.
+        MYSQL_IDENT_SQL="IDENTIFIED BY"
+    else
+        # MySQL 8.4+ disables mysql_native_password by default; fall back to the
+        # server default plugin when it is not ACTIVE so CREATE USER does not fail.
+        MYSQL_AUTH_PLUGIN="mysql_native_password"
+        if ! mysql -u"$ROOT_USER" -p"$ROOT_PASSWORD" -N -B -e \
+            "SELECT PLUGIN_STATUS FROM INFORMATION_SCHEMA.PLUGINS WHERE PLUGIN_NAME='mysql_native_password';" 2>/dev/null \
+            | grep -qi ACTIVE; then
+            MYSQL_AUTH_PLUGIN="caching_sha2_password"
+        fi
+        MYSQL_IDENT_SQL="IDENTIFIED WITH $MYSQL_AUTH_PLUGIN BY"
     fi
 
     randomdbpass=$(openssl rand -base64 10 | tr -dc 'a-zA-Z0-9' | cut -c1-8)
@@ -2450,7 +2591,7 @@ EOF
         fi
         # Idempotent: safe to re-run (IF NOT EXISTS), so a resumed install never breaks here
         run_step "Creating database & user" \
-            "mysql -u root -p$ROOT_PASSWORD -e \"CREATE DATABASE IF NOT EXISTS $dbname;\" && mysql -u root -p$ROOT_PASSWORD -e \"CREATE USER IF NOT EXISTS '$dbuser'@'%' IDENTIFIED WITH $MYSQL_AUTH_PLUGIN BY '$dbpass'; GRANT ALL PRIVILEGES ON $dbname.* TO '$dbuser'@'%'; FLUSH PRIVILEGES;\" && mysql -u root -p$ROOT_PASSWORD -e \"CREATE USER IF NOT EXISTS '$dbuser'@'localhost' IDENTIFIED WITH $MYSQL_AUTH_PLUGIN BY '$dbpass'; GRANT ALL PRIVILEGES ON $dbname.* TO '$dbuser'@'localhost'; FLUSH PRIVILEGES;\"" \
+            "mysql -u root -p$ROOT_PASSWORD -e \"CREATE DATABASE IF NOT EXISTS $dbname;\" && mysql -u root -p$ROOT_PASSWORD -e \"CREATE USER IF NOT EXISTS '$dbuser'@'%' $MYSQL_IDENT_SQL '$dbpass'; GRANT ALL PRIVILEGES ON $dbname.* TO '$dbuser'@'%'; FLUSH PRIVILEGES;\" && mysql -u root -p$ROOT_PASSWORD -e \"CREATE USER IF NOT EXISTS '$dbuser'@'localhost' $MYSQL_IDENT_SQL '$dbpass'; GRANT ALL PRIVILEGES ON $dbname.* TO '$dbuser'@'localhost'; FLUSH PRIVILEGES;\"" \
             || { show_step_error; install_pause "Creating database/user"; }
         mark_phase DB
     else
@@ -2764,6 +2905,7 @@ EOF
 }
 function remove_bot() {
     echo -e "\e[33mStarting Mirza Bot removal process...\033[0m"
+    set_db_vars
     LOG_FILE="/var/log/remove_bot.log"
     echo "Log file: $LOG_FILE" > "$LOG_FILE"
     BOT_DIR="/var/www/html/mirzaprobotconfig"
@@ -2800,16 +2942,20 @@ function remove_bot() {
             exit 1
         }
     fi
-    echo -e "\e[33mRemoving MySQL and database...\033[0m" | tee -a "$LOG_FILE"
-    sudo systemctl stop mysql
-    sudo systemctl disable mysql
+    echo -e "\e[33mRemoving MySQL/MariaDB and database...\033[0m" | tee -a "$LOG_FILE"
+    sudo systemctl stop "$DB_SERVICE" 2>/dev/null
+    sudo systemctl disable "$DB_SERVICE" 2>/dev/null
     sudo systemctl daemon-reload
     sudo apt --fix-broken install -y
-    sudo apt-get purge -y mysql-server mysql-client mysql-common mysql-server-core-* mysql-client-core-*
+    # phpMyAdmin pulls dbconfig-mysql, which depends on the default mysql
+    # client; on Debian that dep (mariadb-client) cannot be purged while
+    # dbconfig-mysql stays, and apt aborts the whole transaction. Remove the
+    # dependents with the database so the resolver never dead-ends.
+    sudo apt-get purge -y mysql-server mysql-client mysql-common mysql-server-core-* mysql-client-core-* mariadb-server mariadb-client mariadb-common phpmyadmin dbconfig-mysql dbconfig-common dbconfig-no-thanks
     sudo rm -rf /etc/mysql /var/lib/mysql /var/log/mysql /var/log/mysql.* /usr/lib/mysql /usr/include/mysql /usr/share/mysql
-    sudo rm /lib/systemd/system/mysql.service
-    sudo rm /etc/init.d/mysql
-    sudo dpkg --remove --force-remove-reinstreq mysql-server mysql-server-8.0 mysql-server-8.4
+    [ -f /lib/systemd/system/mysql.service ] && sudo rm /lib/systemd/system/mysql.service
+    [ -f /etc/init.d/mysql ] && sudo rm /etc/init.d/mysql
+    sudo dpkg --remove --force-remove-reinstreq mysql-server mysql-server-8.0 mysql-server-8.4 2>/dev/null
     sudo find /etc/systemd /lib/systemd /usr/lib/systemd -name "*mysql*" -exec rm -f {} \;
     sudo apt-get purge -y 'mysql-server*' 'mysql-client*'
     sudo apt-get purge -y mysql-common php-mysql php8.2-mysql php8.3-mysql php8.4-mysql php8.5-mysql php-mariadb-mysql-kbs
@@ -2841,10 +2987,14 @@ function remove_bot() {
     sudo a2disconf phpmyadmin.conf &>/dev/null
     sudo rm -f /etc/apache2/conf-available/phpmyadmin.conf
     echo -e "\e[33mRemoving additional packages...\033[0m" | tee -a "$LOG_FILE"
-    sudo apt-get remove -y php-soap php-ssh2 libssh2-1-dev libssh2-1 \
+    # Patterns, not versioned names: apt aborts the whole removal when one name
+    # is unknown (trixie renamed libssh2-1 to libssh2-1t64).
+    sudo apt-get remove -y 'php*-soap' 'php*-ssh2' \
         && echo -e "\e[92mRemoved additional PHP packages.\033[0m" | tee -a "$LOG_FILE" || echo -e "\e[93mSome additional PHP packages may not be installed.\033[0m" | tee -a "$LOG_FILE"
     echo -e "\e[33mResetting firewall rules (except SSL)...\033[0m" | tee -a "$LOG_FILE"
     sudo ufw delete allow 'Apache' 2>/dev/null
+    sudo ufw delete allow 80/tcp 2>/dev/null
+    sudo ufw delete allow 443/tcp 2>/dev/null
     sudo ufw reload 2>/dev/null
     # Clear Mirza install state so a fresh install is allowed afterwards
     sudo rm -rf /root/confmirza
@@ -2854,6 +3004,7 @@ function remove_bot() {
 function migrate_to_pro() {
     clear
     echo -e "\033[1;33mStarting Migration from Free to Pro Version...\033[0m"
+    set_db_vars
     if ! ensure_connectivity; then
         echo -e " ${C_BAD}●${CR} ${C_BAD}No internet connection (even after DNS reset). Aborting.${CR}"
         sleep 2; show_menu; return 1
@@ -2922,11 +3073,16 @@ function migrate_to_pro() {
     fi
     # MySQL 8.4+ disables mysql_native_password by default; fall back to the server
     # default plugin when it is not ACTIVE so CREATE USER does not fail.
-    MYSQL_AUTH_PLUGIN="mysql_native_password"
-    if ! mysql -u "$ROOT_USER" -p"$ROOT_PASS" -N -B -e \
-        "SELECT PLUGIN_STATUS FROM INFORMATION_SCHEMA.PLUGINS WHERE PLUGIN_NAME='mysql_native_password';" 2>/dev/null \
-        | grep -qi ACTIVE; then
-        MYSQL_AUTH_PLUGIN="caching_sha2_password"
+    if [ "${DB_SERVICE:-mysql}" = "mariadb" ]; then
+        MYSQL_IDENT_SQL="IDENTIFIED BY"
+    else
+        MYSQL_AUTH_PLUGIN="mysql_native_password"
+        if ! mysql -u "$ROOT_USER" -p"$ROOT_PASS" -N -B -e \
+            "SELECT PLUGIN_STATUS FROM INFORMATION_SCHEMA.PLUGINS WHERE PLUGIN_NAME='mysql_native_password';" 2>/dev/null \
+            | grep -qi ACTIVE; then
+            MYSQL_AUTH_PLUGIN="caching_sha2_password"
+        fi
+        MYSQL_IDENT_SQL="IDENTIFIED WITH $MYSQL_AUTH_PLUGIN BY"
     fi
     echo -e "\033[32mDatabase connection successful.\033[0m"
     OLD_DB="mirzabot"
@@ -2959,9 +3115,9 @@ function migrate_to_pro() {
     NEW_DB_USER=$(openssl rand -base64 10 | tr -dc 'a-zA-Z' | cut -c1-8)
     NEW_DB_PASS=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-10)
     echo -e "\033[33mCreating new database user...\033[0m"
-    mysql -u "$ROOT_USER" -p"$ROOT_PASS" -e "CREATE USER '$NEW_DB_USER'@'localhost' IDENTIFIED WITH $MYSQL_AUTH_PLUGIN BY '$NEW_DB_PASS';"
+    mysql -u "$ROOT_USER" -p"$ROOT_PASS" -e "CREATE USER '$NEW_DB_USER'@'localhost' $MYSQL_IDENT_SQL '$NEW_DB_PASS';"
     mysql -u "$ROOT_USER" -p"$ROOT_PASS" -e "GRANT ALL PRIVILEGES ON $NEW_DB.* TO '$NEW_DB_USER'@'localhost';"
-    mysql -u "$ROOT_USER" -p"$ROOT_PASS" -e "CREATE USER '$NEW_DB_USER'@'%' IDENTIFIED WITH $MYSQL_AUTH_PLUGIN BY '$NEW_DB_PASS';"
+    mysql -u "$ROOT_USER" -p"$ROOT_PASS" -e "CREATE USER '$NEW_DB_USER'@'%' $MYSQL_IDENT_SQL '$NEW_DB_PASS';"
     mysql -u "$ROOT_USER" -p"$ROOT_PASS" -e "GRANT ALL PRIVILEGES ON $NEW_DB.* TO '$NEW_DB_USER'@'%';"
     mysql -u "$ROOT_USER" -p"$ROOT_PASS" -e "FLUSH PRIVILEGES;"
     echo -e "\033[33mReading old configuration...\033[0m"
