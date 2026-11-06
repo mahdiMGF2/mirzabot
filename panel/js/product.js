@@ -18,3 +18,25 @@ window.openEditModal = function (p) {
 
     openModal('editModal');
 };
+
+(function () {
+    var all = document.getElementById('selAll'), form = document.getElementById('bulkForm');
+    if (!form) return;
+    function rows() { return [].slice.call(document.querySelectorAll('.selRow')); }
+    function sync() {
+        var ch = rows().filter(function (r) { return r.checked; });
+        document.getElementById('selCount').textContent = ch.length;
+        form.style.display = ch.length ? '' : 'none';
+        [].slice.call(form.querySelectorAll('input[name="ids[]"]')).forEach(function (n) { n.remove(); });
+        ch.forEach(function (r) { var h = document.createElement('input'); h.type = 'hidden'; h.name = 'ids[]'; h.value = r.value; form.appendChild(h); });
+    }
+    document.addEventListener('change', function (e) {
+        if (e.target === all) { rows().forEach(function (r) { if (r.closest('tr').style.display !== 'none') r.checked = all.checked; }); sync(); }
+        else if (e.target.classList && e.target.classList.contains('selRow')) sync();
+    });
+    form.addEventListener('submit', function (e) {
+        var op = document.getElementById('bulkOp').value, n = document.getElementById('selCount').textContent;
+        if (op === 'delete' && !confirm(n + ' محصول برای همیشه حذف شود؟')) e.preventDefault();
+        else if (op !== 'delete' && !confirm('این تغییر روی ' + n + ' محصول اعمال شود؟')) e.preventDefault();
+    });
+})();
