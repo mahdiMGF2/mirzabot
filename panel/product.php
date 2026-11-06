@@ -32,6 +32,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
   exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'bulk') {
+  csrf_check_post();
+  $ids = array_values(array_unique(array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])))));
+  $op = (string) ($_POST['op'] ?? '');
+  $val = trim((string) ($_POST['value'] ?? ''));
+  $textOps = ['category' => 'category', 'agent' => 'agent', 'location' => 'Location'];
+  try {
+    if (!$ids) {
+      flash('error', 'هیچ محصولی انتخاب نشده است.');
+    } else {
+      $in = implode(',', array_fill(0, count($ids), '?'));
+      if (isset($textOps[$op])) {
+        if ($op === 'agent' && !in_array($val, ['f', 'n', 'n2'], true)) { flash('error', 'نوع کاربر نامعتبر است (f, n, n2).'); header('Location: product.php'); exit; }
+        db_query($pdo, "UPDATE product SET {$textOps[$op]} = ? WHERE id IN ($in)", array_merge([$val], $ids));
+      } elseif ($op === 'status') {
+        db_query($pdo, "UPDATE product SET status_product = ? WHERE id IN ($in)", array_merge([$val === 'disable' ? 'disable' : 'active'], $ids));
+      } elseif ($op === 'price_percent') {
+        if (!preg_match('/^-?\d{1,3}(\.\d+)?$/', $val) || (float) $val <= -100) { flash('error', 'درصد نامعتبر است (مثلاً 10 یا -5).'); header('Location: product.php'); exit; }
+        db_query($pdo, "UPDATE product SET price_product = CAST(ROUND(CAST(price_product AS DECIMAL(20,2)) * (1 + ? / 100)) AS CHAR) WHERE id IN ($in)", array_merge([(float) $val], $ids));
+      } elseif ($op === 'delete') {
+        db_query($pdo, "DELETE FROM product WHERE id IN ($in)", $ids);
+      } else {
+        flash('error', 'عملیات نامعتبر است.');
+        header('Location: product.php');
+        exit;
+      }
+      flash('success', 'عملیات روی ' . count($ids) . ' محصول انجام شد.');
+    }
+  } catch (Throwable $e) {
+    flash('error', 'خطا: ' . $e->getMessage());
+  }
+  header('Location: product.php');
+  exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit') {
   csrf_check_post();
   $pid = (int) ($_POST['edit_id'] ?? 0);
@@ -88,6 +123,24 @@ include __DIR__ . '/inc/layout_head.php';
   <button class="btn btn-primary" onclick="openModal('addModal')"><?= icon('plus', 14) ?> <?= $textbotlang['panel']['productAddProductBtn'] ?></button>
 </div>
 
+<form method="POST" id="bulkForm" class="card fade-up" style="margin-bottom:12px;display:none">
+  <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
+  <input type="hidden" name="action" value="bulk">
+  <div class="card-body" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <b><span id="selCount">0</span> محصول انتخاب شده</b>
+    <select name="op" id="bulkOp" class="select" style="max-width:260px">
+      <option value="price_percent">تغییر قیمت (درصد، مثلاً 10 یا -5)</option>
+      <option value="category">دسته‌بندی</option>
+      <option value="agent">نوع کاربر (f / n / n2)</option>
+      <option value="location">پنل (نام پنل یا /all)</option>
+      <option value="status">وضعیت (active یا disable)</option>
+      <option value="delete">حذف محصولات انتخاب‌شده</option>
+    </select>
+    <input name="value" id="bulkVal" class="input" style="max-width:200px" placeholder="مقدار">
+    <button class="btn btn-primary btn-sm" type="submit">اعمال روی انتخاب‌شده‌ها</button>
+  </div>
+</form>
+
 <div class="card fade-up d1">
   <?php if (empty($products)): ?>
     <div class="empty" style="padding:60px 20px">
@@ -117,6 +170,7 @@ include __DIR__ . '/inc/layout_head.php';
       <table id="prodTbl" class="tbl-xl">
         <thead>
           <tr>
+            <th><input type="checkbox" id="selAll" title="انتخاب همه"></th>
             <th>#</th>
             <th><?= $textbotlang['panel']['productColPrice'] ?></th>
             <th><?= $textbotlang['panel']['productColActions'] ?></th>
@@ -132,6 +186,7 @@ include __DIR__ . '/inc/layout_head.php';
           <?php $i = 1;
           foreach ($products as $p): ?>
             <tr>
+              <td><input type="checkbox" class="selRow" value="<?= (int) $p['id'] ?>"></td>
               <td class="cf"><?= $i++ ?></td>
               <td class="cs"><?= htmlspecialchars($p['name_product'] ?? '') ?></td>
               <td class="cn cs"><?= number_format((int) ($p['price_product'] ?? 0)) ?> <span class="cf"><?= $textbotlang['panel']['productFieldServiceDays'] ?></span></td>
