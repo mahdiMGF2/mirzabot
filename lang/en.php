@@ -3737,6 +3737,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'addOrder' => '🛒 Add order',
                 'addProduct' => '🛍 Add product',
                 'addTimeConvertVolume' => 'Adding time and converting total volume to remaining volume',
+                'smartRenew' => 'Smart renewal (before expiry: carry over remaining volume and time; after expiry: full reset)',
                 'addTimeVolumeNextMonth' => 'Adding time and volume to the next month',
                 'adminDeletedService' => '🔗 An admin deleted a service from the bot\'s database.
 
