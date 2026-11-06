@@ -94,14 +94,19 @@ foreach ($roots as $root) {
 
 $kept = [];
 $removed = 0;
+$unrecognized = [];
 foreach ($existing as $line) {
     if (mirza_is_cronbot_line($line)) {
-        $removed++;
         $discovered = mirza_root_from_cron_line($line, $hostMap, $domainRoots);
         if ($discovered !== null && mirza_is_bot_root($discovered)) {
+            // A bot we can identify: its line is replaced by the dispatcher line below.
+            $removed++;
             $roots[] = $discovered;
+            continue;
         }
-        continue;
+        // Not a bot install we can identify (another project or an install outside the scanned
+        // directories): leave the line alone instead of silently deleting someone else's job.
+        $unrecognized[] = $line;
     }
     $kept[] = $line;
 }
@@ -135,6 +140,9 @@ fwrite(STDOUT, 'Mode: ' . ($apply ? 'apply' : 'dry-run') . PHP_EOL);
 fwrite(STDOUT, 'Bots found: ' . count($roots) . PHP_EOL);
 fwrite(STDOUT, 'Cronbot lines removed: ' . $removed . PHP_EOL);
 fwrite(STDOUT, 'Dispatcher lines added: ' . $added . PHP_EOL);
+if ($unrecognized !== []) {
+    fwrite(STDOUT, "Kept (cronbot lines not matched to a bot install):\n- " . implode("\n- ", $unrecognized) . PHP_EOL);
+}
 if ($skipped !== []) {
     fwrite(STDOUT, "Skipped:\n- " . implode("\n- ", $skipped) . PHP_EOL);
 }
@@ -185,8 +193,10 @@ function mirza_read_crontab(string $bin, string $user): array
     }
 
     $lines = preg_split('/\r?\n/', $raw) ?: [];
+    // Keep comments: the crontab is rewritten from this list, so dropping them would delete
+    // commented-out jobs (and notes) that belong to other projects.
     return array_values(array_filter(array_map('trim', $lines), static function ($line) {
-        return $line !== '' && strpos($line, '#') !== 0;
+        return $line !== '';
     }));
 }
 
@@ -201,7 +211,7 @@ function mirza_is_bot_root(string $root): bool
 
 function mirza_is_cronbot_line(string $line): bool
 {
-    return strpos($line, '/cronbot/') !== false;
+    return strpos($line, '#') !== 0 && strpos($line, '/cronbot/') !== false;
 }
 
 /**
@@ -237,6 +247,9 @@ function mirza_roots_from_crontab(array $lines): array
 {
     $roots = [];
     foreach ($lines as $line) {
+        if (strpos($line, '#') === 0) {
+            continue;
+        }
         if (preg_match('#(/[^\\s]+)/cronbot/(?:run\\.php|[A-Za-z0-9_]+\\.php)#', $line, $m)) {
             $root = $m[1];
             if (mirza_is_bot_root($root)) {
