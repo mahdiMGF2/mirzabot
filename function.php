@@ -1842,10 +1842,11 @@ function addCronIfNotExists($cronCommand)
     $existingCronJobs = runShellCommand(sprintf('%s -l 2>/dev/null', escapeshellarg($crontabBinary)));
     $existingCronJobs = trim((string) $existingCronJobs);
     $cronLines = $existingCronJobs === '' ? [] : preg_split('/\r?\n/', $existingCronJobs);
+    // Keep every existing line (including comments): the whole crontab is rewritten below, so
+    // dropping lines here would delete jobs that belong to other projects.
     $cronLines = array_values(array_filter(array_map('trim', $cronLines), static function ($line) {
         return $line !== ''
-            && strpos($line, '#') !== 0
-            && stripos($line, 'no crontab') === false;
+            && stripos($line, 'no crontab for') !== 0;
     }));
 
     $newLineAdded = false;
