@@ -3737,6 +3737,7 @@ f,n.n2',
                 'addOrder' => '🛒 添加订单',
                 'addProduct' => '🛍 添加产品',
                 'addTimeConvertVolume' => '添加时间并将总流量转换为剩余流量',
+                'smartRenew' => '智能续费（到期前：结转剩余流量和时间；到期后：完全重置）',
                 'addTimeVolumeNextMonth' => '将时间和流量添加到下个月',
                 'adminDeletedService' => '🔗 一位管理员从机器人数据库中删除了一个服务。
 
