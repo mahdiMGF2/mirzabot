@@ -3,6 +3,15 @@ require_once __DIR__ . '/inc/config.php';
 require_once __DIR__ . '/inc/icons.php';
 require_auth();
 
+// Older installs: create the limit_ip column on first visit if it is missing.
+try {
+  $have = $pdo->query("SHOW COLUMNS FROM product")->fetchAll(PDO::FETCH_COLUMN);
+  if (!in_array('limit_ip', $have, true)) {
+    $pdo->exec("ALTER TABLE product ADD COLUMN limit_ip INT NOT NULL DEFAULT 0");
+  }
+} catch (Throwable $e) {
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
   csrf_check_post();
   $name = trim($_POST['name_product'] ?? '');
@@ -23,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
       "INSERT INTO product (name_product,code_product,price_product,Volume_constraint,Service_time,Location,agent,data_limit_reset,note,category,hide_panel,one_buy_status) VALUES (?,?,?,?,?,?,?,'no_reset',?,?,'{}','0')",
       [$name, $code, (int) ($_POST['price_product'] ?? 0), (int) ($_POST['volume_product'] ?? 0), (int) ($_POST['time_product'] ?? 0), $_POST['namepanel'] ?? '', $_POST['agent_product'] ?? '', $_POST['note_product'] ?? '', $_POST['category_product'] ?? '']
     );
-    db_query($pdo, "UPDATE product SET display_order = id WHERE id = ?", [$pdo->lastInsertId()]);
+    db_query($pdo, "UPDATE product SET display_order = id, limit_ip = ? WHERE id = ?", [max(0, (int) ($_POST['limit_ip'] ?? 0)), $pdo->lastInsertId()]);
     flash('success', $textbotlang['panel']['productAddedPrefix'] . $name . $textbotlang['panel']['productAddedSuffix']);
   } catch (Exception $e) {
     flash('error', $textbotlang['panel']['productDbError'] . $e->getMessage());
@@ -41,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit'
       $pdo->beginTransaction();
       db_query(
         $pdo,
-        "UPDATE product SET name_product=?,price_product=?,Volume_constraint=?,Service_time=?,Location=?,agent=?,note=?,category=? WHERE id=?",
-        [$name, (int) ($_POST['price_product'] ?? 0), (int) ($_POST['volume_product'] ?? 0), (int) ($_POST['time_product'] ?? 0), $_POST['namepanel'] ?? '', $_POST['agent_product'] ?? '', $_POST['note_product'] ?? '', $_POST['category_product'] ?? '', $pid]
+        "UPDATE product SET name_product=?,price_product=?,Volume_constraint=?,Service_time=?,Location=?,agent=?,note=?,category=?,limit_ip=? WHERE id=?",
+        [$name, (int) ($_POST['price_product'] ?? 0), (int) ($_POST['volume_product'] ?? 0), (int) ($_POST['time_product'] ?? 0), $_POST['namepanel'] ?? '', $_POST['agent_product'] ?? '', $_POST['note_product'] ?? '', $_POST['category_product'] ?? '', max(0, (int) ($_POST['limit_ip'] ?? 0)), $pid]
       );
       if (isset($_POST['position'])) {
         move_display_order($pdo, 'product', $pid, (int) $_POST['position']);
@@ -219,6 +228,10 @@ include __DIR__ . '/inc/layout_head.php';
               <option value="n2"><?= $textbotlang['panel']['productColCategory'] ?></option>
             </select>
           </div>
+          <div class="field">
+            <label>محدودیت IP هم‌زمان (۰ = نامحدود؛ برای سرویس‌های x-ui)</label>
+            <input type="number" min="0" name="limit_ip" class="input" value="0">
+          </div>
           <div class="field full">
             <label><?= $textbotlang['panel']['productColDescription'] ?></label>
             <input type="text" name="note_product" class="input" placeholder="<?= htmlspecialchars($textbotlang['panel']['productDescriptionOptional']) ?>">
@@ -293,6 +306,10 @@ include __DIR__ . '/inc/layout_head.php';
               <option value="n"><?= $textbotlang['panel']['productDetailNote'] ?></option>
               <option value="n2"><?= $textbotlang['panel']['productCloseBtn'] ?></option>
             </select>
+          </div>
+          <div class="field">
+            <label>محدودیت IP هم‌زمان (۰ = نامحدود؛ برای سرویس‌های x-ui)</label>
+            <input type="number" min="0" name="limit_ip" id="edit_limit_ip" class="input" value="0">
           </div>
           <div class="field full">
             <label><?= $textbotlang['panel']['productUnlimitedLabel'] ?></label>

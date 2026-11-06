@@ -7,6 +7,7 @@ window.openEditModal = function (p) {
     document.getElementById('edit_cat').value = p.category || '';
     document.getElementById('edit_agent').value = p.agent || '';
     document.getElementById('edit_note').value = p.note || '';
+    document.getElementById('edit_limit_ip').value = p.limit_ip || 0;
     document.getElementById('edit_position').value = p.position || '';
 
     var sel = document.getElementById('edit_panel');
