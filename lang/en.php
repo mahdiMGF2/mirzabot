@@ -1769,7 +1769,7 @@ trojan://xyz',
                         'changedData' => '✅ The changes were successfully saved',
                         'setDayRemove' => '📌 Send the number of days after which accounts whose time has expired should be deleted
 Current time: ',
-                        'setVolumeRemove' => '📌 Send the number of days after which accounts whose volume has run out should be deleted. The account time is calculated based on the user\'s last connection. This feature is for the Marzban panel
+                        'setVolumeRemove' => '📌 Send the number of days after which accounts whose volume has run out should be deleted. The account time is calculated based on the user\'s last connection. This feature is for Marzban and 3x-ui panels
 Current time: ',
                         'cannotDeleteUnlimited' => '❌ The service cannot be deleted because its volume and time are unlimited. ',
                         'askOnHoldDays' => 'In this section you must set, if the user has not connected to their config after a certain number of days and is in on_hold status, to send the user a message',

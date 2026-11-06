@@ -158,9 +158,10 @@ class ServiceMonitor
         if (!in_array($userData['status'], ['limited', 'expired']))
             return false;
         $panel = select("marzban_panel", "*", "name_panel", $invoice['Service_location'], "select");
-        if ($panel['type'] != "marzban")
+        if (!in_array($panel['type'], ["marzban", "x-ui_single"]))
             return;
-        if ($userData['data_limit_reset'] != "no_reset")
+        // 3x-ui has no periodic reset concept, so only Marzban reports data_limit_reset
+        if ($panel['type'] == "marzban" && ($userData['data_limit_reset'] ?? null) != "no_reset")
             return;
         if ($userData['status'] == "Unsuccessful")
             return;
@@ -170,6 +171,9 @@ class ServiceMonitor
             $timelastconect = 0;
         } else {
             $time = strtotime($userData['online_at']);
+            // 3x-ui returns "offline" when it has never seen the client online: not a date, never delete on it
+            if ($time === false)
+                return;
             $timelastconect = (time() - $time) / 86400;
         }
         if ($timelastconect == 0)
