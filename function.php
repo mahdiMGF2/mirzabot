@@ -1879,8 +1879,7 @@ function addCronIfNotExists($cronCommand)
     $cronLines = $existingCronJobs === '' ? [] : preg_split('/\r?\n/', $existingCronJobs);
     $cronLines = array_values(array_filter(array_map('trim', $cronLines), static function ($line) {
         return $line !== ''
-            && strpos($line, '#') !== 0
-            && stripos($line, 'no crontab') === false;
+            && stripos($line, 'no crontab for') !== 0;
     }));
 
     $newLineAdded = false;
