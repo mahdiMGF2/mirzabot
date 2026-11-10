@@ -371,7 +371,7 @@ function mini_user_info(array $data, string $method): void
 
 function mini_countries(array $data, string $method): void
 {
-    global $pdo, $setting, $textbotlang, $tokencheck;
+    global $pdo, $setting, $tokencheck;
 
     if ($method !== "GET") {
         echo json_encode([

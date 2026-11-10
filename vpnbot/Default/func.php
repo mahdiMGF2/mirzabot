@@ -16,8 +16,7 @@ function readJsonFileIfExists($path, $default = [])
 }
 
 function DirectPaymentbot($order_id,$image = 'images.jpg'){
-    global $pdo,$ManagePanel,$textbotlang,$keyboardextendfnished,$keyboard,$Confirm_pay,$from_id,$message_id,$datatextbot;
-    $setting = select("setting", "*");
+    global $Confirm_pay,$from_id,$message_id,$datatextbot;
     $Payment_report = select("Payment_report", "*", "id_order", $order_id,"select");
     $format_price_cart = number_format($Payment_report['price']);
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'],"select");

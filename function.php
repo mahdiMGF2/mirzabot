@@ -2370,16 +2370,6 @@ function usernameMethodKey($value, $default = 'numericIdRandom')
     $labels = usernameMethodLabels();
     return $labels[$value] ?? $default;
 }
-function generateAuthStr($length = 10)
-{
-    $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    $max = strlen($characters) - 1;
-    $result = '';
-    for ($i = 0; $i < $length; $i++) {
-        $result .= $characters[random_int(0, $max)];
-    }
-    return $result;
-}
 function createqrcode($contents)
 {
     $contents = (string) $contents;
@@ -2443,8 +2433,8 @@ function check_active_btn($keyboard, $text_var)
 {
     $trace_keyboard = json_decode($keyboard, true)['keyboard'];
     $status = false;
-    foreach ($trace_keyboard as $key => $callback_set) {
-        foreach ($callback_set as $keyboard_key => $keyboard) {
+    foreach ($trace_keyboard as $callback_set) {
+        foreach ($callback_set as $keyboard) {
             if ($keyboard['text'] == $text_var) {
                 $status = true;
                 break;

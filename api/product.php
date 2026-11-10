@@ -280,7 +280,7 @@ function prod_set_inbounds(array $data, string $method): void
             sendJsonResponse(false, "User Not Found", [], 200);
 
         if (!$isNewMarzban) {
-            foreach ($DataUserOut['proxies'] as $key => $value) {
+            foreach (array_keys($DataUserOut['proxies']) as $key) {
                 if ($key == "shadowsocks" || $key == "trojan") {
                     unset($DataUserOut['proxies'][$key]['password']);
                 } elseif ($key == "wireguard") {

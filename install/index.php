@@ -39,7 +39,7 @@ function mirza_install_authorized(): bool
 
 function mirza_install_group(string $group, array $items): array
 {
-    foreach ($items as $index => $item) {
+    foreach (array_keys($items) as $index) {
         $items[$index]['group'] = $group;
     }
 
@@ -381,7 +381,6 @@ if ($action !== '') {
 }
 
 $locked = mirza_install_locked();
-$configured = mirza_install_is_configured();
 $authorized = mirza_install_authorized();
 $host = mirza_install_host();
 
