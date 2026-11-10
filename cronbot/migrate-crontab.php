@@ -99,13 +99,10 @@ foreach ($existing as $line) {
     if (mirza_is_cronbot_line($line)) {
         $discovered = mirza_root_from_cron_line($line, $hostMap, $domainRoots);
         if ($discovered !== null && mirza_is_bot_root($discovered)) {
-            // A bot we can identify: its line is replaced by the dispatcher line below.
             $removed++;
             $roots[] = $discovered;
             continue;
         }
-        // Not a bot install we can identify (another project or an install outside the scanned
-        // directories): leave the line alone instead of silently deleting someone else's job.
         $unrecognized[] = $line;
     }
     $kept[] = $line;
@@ -193,8 +190,6 @@ function mirza_read_crontab(string $bin, string $user): array
     }
 
     $lines = preg_split('/\r?\n/', $raw) ?: [];
-    // Keep comments: the crontab is rewritten from this list, so dropping them would delete
-    // commented-out jobs (and notes) that belong to other projects.
     return array_values(array_filter(array_map('trim', $lines), static function ($line) {
         return $line !== '';
     }));
