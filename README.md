@@ -167,7 +167,7 @@ Mirza Bot integrates with the most popular VPN and network management panels:
 |-------------|---------|
 | 🖥️ **OS** | A **clean** Ubuntu **22.04/24.04/26.04** or **Debian 12/13** server |
 | 🌐 **Domain** | A domain name pointed to your server's IP |
-| ⚙️ **Stack** | PHP 8.5.12+, Apache, MySQL/MariaDB, SSL — *installed automatically by the script* |
+| ⚙️ **Stack** | PHP 8.5.12+ (or 8.4.27+), Apache, MySQL/MariaDB, SSL — *installed automatically by the script* |
 
 > 💡 Start from a fresh server with no existing web server, database, or panel installed.
 

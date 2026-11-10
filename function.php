@@ -3,7 +3,7 @@ require_once 'vendor/autoload.php';
 require 'config.php';
 ini_set('error_log', 'error_log');
 
-const MIN_PHP_VERSION = '8.5.12';
+const MIN_PHP_VERSION = PHP_VERSION_ID >= 80500 ? '8.5.12' : '8.4.27';
 
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;

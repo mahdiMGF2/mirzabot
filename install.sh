@@ -553,6 +553,7 @@ export -f setup_php_repo
 
 export PHP_TARGET_VER="8.5"
 export PHP_MIN_VERSION="8.5.12"
+[ "$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;' 2>/dev/null)" = "8.4" ] && export PHP_TARGET_VER="8.4" PHP_MIN_VERSION="8.4.27"
 
 # 0 when apt has an installable candidate for this package.
 _apt_has_candidate() {
@@ -571,6 +572,14 @@ php_candidate_ok() {
     dpkg --compare-versions "${cand#*:}" ge "$PHP_MIN_VERSION"
 }
 export -f php_candidate_ok
+
+select_php_target() {
+    if PHP_TARGET_VER=8.5 PHP_MIN_VERSION=8.5.12 php_candidate_ok >/dev/null; then
+        export PHP_TARGET_VER=8.5 PHP_MIN_VERSION=8.5.12
+    elif PHP_TARGET_VER=8.4 PHP_MIN_VERSION=8.4.27 php_candidate_ok >/dev/null; then
+        export PHP_TARGET_VER=8.4 PHP_MIN_VERSION=8.4.27
+    fi
+}
 
 php_version_ok() {
     "php$PHP_TARGET_VER" -r 'echo PHP_VERSION, PHP_EOL; exit(version_compare(PHP_VERSION, getenv("PHP_MIN_VERSION"), ">=") ? 0 : 1);'
@@ -602,6 +611,8 @@ upgrade_php_if_needed() {
     run_step "Adding PHP repository" \
         "setup_php_repo && apt-get update --allow-releaseinfo-change -o DPkg::Lock::Timeout=180" \
         || { show_step_error; return 1; }
+    select_php_target
+    V="$PHP_TARGET_VER"
     cand=$(apt-cache policy "php$V" 2>/dev/null | awk '/Candidate:/{print $2; exit}')
     [ "$cand" = "(none)" ] && cand=""
     cand_short=${cand#*:}; cand_short=${cand_short%%[-+~]*}
@@ -2193,6 +2204,7 @@ function install_bot() {
             "apt-get install -y $_base_tools" \
             || { show_step_error; install_pause "Installing base tools"; }
 
+        select_php_target
         PHP_VER="$PHP_TARGET_VER"
         state_set PHP_VER "$PHP_VER"
         echo -e " ${C_DIM}Selected PHP version:${CR} ${C_KEY}${PHP_VER} (>= ${PHP_MIN_VERSION})${CR}"
