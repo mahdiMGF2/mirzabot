@@ -2758,6 +2758,9 @@ function update_bot() {
     LANG_OVERRIDE_BACKUP="/root/mirzapro_lang_override_backup"
     rm -rf "$LANG_OVERRIDE_BACKUP"
     [ -d "$BOT_DIR/lang/override" ] && cp -a "$BOT_DIR/lang/override" "$LANG_OVERRIDE_BACKUP"
+    QR_BACKGROUND_BACKUP="/root/mirzapro_custom_qr.jpg"
+    rm -f "$QR_BACKGROUND_BACKUP"
+    [ -f "$BOT_DIR/custom.jpg" ] && cp "$BOT_DIR/custom.jpg" "$QR_BACKGROUND_BACKUP"
     run_step "Backing up vpnbots" "backup_vpnbots '$BOT_DIR'" \
         || { show_step_error
              echo -e "\e[91mError: Failed to backup vpnbots.\033[0m"
@@ -2797,6 +2800,10 @@ function update_bot() {
     if [ -d "$LANG_OVERRIDE_BACKUP" ]; then
         sudo rm -rf "$BOT_DIR/lang/override"
         sudo mv "$LANG_OVERRIDE_BACKUP" "$BOT_DIR/lang/override"
+    fi
+    if [ -f "$QR_BACKGROUND_BACKUP" ]; then
+        sudo cp "$QR_BACKGROUND_BACKUP" "$BOT_DIR/images.jpg"
+        sudo mv "$QR_BACKGROUND_BACKUP" "$BOT_DIR/custom.jpg"
     fi
     run_step "Restoring vpnbots" "restore_vpnbots '$BOT_DIR'" \
         || { show_step_error
