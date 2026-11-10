@@ -3724,7 +3724,6 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     } else {
         $statuscustom = false;
     }
-    // "Previous menu": back to the category list when a duration was picked first, otherwise to the first step after the location.
     $backcat = isset($userdate['monthproduct']) ? "productmonth_" . $userdate['monthproduct'] : "backproduct";
     Editmessagetext($from_id, $message_id, $textbotlang['users']['sell']['serviceSelectFirst'], KeyboardProduct($marzban_list_get['name_panel'], $query, $user['pricediscount'], $datakeyboard, $statuscustom, $backcat, null, "customsellvolume", $queryParams));
 } elseif (preg_match('/^productmonth_(\w+)/', $datain, $dataget)) {
@@ -3768,7 +3767,6 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         } else {
             $statuscustom = false;
         }
-        // Back returns to the duration list instead of closing the menu.
         Editmessagetext($from_id, $message_id, $textbotlang['users']['sell']['serviceSelectFirst'], KeyboardProduct($marzban_list_get['name_panel'], $query, $user['pricediscount'], $datakeyboard, $statuscustom, "backproduct", null, "customsellvolume", $queryParams));
     }
 } elseif ($datain == "customsellvolume") {
