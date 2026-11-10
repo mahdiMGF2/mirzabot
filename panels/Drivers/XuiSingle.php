@@ -215,24 +215,22 @@ class XuiSinglePanelDriver extends BasePanelDriver
 
     public function modify(array $vars)
     {
-        $name_panel = $vars['name_panel'];
         $username = $vars['username'];
         $config = $vars['config'];
         $Get_Data_Panel = $vars['Get_Data_Panel'];
-        $data_user = $this->DataUser($name_panel, $username);
-        if (($data_user['status'] ?? '') == 'Unsuccessful') {
+        $current = get_clinets($username, $Get_Data_Panel);
+        $client = json_decode($current['body'] ?? '', true)['obj']['client'] ?? null;
+        if (!is_array($client)) {
             return array(
                 'status' => false,
-                'msg' => $data_user['msg'] ?? ''
+                'msg' => $current['error'] ?? 'User not found'
             );
         }
-        $data = array(
-            "email" => $username,
-            "totalGB" => isset($config['totalGB']) ? $config['totalGB'] : $data_user['data_limit'],
-            "expiryTime" => isset($config['expiryTime']) ? $config['expiryTime'] : $data_user['expiry_time'],
-            "tgId" => 0,
-            "enable" => isset($config['enable']) ? $config['enable'] : true,
-        );
+        $data = array_intersect_key($client, array_flip(['limitIp', 'limitHwid', 'flow', 'comment', 'tgId', 'group', 'reset']));
+        $data['email'] = $username;
+        $data['totalGB'] = $config['totalGB'] ?? $client['totalGB'];
+        $data['expiryTime'] = $config['expiryTime'] ?? $client['expiryTime'];
+        $data['enable'] = $config['enable'] ?? true;
         if (!empty($config['id']))
             $data['id'] = $config['id'];
         if (!empty($config['subId']))
