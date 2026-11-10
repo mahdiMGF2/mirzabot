@@ -172,7 +172,7 @@ var _swipeSb = document.getElementById('sidebar');
 if (_swipeSb) {
     var _swipeX = 0;
     _swipeSb.addEventListener('touchstart', function (e) { _swipeX = e.touches[0].clientX; }, { passive: true });
-    _swipeSb.addEventListener('touchmove',  function (e) { if (e.touches[0].clientX - _swipeX > 40) closeSidebar(); }, { passive: true });
+    _swipeSb.addEventListener('touchmove',  function (e) { if ((e.touches[0].clientX - _swipeX) * (document.documentElement.dir === 'ltr' ? -1 : 1) > 40) closeSidebar(); }, { passive: true });
 }
 
 window.openModal = function (id) {
@@ -231,3 +231,6 @@ setTimeout(function () {
         setTimeout(function () { n.remove(); }, 420);
     });
 }, 5500);
+document.addEventListener('click', function (e) {
+    document.querySelectorAll('details.lang-menu[open]').forEach(function (d) { if (!d.contains(e.target)) d.removeAttribute('open'); });
+});

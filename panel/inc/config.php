@@ -16,7 +16,15 @@ require __DIR__ . '/../../function.php';
 date_default_timezone_set('Asia/Tehran');
 
 // Panel UI language strings (loaded from lang/fa.php via languagechange())
-$textbotlang = languagechange();
+$panelLanguages = ['fa' => 'فارسی', 'en' => 'English', 'ru' => 'Русский', 'zh' => '中文'];
+$panelLang = $_GET['lang'] ?? $_COOKIE['panel_lang'] ?? 'fa';
+if (!is_string($panelLang) || !isset($panelLanguages[$panelLang])) {
+    $panelLang = 'fa';
+}
+if (isset($_GET['lang'])) {
+    setcookie('panel_lang', $panelLang, ['expires' => time() + 31536000, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
+}
+$textbotlang = languagechange(null, $panelLang);
 
 function db_query(PDO $pdo, string $sql, array $params = []): PDOStatement
 {
