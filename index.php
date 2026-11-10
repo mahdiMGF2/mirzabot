@@ -3724,7 +3724,8 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     } else {
         $statuscustom = false;
     }
-    Editmessagetext($from_id, $message_id, $textbotlang['users']['sell']['serviceSelectFirst'], KeyboardProduct($marzban_list_get['name_panel'], $query, $user['pricediscount'], $datakeyboard, $statuscustom, "backuser", null, "customsellvolume", $queryParams));
+    $backcat = isset($userdate['monthproduct']) ? "productmonth_" . $userdate['monthproduct'] : "backproduct";
+    Editmessagetext($from_id, $message_id, $textbotlang['users']['sell']['serviceSelectFirst'], KeyboardProduct($marzban_list_get['name_panel'], $query, $user['pricediscount'], $datakeyboard, $statuscustom, $backcat, null, "customsellvolume", $queryParams));
 } elseif (preg_match('/^productmonth_(\w+)/', $datain, $dataget)) {
     $monthenumber = $dataget[1];
     $userdate = json_decode($user['Processing_value'], true);
@@ -3766,7 +3767,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         } else {
             $statuscustom = false;
         }
-        Editmessagetext($from_id, $message_id, $textbotlang['users']['sell']['serviceSelectFirst'], KeyboardProduct($marzban_list_get['name_panel'], $query, $user['pricediscount'], $datakeyboard, $statuscustom, "backuser", null, "customsellvolume", $queryParams));
+        Editmessagetext($from_id, $message_id, $textbotlang['users']['sell']['serviceSelectFirst'], KeyboardProduct($marzban_list_get['name_panel'], $query, $user['pricediscount'], $datakeyboard, $statuscustom, "backproduct", null, "customsellvolume", $queryParams));
     }
 } elseif ($datain == "customsellvolume") {
     $userdate = json_decode($user['Processing_value'], true);
