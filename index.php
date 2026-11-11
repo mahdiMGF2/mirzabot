@@ -3975,7 +3975,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         $maxvolume = intval(json_decode($marzban_list_get['maxvolume'], true)[$user['agent']] ?? 0);
         $maintime = intval(json_decode($marzban_list_get['maintime'], true)[$user['agent']] ?? 0);
         $maxtime = intval(json_decode($marzban_list_get['maxtime'], true)[$user['agent']] ?? 0);
-        if ((json_decode($marzban_list_get['customvolume'] ?? '[]', true)[$user['agent']] ?? null) != "1" || $marzban_list_get['type'] == "Manualsale"
+        if (((json_decode($marzban_list_get['customvolume'] ?? '[]', true)[$user['agent']] ?? null) != "1" && select("product", "*", null, null, "count") != 0) || $marzban_list_get['type'] == "Manualsale"
             || !ctype_digit((string) $parts[1]) || !ctype_digit((string) $parts[2])
             || $parts[2] < $mainvolume || $parts[2] > $maxvolume || $parts[1] < $maintime || $parts[1] > $maxtime) {
             sendmessage($from_id, $textbotlang['users']['sell']['purchaseError'], $backuser, 'html');
