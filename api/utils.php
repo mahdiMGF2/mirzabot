@@ -171,7 +171,7 @@ function logApiRequest($headers, $data, $action)
         );
         $stmt->execute([
             json_encode(array_diff_key(array_change_key_case((array) $headers), array_flip(['token', 'authorization', 'cookie']))),
-            json_encode($data),
+            json_encode(is_array($data) ? array_diff_key($data, array_flip(['password_panel', 'secret_code', 'token', 'api_token', 'password'])) : $data),
             date('Y/m/d H:i:s'),
             $_SERVER['REMOTE_ADDR'] ?? 'unknown',
             $action

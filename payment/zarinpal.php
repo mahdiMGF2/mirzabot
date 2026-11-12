@@ -19,7 +19,9 @@ if ($Authority === '') {
 }
 $setting = select("setting", "*");
 $PaySetting = select("PaySetting", "ValuePay", "NamePay", "merchant_zarinpal","select")['ValuePay'];
-$Payment_reports = select("Payment_report", "*", "dec_not_confirmed", $Authority,"select");
+$stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE dec_not_confirmed = ? AND Payment_Method = 'zarinpal' LIMIT 1");
+$stmt->execute([$Authority]);
+$Payment_reports = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!is_array($Payment_reports)) {
     http_response_code(404);
     exit('order not found');
@@ -75,7 +77,7 @@ $payment_status = $textbotlang['paymentGateway']['zarinpalErrors'][$response['er
     if($pricecashback != "0"){
         $result = ($Payment_report['price'] * $pricecashback) / 100;
         $Balance_confrim = intval($Balance_id['Balance']) +$result;
-        update("user","Balance",$Balance_confrim, "id",$Balance_id['id']); 
+        addBalance($Balance_id['id'], $result);
         $pricecashback =  number_format($pricecashback);
         $text_report = sprintf($textbotlang['paymentGateway']['giftReport'], $result);
         sendmessage($Balance_id['id'], $text_report, null, 'HTML');

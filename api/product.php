@@ -187,6 +187,11 @@ function prod_product_edit(array $data, string $method): void
         }
     }
 
+    foreach (['price', 'volume', 'data_limit', 'time'] as $numericField) {
+        if (isset($data[$numericField])) {
+            $data[$numericField] = requireInt($data, $numericField, 0);
+        }
+    }
     try {
         $productData = [
             'name_product' => isset($data['name']) ? $data['name'] : $product['name_product'],

@@ -169,8 +169,6 @@ foreach ([
     $_POST['init_data'] ?? null,
     $_POST['initDataUnsafe'] ?? null,
     $_POST['init_data_unsafe'] ?? null,
-    $_GET['initData'] ?? null,
-    $_GET['init_data'] ?? null,
 ] as $value) {
     if ($value === null) {
         continue;

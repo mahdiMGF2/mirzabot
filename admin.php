@@ -1752,8 +1752,7 @@ elseif ($datain == "systemsms") {
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
     if ($pricecashback != "0") {
         $result = ($Payment_report['price'] * $pricecashback) / 100;
-        $Balance_confrim = intval($Balance_id['Balance']) + $result;
-        update("user", "Balance", $Balance_confrim, "id", $Balance_id['id']);
+        addBalance($Balance_id['id'], $result);
         $pricecashback = number_format($pricecashback);
         $text_report = sprintf($textbotlang['users']['Balance']['giftDepositAlt'], $result);
         sendmessage($Balance_id['id'], $text_report, null, 'HTML');
@@ -1795,7 +1794,18 @@ elseif ($datain == "systemsms") {
         ));
         return;
     }
-    update("Payment_report", "payment_Status", "reject", "id_order", $id_order);
+    $claim = $pdo->prepare("UPDATE Payment_report SET payment_Status = 'reject' WHERE id_order = ? AND payment_Status NOT IN ('paid', 'reject')");
+    $claim->execute([$id_order]);
+    clearSelectCache('Payment_report');
+    if ($claim->rowCount() === 0) {
+        telegram('answerCallbackQuery', array(
+            'callback_query_id' => $callback_query_id,
+            'text' => $textbotlang['Admin']['Payment']['reviewedPayment'],
+            'show_alert' => true,
+            'cache_time' => 5,
+        ));
+        return;
+    }
 
     sendmessage($from_id, $textbotlang['Admin']['Payment']['reasonRejecting'], $backadmin, 'HTML');
     step('reject-dec', $from_id);
@@ -3581,9 +3591,7 @@ elseif ($datain == "systemsms") {
     $invoice = null;
     $stmt->execute([$user['Processing_value'], $randomString, $dateacc, $text, $payment_Status, $Payment_Method, $invoice]);
     sendmessage($from_id, $textbotlang['Admin']['manageUser']['addBalanced'], $keyboardadmin, 'html');
-    $Balance_user = select("user", "*", "id", $user['Processing_value'], "select");
-    $Balance_add_user = $Balance_user['Balance'] + $text;
-    update("user", "Balance", $Balance_add_user, "id", $user['Processing_value']);
+    addBalance($user['Processing_value'], intval($text));
     $heibalanceuser = number_format($text, 0);
     $textadd = sprintf($textbotlang['users']['Balance']['addedNotice'], $heibalanceuser);
     sendmessage($user['Processing_value'], $textadd, null, 'HTML');
@@ -3627,9 +3635,8 @@ elseif ($datain == "systemsms") {
     $invoice = null;
     $stmt->execute([$user['Processing_value'], $randomString, $dateacc, $text, $payment_Status, $Payment_Method, $invoice]);
     sendmessage($from_id, $textbotlang['Admin']['manageUser']['lowBalanced'], $keyboardadmin, 'html');
-    $Balance_user = select("user", "*", "id", $user['Processing_value'], "select");
-    $Balance_add_user = $Balance_user['Balance'] - $text;
-    update("user", "Balance", $Balance_add_user, "id", $user['Processing_value']);
+    $pdo->prepare("UPDATE user SET Balance = Balance - ? WHERE id = ?")->execute([intval($text), $user['Processing_value']]);
+    clearSelectCache('user');
     $lowbalanceuser = number_format($text, 0);
     $textkam = sprintf($textbotlang['users']['Balance']['deductedNotice2'], $lowbalanceuser);
     sendmessage($user['Processing_value'], $textkam, null, 'HTML');
@@ -4724,9 +4731,7 @@ elseif ($datain == "systemsms") {
         return;
     }
     $invoice = select("invoice", "*", "id_invoice", $user['Processing_value'], "select");
-    $Balance_id_cancel = select("user", "*", "id", $invoice['id_user'], "select");
-    $Balance_id_cancel_fee = intval($Balance_id_cancel['Balance']) + intval($text);
-    update("user", "Balance", $Balance_id_cancel_fee, "id", $invoice['id_user']);
+    addBalance($invoice['id_user'], intval($text));
     step('home', $from_id);
     sendmessage($invoice['id_user'], sprintf($textbotlang['users']['Balance']['addedNotice5'], $text), null, 'HTML');
     sendmessage($from_id, $textbotlang['Admin']['Balance']['addedToUser'], $keyboardadmin, 'HTML');

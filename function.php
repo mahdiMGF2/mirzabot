@@ -1026,12 +1026,46 @@ function addBalance($userId, $amount)
     $stmt->execute([$amount, $userId]);
     clearSelectCache('user');
 }
+function consumeDiscountCode($code, $userId): bool
+{
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE DiscountSell SET usedDiscount = CAST(usedDiscount AS UNSIGNED) + 1 WHERE codeDiscount = ? AND CAST(usedDiscount AS UNSIGNED) < CAST(limitDiscount AS UNSIGNED)");
+    $stmt->execute([$code]);
+    clearSelectCache('DiscountSell');
+    if ($stmt->rowCount() !== 1) {
+        return false;
+    }
+    $pdo->prepare("INSERT INTO Giftcodeconsumed (id_user, code) VALUES (?, ?)")->execute([$userId, $code]);
+    return true;
+}
+function releaseDiscountCode($code, $userId): void
+{
+    global $pdo;
+    $pdo->prepare("UPDATE DiscountSell SET usedDiscount = CAST(usedDiscount AS UNSIGNED) - 1 WHERE codeDiscount = ? AND CAST(usedDiscount AS UNSIGNED) > 0")->execute([$code]);
+    $pdo->prepare("DELETE FROM Giftcodeconsumed WHERE id_user = ? AND code = ? LIMIT 1")->execute([$userId, $code]);
+    clearSelectCache('DiscountSell');
+}
 function cancelPendingGatewayOrders($id_user): void
 {
     global $pdo;
-    $stmt = $pdo->prepare("DELETE FROM invoice WHERE id_user = ? AND Status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = invoice.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))");
+    $pendingInvoice = "id_user = ? AND Status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = invoice.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
+    $pendingService = "id_user = ? AND status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = service_other.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
+    $stmt = $pdo->prepare("SELECT discount_code FROM invoice WHERE $pendingInvoice AND discount_code IS NOT NULL AND discount_code != ''");
     $stmt->execute([$id_user]);
-    $stmt = $pdo->prepare("DELETE FROM service_other WHERE id_user = ? AND status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = service_other.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))");
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $code) {
+        releaseDiscountCode($code, $id_user);
+    }
+    $stmt = $pdo->prepare("SELECT value FROM service_other WHERE $pendingService");
+    $stmt->execute([$id_user]);
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $value) {
+        $code = json_decode((string) $value, true)['discount_code'] ?? '';
+        if ($code !== '') {
+            releaseDiscountCode($code, $id_user);
+        }
+    }
+    $stmt = $pdo->prepare("DELETE FROM invoice WHERE $pendingInvoice");
+    $stmt->execute([$id_user]);
+    $stmt = $pdo->prepare("DELETE FROM service_other WHERE $pendingService");
     $stmt->execute([$id_user]);
     clearSelectCache('invoice');
     clearSelectCache('service_other');
@@ -1103,6 +1137,9 @@ function DirectPayment($order_id, $image = 'images.jpg')
             addBalance($Balance_id['id'], min($paidAmount, $orderPrice));
             if ($orderType != "buy") {
                 update("service_other", "status", "failed", "id", $service_order['id']);
+                if (!empty($serviceParams['discount_code'])) {
+                    releaseDiscountCode($serviceParams['discount_code'], $Balance_id['id']);
+                }
             }
             sendmessage($Balance_id['id'], $textbotlang['users']['Balance']['notEnoughBalance'], null, 'HTML');
             sendmessage($Balance_id['id'], sprintf($textbotlang['users']['Balance']['addedNotice5'], number_format(min($paidAmount, $orderPrice))), $keyboard, 'HTML');
@@ -1201,16 +1238,8 @@ function DirectPayment($order_id, $image = 'images.jpg')
             update("invoice", "user_info", $dataoutput['subscription_url'], "id_invoice", $get_invoice['id_invoice']);
         }
         sendMessageService($marzban_list_get, $dataoutput['configs'], $output_config_link, $dataoutput['username'], $Shoppinginfo, $textcreatuser, $get_invoice['id_invoice'], $get_invoice['id_user'], $image, wireguard: $dataoutput['wireguard'] ?? []);
-        $partsdic = explode("_", $Balance_id['Processing_value_four']);
-        if ($partsdic[0] == "dis") {
-            $SellDiscountlimit = select("DiscountSell", "*", "codeDiscount", $partsdic[1], "select");
-            $value = intval($SellDiscountlimit['usedDiscount']) + 1;
-            update("DiscountSell", "usedDiscount", $value, "codeDiscount", $partsdic[1]);
-            $stmt = $pdo->prepare("INSERT INTO Giftcodeconsumed (id_user,code) VALUES (:id_user,:code)");
-            $stmt->bindParam(':id_user', $Balance_id['id']);
-            $stmt->bindParam(':code', $partsdic[1]);
-            $stmt->execute();
-            $text_report = sprintf($textbotlang['Admin']['reportgroup']['discountCodeUsed'], $Balance_id['username'], $Balance_id['id'], $partsdic[1]);
+        if (!empty($get_invoice['discount_code'])) {
+            $text_report = sprintf($textbotlang['Admin']['reportgroup']['discountCodeUsed'], $Balance_id['username'], $Balance_id['id'], $get_invoice['discount_code']);
             if (strlen($setting['Channel_Report']) > 0) {
                 telegram('sendmessage', [
                     'chat_id' => $setting['Channel_Report'],
@@ -1229,7 +1258,7 @@ function DirectPayment($order_id, $image = 'images.jpg')
         if ($affiliatescommission['status_commission'] == "oncommission" && ($Balance_id['affiliates'] != null && intval($Balance_id['affiliates']) != 0)) {
             if ($marzbanporsant_one_buy['porsant_one_buy'] == "on_buy_porsant") {
                 if ($countinvoice <= 1) {
-                    $result = ($Payment_report['price'] * $setting['affiliatespercentage']) / 100;
+                    $result = ($orderPrice * $setting['affiliatespercentage']) / 100;
                     $user_Balance = select("user", "*", "id", $Balance_id['affiliates'], "select");
                     if (intval($setting['scorestatus']) == 1 and !in_array($Balance_id['affiliates'], $admin_ids)) {
                         sendmessage($Balance_id['affiliates'], $textbotlang['users']['affiliates']['pointsEarned2Alt'], null, 'html');
@@ -1253,7 +1282,7 @@ function DirectPayment($order_id, $image = 'images.jpg')
                 }
             } else {
 
-                $result = ($Payment_report['price'] * $setting['affiliatespercentage']) / 100;
+                $result = ($orderPrice * $setting['affiliatespercentage']) / 100;
                 $user_Balance = select("user", "*", "id", $Balance_id['affiliates'], "select");
                 if (intval($setting['scorestatus']) == 1 and !in_array($Balance_id['affiliates'], $admin_ids)) {
                     sendmessage($Balance_id['affiliates'], $textbotlang['users']['affiliates']['pointsEarned2Alt'], null, 'html');
@@ -1346,6 +1375,9 @@ function DirectPayment($order_id, $image = 'images.jpg')
             update("service_other", "output", json_encode($extend), "id", $service_order['id']);
             update("service_other", "status", "failed", "id", $service_order['id']);
             addBalance($Balance_id['id'], $orderPrice);
+            if (!empty($serviceParams['discount_code'])) {
+                releaseDiscountCode($serviceParams['discount_code'], $Balance_id['id']);
+            }
             sendmessage($Balance_id['id'], $textbotlang['users']['sell']['errorConfig'], $keyboard, 'HTML');
             sendmessage($Balance_id['id'], sprintf($textbotlang['users']['Balance']['refundRenewFailed'], number_format($orderPrice)), $keyboard, 'HTML');
             $extend['msg'] = json_encode($extend['msg']);
@@ -1364,16 +1396,8 @@ function DirectPayment($order_id, $image = 'images.jpg')
 
         update("service_other", "output", json_encode($extend), "id", $service_order['id']);
         update("service_other", "status", "paid", "id", $service_order['id']);
-        $partsdic = explode("_", $Balance_id['Processing_value_four']);
-        if ($partsdic[0] == "dis") {
-            $SellDiscountlimit = select("DiscountSell", "*", "codeDiscount", $partsdic[1], "select");
-            $value = intval($SellDiscountlimit['usedDiscount']) + 1;
-            update("DiscountSell", "usedDiscount", $value, "codeDiscount", $partsdic[1]);
-            $stmt = $pdo->prepare("INSERT INTO Giftcodeconsumed (id_user,code) VALUES (:id_user,:code)");
-            $stmt->bindParam(':id_user', $Balance_id['id']);
-            $stmt->bindParam(':code', $partsdic[1]);
-            $stmt->execute();
-            $text_report = sprintf($textbotlang['Admin']['reportgroup']['discountCodeUsedFn'], $Balance_id['username'], $Balance_id['id'], $partsdic[1]);
+        if (!empty($serviceParams['discount_code'])) {
+            $text_report = sprintf($textbotlang['Admin']['reportgroup']['discountCodeUsedFn'], $Balance_id['username'], $Balance_id['id'], $serviceParams['discount_code']);
             if (strlen($setting['Channel_Report']) > 0) {
                 telegram('sendmessage', [
                     'chat_id' => $setting['Channel_Report'],
@@ -1398,7 +1422,7 @@ function DirectPayment($order_id, $image = 'images.jpg')
             $valurcashbackextend = json_decode(select("shopSetting", "*", "Namevalue", "chashbackextend_agent", "select")['value'], true)[$Balance_id['agent']];
         }
         if (intval($valurcashbackextend) != 0) {
-            $result = ($prodcut['price_product'] * $valurcashbackextend) / 100;
+            $result = ($orderPrice * $valurcashbackextend) / 100;
             addBalance($Balance_id['id'], $result);
             sendmessage($Balance_id['id'], sprintf($textbotlang['users']['extend']['giftChargedFn'], $result), null, 'HTML');
         }

@@ -1096,14 +1096,11 @@ function mini_purchase(array $data, string $method): void
         if ($marzbanporsant_one_buy['porsant_one_buy'] == "on_buy_porsant") {
             if ($countinvoice <= 1) {
                 $result = ($product['price_product'] * $setting['affiliatespercentage']) / 100;
-                $user_Balance = select("user", "*", "id", $user_info['affiliates'], "select");
-                $Balance_prim = $user_Balance['Balance'] + $result;
                 if (intval($setting['scorestatus']) == 1) {
                     sendmessage($user_info['affiliates'], $textbotlang['users']['affiliates']['pointsEarned2'], null, 'html');
-                    $scorenew = $user_Balance['score'] + 2;
-                    update("user", "score", $scorenew, "id", $user_info['affiliates']);
+                    $pdo->prepare("UPDATE user SET score = score + 2 WHERE id = ?")->execute([$user_info['affiliates']]);
                 }
-                update("user", "Balance", $Balance_prim, "id", $user_info['affiliates']);
+                addBalance($user_info['affiliates'], $result);
                 $result = number_format($result);
                 $dateacc = date('Y/m/d H:i:s');
                 $textadd = sprintf($textbotlang['users']['affiliates']['commissionPaidMiniapp'], $result);
@@ -1120,14 +1117,11 @@ function mini_purchase(array $data, string $method): void
             }
         } else {
             $result = ($product['price_product'] * $setting['affiliatespercentage']) / 100;
-            $user_Balance = select("user", "*", "id", $user_info['affiliates'], "select");
-            $Balance_prim = $user_Balance['Balance'] + $result;
             if (intval($setting['scorestatus']) == 1) {
                 sendmessage($user_info['affiliates'], $textbotlang['users']['affiliates']['pointsEarned2b'], null, 'html');
-                $scorenew = $user_Balance['score'] + 2;
-                update("user", "score", $scorenew, "id", $user_info['affiliates']);
+                $pdo->prepare("UPDATE user SET score = score + 2 WHERE id = ?")->execute([$user_info['affiliates']]);
             }
-            update("user", "Balance", $Balance_prim, "id", $user_info['affiliates']);
+            addBalance($user_info['affiliates'], $result);
             $result = number_format($result);
             $dateacc = date('Y/m/d H:i:s');
             $textadd = sprintf($textbotlang['users']['affiliates']['commissionPaidMiniapp2'], $result);
