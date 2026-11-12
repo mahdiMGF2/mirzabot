@@ -285,14 +285,14 @@ if (strpos($text, "/start ") !== false && $user['step'] != "gettextSystemMessage
                 sendmessage($from_id, $textbotlang['users']['affiliates']['invalidaffiliates'], null, 'html');
                 return;
             }
-            isValidInvitationCode($setting, $from_id, $user['verify']);
             $user = select("user", "*", "id", $from_id, "select");
-            $previousOrders = $pdo->prepare("SELECT (SELECT COUNT(*) FROM invoice WHERE id_user = ?) + (SELECT COUNT(*) FROM Payment_report WHERE id_user = ?)");
-            $previousOrders->execute([$from_id, $from_id]);
+            $previousOrders = $pdo->prepare("SELECT (SELECT COUNT(*) FROM invoice WHERE id_user = ? AND name_product != ? AND Status NOT IN ('unpaid', 'Unsuccessful')) + (SELECT COUNT(*) FROM Payment_report WHERE id_user = ? AND payment_Status = 'paid')");
+            $previousOrders->execute([$from_id, $textbotlang['common']['labels']['testServiceName'], $from_id]);
             if (intval($user['affiliates']) != 0 || intval($previousOrders->fetchColumn()) != 0) {
                 sendmessage($from_id, $textbotlang['users']['affiliates']['affiliateedago'], null, 'html');
                 return;
             }
+            isValidInvitationCode($setting, $from_id, $user['verify']);
             update("user", "affiliates", $affiliatesid, "id", $from_id);
             $useraffiliates = select("user", "*", 'id', $affiliatesid, "select");
             sendmessage($from_id, sprintf($textbotlang['users']['affiliates']['welcomeInvited'], $useraffiliates['username']), $keyboard, 'html');
@@ -1706,6 +1706,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     step('getcodesellDiscountextend', $from_id);
     deletemessage($from_id, $message_id);
 } elseif ($user['step'] == "getcodesellDiscountextend") {
+    cancelPendingGatewayOrders($from_id);
     $userdate = json_decode($user['Processing_value'], true);
     $nameloc = select("invoice", "*", "id_invoice", $userdate['id_invoice'], "select");
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $nameloc['Service_location'], "select");
@@ -1833,6 +1834,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         return;
     }
     if ($datain == "confirmserdiscount") {
+        cancelPendingGatewayOrders($from_id);
         $stmt = $pdo->prepare("SELECT * FROM DiscountSell WHERE (code_product = :code_product OR code_product = 'all') AND (code_panel = :code_panel OR code_panel = '/all') AND codeDiscount = :codeDiscount AND (agent = :agent OR agent = 'allusers') AND (type = 'all' OR type = 'extend')");
         $stmt->execute([
             ':code_product' => $userdata['code_product'],
@@ -3061,13 +3063,6 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     }
     if ($locationproduct == 1) {
         $panel = select("marzban_panel", "*", "TestAccount", "ONTestAccount", "select");
-        if ($panel['hide_user'] != null) {
-            $list_user = json_decode($panel['hide_user'], true);
-            if (in_array($from_id, $list_user)) {
-                sendmessage($from_id, $textbotlang['users']['sell']['nullPanel'], null, 'HTML');
-                return;
-            }
-        }
         $location = $panel['code_panel'];
     } else {
         if (isset($dataget[1])) {
@@ -4041,6 +4036,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         sendmessage($from_id, $textbotlang['users']['sell']['productNotFound'], null, 'HTML');
         return;
     }
+    cancelPendingGatewayOrders($from_id);
     if ($datain == "confirmandgetserviceDiscount") {
         $stmt = $pdo->prepare("SELECT * FROM DiscountSell WHERE (code_product = :code_product OR code_product = 'all') AND (code_panel = :code_panel OR code_panel = '/all') AND codeDiscount = :codeDiscount AND (agent = :agent OR agent = 'allusers') AND (type = 'all' OR type = 'buy')");
         $stmt->execute([
@@ -4062,7 +4058,6 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     } else {
         $priceproduct = $info_product['price_product'];
     }
-    cancelPendingGatewayOrders($from_id);
     $username_ac = strtolower($user['Processing_value_tow']);
     $DataUserOut = $ManagePanel->DataUser($marzban_list_get['name_panel'], $username_ac);
     if (isset($DataUserOut['username']) || rowExists("invoice", "username", $username_ac)) {
@@ -4131,6 +4126,10 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         return;
     }
     if (!deductBalance($user, $priceproduct)) {
+        if ($discountApplied !== null) {
+            releaseDiscountCode($discountApplied, $from_id);
+            $pdo->prepare("UPDATE invoice SET discount_code = NULL WHERE id_invoice = ?")->execute([$randomString]);
+        }
         sendmessage($from_id, $textbotlang['users']['Balance']['notEnoughBalance'], null, 'HTML');
         return;
     }
@@ -4174,6 +4173,10 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         }
         $dataoutput['msg'] = $errorMessage;
         addBalance($from_id, $priceproduct);
+        if ($discountApplied !== null) {
+            releaseDiscountCode($discountApplied, $from_id);
+            $pdo->prepare("UPDATE invoice SET discount_code = NULL WHERE id_invoice = ?")->execute([$randomString]);
+        }
         sendmessage($from_id, $textbotlang['users']['sell']['errorConfig'], $keyboard, 'HTML');
         $texterros = sprintf($textbotlang['Admin']['reportgroup']['errorSubscriptionCreate'], $dataoutput['msg'], $from_id, $username, $marzban_list_get['name_panel']);
         if (strlen($setting['Channel_Report']) > 0) {
@@ -4324,6 +4327,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     step('getcodesellDiscount', $from_id);
     deletemessage($from_id, $message_id);
 } elseif ($user['step'] == "getcodesellDiscount") {
+    cancelPendingGatewayOrders($from_id);
     $userdate = json_decode($user['Processing_value'], true);
     if (!isset($userdate['name_panel'])) {
         sendmessage($from_id, $textbotlang['users']['sell']['restartFromStart'], $keyboard, 'HTML');

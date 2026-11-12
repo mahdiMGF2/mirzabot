@@ -1140,6 +1140,9 @@ function DirectPayment($order_id, $image = 'images.jpg')
                 if (!empty($serviceParams['discount_code'])) {
                     releaseDiscountCode($serviceParams['discount_code'], $Balance_id['id']);
                 }
+            } elseif (!empty($get_invoice['discount_code'])) {
+                releaseDiscountCode($get_invoice['discount_code'], $Balance_id['id']);
+                $pdo->prepare("UPDATE invoice SET discount_code = NULL WHERE id_invoice = ?")->execute([$get_invoice['id_invoice']]);
             }
             sendmessage($Balance_id['id'], $textbotlang['users']['Balance']['notEnoughBalance'], null, 'HTML');
             sendmessage($Balance_id['id'], sprintf($textbotlang['users']['Balance']['addedNotice5'], number_format(min($paidAmount, $orderPrice))), $keyboard, 'HTML');
@@ -1192,6 +1195,10 @@ function DirectPayment($order_id, $image = 'images.jpg')
             update("invoice", "Status", $invoiceStatusBefore, "id_invoice", $get_invoice['id_invoice']);
             $dataoutput['msg'] = json_encode($dataoutput['msg'] ?? $dataoutput ?? 'unknown error');
             addBalance($Balance_id['id'], $orderPrice);
+            if (!empty($get_invoice['discount_code'])) {
+                releaseDiscountCode($get_invoice['discount_code'], $Balance_id['id']);
+                $pdo->prepare("UPDATE invoice SET discount_code = NULL WHERE id_invoice = ?")->execute([$get_invoice['id_invoice']]);
+            }
             sendmessage($Balance_id['id'], $textbotlang['users']['sell']['errorConfig'], $keyboard, 'HTML');
             sendmessage($Balance_id['id'], sprintf($textbotlang['users']['Balance']['refundCreateFailed'], number_format($orderPrice)), $keyboard, 'HTML');
             $texterros = sprintf($textbotlang['Admin']['reportgroup']['errorConfigCreate'], $dataoutput['msg'], $Balance_id['id'], $Balance_id['username'], $marzban_list_get['name_panel']);

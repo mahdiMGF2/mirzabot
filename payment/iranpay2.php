@@ -191,7 +191,6 @@ $pricecashback = select("PaySetting", "ValuePay", "NamePay", "chashbackiranpay2"
 $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
 if ($pricecashback != "0") {
     $result_cashback = ($Payment_report['price'] * $pricecashback) / 100;
-    $Balance_confrim = intval($Balance_id['Balance']) + $result_cashback;
     addBalance($Balance_id['id'], $result_cashback);
     $pricecashback = number_format($pricecashback);
     $text_report = sprintf($textbotlang['paymentGateway']['giftReport'], $result_cashback);

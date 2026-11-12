@@ -155,16 +155,17 @@ function inv_remove_service(array $data, string $method): void
     }
     if ($data['type'] == "one" || $data['type'] == "tow") {
         $refund = $data['type'] == "tow" ? requireInt($data, 'amount', 0) : 0;
-        $claim = $pdo->prepare("UPDATE invoice SET Status = 'removebyadmin' WHERE id_invoice = ? AND Status != 'removebyadmin'");
+        $claim = $pdo->prepare("UPDATE invoice SET Status = 'removebyadmin' WHERE id_invoice = ? AND (Status IS NULL OR Status != 'removebyadmin')");
         $claim->execute([$data["id_invoice"]]);
         clearSelectCache('invoice');
-        if ($claim->rowCount() !== 1) {
-            sendJsonResponse(false, "Service already removed", []);
-        }
-        if ($refund > 0) {
+        $claimed = $claim->rowCount() === 1;
+        if ($claimed && $refund > 0) {
             addBalance($invoice['id_user'], $refund);
         }
         $ManagePanel->RemoveUser($invoice['Service_location'], $invoice['username']);
+        if (!$claimed && $refund > 0) {
+            sendJsonResponse(false, "Service was already removed; refund skipped", $invoice);
+        }
     } elseif ($data['type'] == "three") {
         $stmt = $pdo->prepare("DELETE  FROM invoice WHERE id_invoice = :id_invoice");
         $stmt->execute(['id_invoice' => $data['id_invoice']]);

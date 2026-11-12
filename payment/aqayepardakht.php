@@ -73,7 +73,6 @@ if (is_object($result) && $result->code == "1") {
     $Balance_id = $__q16->fetch(PDO::FETCH_ASSOC);
     if($pricecashback != "0"){
         $result = ($Payment_report['price'] * $pricecashback) / 100;
-        $Balance_confrim = intval($Balance_id['Balance']) +$result;
         addBalance($Balance_id['id'], $result);
         $pricecashback =  number_format($pricecashback);
         $text_report = sprintf($textbotlang['paymentGateway']['giftReport'], $result);

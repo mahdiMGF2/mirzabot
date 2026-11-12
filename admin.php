@@ -5297,6 +5297,11 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($datain == "optimizebot" && $adminrulecheck['rule'] == "administrator") {
     #remove data
     $testServiceName = $textbotlang['common']['labels']['testServiceName'];
+    $stmt = $pdo->prepare("SELECT id_user, discount_code FROM invoice WHERE Status IN ('unpaid', 'Unsuccessful') AND name_product != :mp11 AND CAST(time_sell AS UNSIGNED) < :olderThan AND discount_code IS NOT NULL AND discount_code != ''");
+    $stmt->execute([':mp11' => $testServiceName, ':olderThan' => time() - 86400]);
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $staleOrder) {
+        releaseDiscountCode($staleOrder['discount_code'], $staleOrder['id_user']);
+    }
     $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status IN ('unpaid', 'Unsuccessful') AND name_product != :mp11 AND CAST(time_sell AS UNSIGNED) < :olderThan");
     $stmt->execute([':mp11' => $testServiceName, ':olderThan' => time() - 86400]);
     $countunpiadorder = $stmt->rowCount();

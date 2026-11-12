@@ -64,7 +64,6 @@ while ($Payment_report = ($list_service)->fetch(PDO::FETCH_ASSOC)) {
         $Balance_id = $__q18->fetch(PDO::FETCH_ASSOC);
         if ($pricecashback != "0") {
             $result = ($Payment_report['price'] * $pricecashback) / 100;
-            $Balance_confrim = intval($Balance_id['Balance']) + $result;
             addBalance($Balance_id['id'], $result);
             $pricecashback = number_format($pricecashback);
             $text_report = sprintf($textbotlang['users']['Balance']['giftDepositPlisio'], $result);
