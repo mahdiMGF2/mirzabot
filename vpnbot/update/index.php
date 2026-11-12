@@ -1762,6 +1762,10 @@ $output
     if (isset($userdate['code_product'])) {
         $product = $userdate['code_product'];
         $product = select("product", "*", "code_product", $product);
+        if ($product == false) {
+            sendmessage($from_id, "❌ تمدید با خطا مواجه گردید مراحل تمدید را مجددا انجام دهید.", null, 'HTML');
+            return;
+        }
         $productlist = json_decode(file_get_contents('product.json'), true);
         $priceproductmain = $product['price_product'];
         if (isset($productlist[$product['code_product']])) {
