@@ -2,7 +2,7 @@
 
 # 🤖 Mirza Bot
 
-### A powerful Telegram bot for selling VPN services — with fully automated config creation.
+### A Telegram bot for selling VPN services, with fully automated config creation.
 
 <p>
   <a href="https://t.me/mirzapanel">
@@ -29,77 +29,65 @@
   <a href="https://github.com/mahdiMGF2/mirzabot/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/mahdiMGF2/mirzabot?style=flat-square" alt="License"/>
   </a>
-  <img src="https://img.shields.io/badge/PHP-8.5.12%2B-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP 8.5.12+"/>
+  <img src="https://img.shields.io/badge/PHP-8.4.27%2B-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP 8.4.27+"/>
 </p>
 
 </div>
 
 ---
 
-## 📚 Table of Contents
+## 📚 Contents
 
-- [✨ Overview](#-overview)
-- [📖 Documentation](#-documentation)
-- [🧩 Supported Panels](#-supported-panels)
-- [💳 Payment Gateways](#-payment-gateways)
-- [⚙️ Features](#️-features)
-- [🚀 Installation](#-installation)
-  - [Prerequisites](#prerequisites)
-  - [Install](#install)
-  - [Update](#update)
-  - [Remove](#remove)
-  - [Non-Interactive (CLI) Usage](#non-interactive-cli-usage)
-- [💎 Free vs. Pro](#-free-vs-pro)
-- [🌍 Languages](#-languages)
-- [💵 Support the Project](#-support-the-project)
-- [👥 Contributors](#-contributors)
+- [Overview](#-overview)
+- [Documentation](#-documentation)
+- [Supported Panels](#-supported-panels)
+- [Payment Gateways](#-payment-gateways)
+- [Features](#️-features)
+- [Installation](#-installation)
+- [Command Line](#-command-line)
+- [Free vs. Pro](#-free-vs-pro)
+- [Languages](#-languages)
+- [Support the Project](#-support-the-project)
+- [Contributors](#-contributors)
 
 ---
 
 ## ✨ Overview
 
-**Mirza Bot** is a feature-rich Telegram bot for selling VPN subscriptions and automating the entire sales workflow — from purchase and payment to config creation and service management.
+**Mirza Bot** sells VPN subscriptions on Telegram and automates the whole flow: purchase, payment, config creation and service management.
 
-It connects directly to your panels, builds configurations automatically, accepts a wide range of payment methods, and gives both customers and admins a clean experience through a **Telegram Mini App** and a **web admin panel**.
-
-> Whether you're handing out trial accounts or running a large-scale reseller business, Mirza Bot has the tools to run it end to end.
+It connects to your panels, creates configs automatically, accepts many payment methods, and comes with a **Telegram Mini App** for customers and a **web admin panel** for you.
 
 ---
 
 ## 📖 Documentation
 
-The complete user manual lives at **[mirzabot.com/docs](https://mirzabot.com/docs/)** — 61 pages covering every part of the bot, written in **Persian (فارسی)**.
-
-It is not a feature list: every menu is documented with the exact order of the steps the bot asks for, what each field accepts, the error message you get when it rejects your input, and the mistake that most often breaks that feature.
+The full manual is at **[mirzabot.com/docs](https://mirzabot.com/docs/)**: 61 pages in **Persian (فارسی)**. Every menu is documented with the steps the bot asks for, what each field accepts, and the errors you can get.
 
 | Section | What it covers |
 |---------|----------------|
-| **شروع** (Getting started) | Architecture, requirements, server install, shared-host install, CLI flags, updating and removing |
+| **شروع** (Getting started) | Requirements, server and shared-host install, CLI, updating and removing |
 | **ساختار** (Structure) | Repository layout, database tables, which file does what |
-| **پنل‌ها** (Panels) | Adding each of the 13 panel types, protocol & inbound setup, per-panel menus, manual config creation, node management |
-| **فروشگاه** (Shop) | Products, categories, trial accounts, On-Hold services, bulk purchase, manual sale, renewals and location changes |
-| **پرداخت** (Payments) | Card-to-card with receipt approval, every online and crypto gateway, wallet and refunds |
-| **مدیریت** (Administration) | Admin roles, feature switches, report channel and topics, texts, forced-join channel, web panel |
-| **رشد و بازاریابی** (Growth) | Referrals, cashback, discount and gift codes, lottery and wheel, reseller system |
-| **نگهداری** (Operations) | Cron jobs, backup and restore, optimization, security checklist, troubleshooting |
-
-> The docs are generated from the bot's own source, so menu names, limits and error strings match the code rather than an older release.
+| **پنل‌ها** (Panels) | Adding each panel type, protocols and inbounds, manual configs, nodes |
+| **فروشگاه** (Shop) | Products, categories, trial accounts, On-Hold, bulk purchase, manual sale, renewals |
+| **پرداخت** (Payments) | Card-to-card, online and crypto gateways, wallet and refunds |
+| **مدیریت** (Administration) | Admin roles, feature switches, report channel, texts, forced join, web panel |
+| **رشد و بازاریابی** (Growth) | Referrals, cashback, discount and gift codes, lottery, reseller system |
+| **نگهداری** (Operations) | Cron jobs, backup and restore, security checklist, troubleshooting |
 
 ---
 
 ## 🧩 Supported Panels
 
-Mirza Bot integrates with the most popular VPN and network management panels:
-
-| Panel | Panel |
-|-------|-------|
-| 🟢 **Marzban** | 🟢 **Marzneshin** |
-| 🟢 **Sanaei / Alireza** |
-| 🟢 **S-UI** | 🟢 **Hiddify** |
-| 🟢 **WGDashboard** (WireGuard) | 🟢 **MikroTik** |
-| 🟢 **IBSng** | 🟢 **Pasarguard** |
-
-> Configs are generated automatically and are compatible with all common protocols.
+| | |
+|---|---|
+| Marzban | Pasarguard |
+| Marzneshin | 3x-ui (Sanaei) |
+| Hiddify | Rebecca |
+| Nexora | WGDashboard (WireGuard) |
+| WG-Mate | MikroTik |
+| IBSng | Mirza Agent |
+| Manual sale | |
 
 ---
 
@@ -107,190 +95,142 @@ Mirza Bot integrates with the most popular VPN and network management panels:
 
 | Gateway | Type |
 |---------|------|
-| 💵 **Card-to-Card** | Manual (receipt + admin approval) |
-| 🪙 **NowPayments** | Crypto |
-| 🪙 **Plisio** | Crypto |
-| 🪙 **CubePay** | TRON / crypto |
-| 🇮🇷 **Zarinpal** | Online gateway |
-| 🇮🇷 **Aqayepardakht** | Online gateway |
-| 🇮🇷 **IranPay** | Online gateway |
+| Card-to-card | Manual (receipt + admin approval) |
+| Variza | Automated card-to-card |
+| AbanGateway | Automated card-to-card |
+| Zarinpal | Online gateway |
+| Aqayepardakht | Online gateway |
+| IranPay | Online gateway |
+| NOWPayments | Crypto |
+| Plisio | Crypto |
+| CubePay | Crypto |
+| Offline crypto | Manual (admin approval) |
+| Telegram Stars | Telegram |
 
 ---
 
 ## ⚙️ Features
 
-### 🛒 Sales & Configuration
-- ✅ VPN purchase with **fully automated** config creation
-- ✅ Trial / test accounts for new users
-- ✅ Compatibility with all common protocols
-- ✅ QR codes for fast config import
-- ✅ Protocol-based configuration settings
-- ✅ Product, panel & gateway management
+**Sales**
+- Automated config creation for every purchase, with QR codes
+- Trial accounts, bulk purchase and On-Hold services
+- Renewal, extra volume, extra time and location change
 
-### 👤 User Experience
-- ✅ **Telegram Mini App** for a modern, in-app interface
-- ✅ View & manage purchased services:
-  - Renew a service
-  - Buy additional volume
-  - Retrieve config / update subscription links
-- ✅ Wallet & balance system
-- ✅ Detailed purchase & trial reports
-- ✅ Support section, FAQ & customizable tutorials
-- ✅ Phone-number verification
-- ✅ Mandatory channel membership for purchases
+**Customers**
+- Telegram Mini App
+- Wallet, purchase history and service management
+- Support, FAQ and tutorials
+- Phone verification and forced channel join
 
-### 📈 Growth & Marketing
-- ✅ Affiliate / referral system
-- ✅ Cashback rewards
-- ✅ Discount codes
-- ✅ Gift codes
-- ✅ Lottery system
-- ✅ **Agent / reseller** system
+**Growth**
+- Referrals, cashback, discount and gift codes
+- Lottery and wheel of fortune
+- Agent / reseller system with their own bots
 
-### 🛠️ Administration
-- ✅ **Web admin panel** (login-protected dashboard)
-- ✅ Multiple admins support
-- ✅ Balance & user management
-- ✅ Full text/message customization from the bot
-- ✅ Configurable username-generation methods
-- ✅ Automatic backups
-- ✅ Notification & expiry-reminder services (cron)
-- ✅ On-hold configurations
+**Administration**
+- Web admin panel in four languages
+- Multiple admins with roles
+- Editable bot texts and username formats
+- Automatic backups, expiry reminders and reports
 
 ---
 
 ## 🚀 Installation
 
-### Prerequisites
+### Requirements
 
-| Requirement | Details |
-|-------------|---------|
-| 🖥️ **OS** | A **clean** Ubuntu **22.04/24.04/26.04** or **Debian 12/13** server |
-| 🌐 **Domain** | A domain name pointed to your server's IP |
-| ⚙️ **Stack** | PHP 8.5.12+, Apache, MySQL/MariaDB, SSL — *installed automatically by the script* |
+| | |
+|---|---|
+| **Server** | A clean Ubuntu 22.04 / 24.04 / 26.04 or Debian 12 / 13 |
+| **Domain** | A domain pointed to the server's IP |
+| **Stack** | PHP 8.5.12+ (or 8.4.27+), Apache, MySQL / MariaDB and SSL, installed by the script |
 
-> 💡 Start from a fresh server with no existing web server, database, or panel installed.
+> 💡 Start from a fresh server with no web server, database or panel on it.
 
-### Install
+### Install, update, remove
 
-Run the following command on your server as **root**:
-
-```bash
-curl -o install.sh -L https://raw.githubusercontent.com/mahdiMGF2/mirzabot/main/install.sh && bash install.sh
-```
-
-An interactive menu will appear:
-
-```
-1) Install Mirza
-2) Update Mirza
-3) Remove Mirza
-4) Migrate: Free → Pro (Beta)
-5) Renew SSL certificate
-6) Help & Parameters
-7) Exit
-```
-
-➡️ Select **`1`** to install the bot, then follow the prompts.
-
-### Update
-
-Run the same command and select **`2`**:
+Run this as **root**:
 
 ```bash
 curl -o install.sh -L https://raw.githubusercontent.com/mahdiMGF2/mirzabot/main/install.sh && bash install.sh
 ```
 
-### Remove
+After the first install, open the same menu any time with `mirza`:
 
-Run the same command and select **`3`** to completely remove the bot and its services.
+```
+1) Install          4) Update PHP       7) Migrate Free → Pro
+2) Update           5) Renew SSL        8) Help
+3) Remove           6) Backup database  9) Import database
+                                        0) Exit
+```
 
-### Non-Interactive (CLI) Usage
+---
 
-You can also drive the installer entirely from the command line — handy for automation and scripted deployments.
+## 💻 Command Line
 
-**Commands**
+The menu items can also run directly, which is handy for scripts.
 
-| Command | Description |
-|---------|-------------|
-| `install` | Install Mirza |
-| `update` | Update Mirza (choose channel / version) |
-| `remove` | Remove Mirza and its services |
-| `migrate` | Migrate Free → Pro |
-| `renew` | Renew the bot's SSL certificate |
-| `menu` | Open the interactive panel (default) |
+| Command | What it does |
+|---------|--------------|
+| `mirza install` | Install the bot |
+| `mirza update` | Update the bot |
+| `mirza remove` | Remove the bot and its services |
+| `mirza update-php` | Upgrade PHP to the required version |
+| `mirza renew` | Renew the SSL certificate |
+| `mirza backup` | Back up the database and send it to Telegram |
+| `mirza import` | Import a database from an SQL file (beta) |
+| `mirza migrate` | Migrate Free → Pro |
 
-**Install parameters**
-
-| Parameter | Description |
-|-----------|-------------|
-| `--name` | Bot username |
+| Option | Description |
+|--------|-------------|
 | `--token` | Telegram bot token |
 | `--admin` | Admin chat ID |
-| `--domain` | Domain name (e.g. `bot.example.com`) |
-| `--db-user` | Database username |
-| `--db-pass` | Database password |
-| `--version` | Specific release tag (e.g. `0.1.7`) |
-| `--channel` | `beta` · `release` · `auto` |
-| `-h`, `--help` | Show CLI help and exit |
-
-**Examples**
+| `--domain` | Domain, e.g. `bot.example.com` |
+| `--db-user` / `--db-pass` | Database username and password |
+| `--version` | A specific release, e.g. `0.9.1` |
+| `--channel` | `release`, `beta` or `auto` |
+| `-h`, `--help` | Show help |
 
 ```bash
-# Auto-pick the best channel
-mirza install --channel auto
-
-# Fully non-interactive install
-mirza install --name myvpnbot --token 123:ABC \
-              --admin 111 --domain bot.example.com --version 0.1.7
-
-# Update to a specific version or channel
-mirza update --version 0.1.6
+mirza install --token 123:ABC --admin 111 --domain bot.example.com --version 0.9.1
 mirza update --channel release
-
-# Remove
-mirza remove
 ```
 
 ---
 
 ## 💎 Free vs. Pro
 
-| | Free 🆓 | Pro 💎 |
+| | Free | Pro |
 |---|:---:|:---:|
-| Automated VPN sales & config creation | ✅ | ✅ |
-| Trial accounts, wallet & service management | ✅ | ✅ |
-| All supported panels & payment gateways | ✅ | ✅ |
-| Advanced customization & analytics | — | ✅ |
-| Enhanced management & extra modules | — | ✅ |
+| Automated sales and config creation | ✅ | ✅ |
+| Trial accounts, wallet and service management | ✅ | ✅ |
+| All supported panels and payment gateways | ✅ | ✅ |
+| Advanced customization and analytics | — | ✅ |
+| Extra management modules | — | ✅ |
 
-📌 **Pro purchase guide:** [View on Telegram »](https://t.me/mirzaperimium/4)
+📌 **How to buy Pro:** [see on Telegram](https://t.me/mirzaperimium/4)
 
 ---
 
 ## 🌍 Languages
 
-Mirza Bot ships with full translations for:
+The bot and the web panel are fully translated into:
 
-🇬🇧 English · 🇮🇷 Persian (فارسی) · 🇷🇺 Russian (Русский) · 🇨🇳 Chinese (中文)
+🇮🇷 Persian (فارسی) · 🇬🇧 English · 🇷🇺 Russian (Русский) · 🇨🇳 Chinese (中文)
 
 ---
 
 ## 💵 Support the Project
 
-If **Mirza Bot** helps your business, please consider supporting its development with a crypto donation:
+If Mirza Bot helps your business, you can support its development with a crypto donation:
 
 <a href="https://nowpayments.io/donation/mahdi">
   <img src="https://img.shields.io/badge/Donate-NowPayments-1A1A2E?style=for-the-badge&logo=bitcoin&logoColor=white" alt="Donate"/>
 </a>
 
-Your support keeps the updates and improvements coming. Thank you! 🙌
-
 ---
 
 ## 👥 Contributors
-
-Thanks to everyone who has contributed to making Mirza Bot better:
 
 <a href="https://github.com/mahdiMGF2/mirzabot/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=mahdiMGF2/mirzabot" alt="Contributors"/>
@@ -299,8 +239,6 @@ Thanks to everyone who has contributed to making Mirza Bot better:
 ---
 
 <div align="center">
-
-**Made with ❤️ by the Mirza Panel community**
 
 📖 [Documentation](https://mirzabot.com/docs/) · 💬 [Channel](https://t.me/mirzapanel) · 👥 [Group](https://t.me/mirzapanelgroup) · ⭐ [Star on GitHub](https://github.com/mahdiMGF2/mirzabot)
 

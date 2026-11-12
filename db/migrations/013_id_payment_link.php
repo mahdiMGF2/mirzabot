@@ -24,23 +24,23 @@ return static function (PDO $pdo, Schema $schema): void {
         return (bool) $stmt->fetchColumn();
     };
 
-    $idOrder = $columnInfo('Payment_report', 'id_order');
+    $idOrder = $columnInfo('payment_report', 'id_order');
     if (!$idOrder) {
         return;
     }
     if ((int) $idOrder['CHARACTER_MAXIMUM_LENGTH'] > 80) {
-        $longest = (int) $pdo->query("SELECT COALESCE(MAX(CHAR_LENGTH(id_order)), 0) FROM Payment_report")->fetchColumn();
+        $longest = (int) $pdo->query("SELECT COALESCE(MAX(CHAR_LENGTH(id_order)), 0) FROM payment_report")->fetchColumn();
         if ($longest > 80) {
-            error_log("[db:migration:id_payment_link] Payment_report.id_order has values longer than 80 characters; foreign keys skipped");
+            error_log("[db:migration:id_payment_link] payment_report.id_order has values longer than 80 characters; foreign keys skipped");
             return;
         }
-        if ($indexExists('Payment_report', 'idx_payreport_id_order')) {
-            $run('drop_prefix_index', "ALTER TABLE `Payment_report` DROP INDEX `idx_payreport_id_order`");
+        if ($indexExists('payment_report', 'idx_payreport_id_order')) {
+            $run('drop_prefix_index', "ALTER TABLE `payment_report` DROP INDEX `idx_payreport_id_order`");
         }
-        $run('shrink_id_order', "ALTER TABLE `Payment_report` MODIFY `id_order` VARCHAR(80) CHARACTER SET {$idOrder['CHARACTER_SET_NAME']} COLLATE {$idOrder['COLLATION_NAME']} NULL");
+        $run('shrink_id_order', "ALTER TABLE `payment_report` MODIFY `id_order` VARCHAR(80) CHARACTER SET {$idOrder['CHARACTER_SET_NAME']} COLLATE {$idOrder['COLLATION_NAME']} NULL");
     }
-    if (!$indexExists('Payment_report', 'idx_payreport_id_order')) {
-        $run('id_order_index', "ALTER TABLE `Payment_report` ADD INDEX `idx_payreport_id_order` (`id_order`)");
+    if (!$indexExists('payment_report', 'idx_payreport_id_order')) {
+        $run('id_order_index', "ALTER TABLE `payment_report` ADD INDEX `idx_payreport_id_order` (`id_order`)");
     }
 
     foreach (['invoice' => ['idx_invoice_id_payment', 'fk_invoice_payment_report'], 'service_other' => ['idx_serviceother_id_payment', 'fk_service_other_payment_report']] as $table => [$indexName, $foreignKeyName]) {
@@ -54,7 +54,7 @@ return static function (PDO $pdo, Schema $schema): void {
         if (!$indexExists($table, $indexName)) {
             $run("$table:index", "ALTER TABLE `$table` ADD INDEX `$indexName` (`id_payment`)");
         }
-        $run("$table:orphans", "UPDATE `$table` t SET t.id_payment = NULL WHERE t.id_payment IS NOT NULL AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = t.id_payment)");
-        $run("$table:foreign_key", "ALTER TABLE `$table` ADD CONSTRAINT `$foreignKeyName` FOREIGN KEY (`id_payment`) REFERENCES `Payment_report` (`id_order`) ON DELETE SET NULL ON UPDATE CASCADE");
+        $run("$table:orphans", "UPDATE `$table` t SET t.id_payment = NULL WHERE t.id_payment IS NOT NULL AND NOT EXISTS (SELECT 1 FROM payment_report pr WHERE pr.id_order = t.id_payment)");
+        $run("$table:foreign_key", "ALTER TABLE `$table` ADD CONSTRAINT `$foreignKeyName` FOREIGN KEY (`id_payment`) REFERENCES `payment_report` (`id_order`) ON DELETE SET NULL ON UPDATE CASCADE");
     }
 };

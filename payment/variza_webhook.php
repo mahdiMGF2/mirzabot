@@ -76,10 +76,12 @@ if ($slug === '') {
 }
 
 // Variza stores slug in dec_not_confirmed (like zarinpal Authority).
-$payment = select("Payment_report", "*", "dec_not_confirmed", $slug, "select");
+$stmt = $pdo->prepare("SELECT * FROM payment_report WHERE dec_not_confirmed = ? AND Payment_Method = 'variza' LIMIT 1");
+$stmt->execute([$slug]);
+$payment = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$payment) {
     // Fallback: some installs may have slug in id_invoice; try there too.
-    $payment = select("Payment_report", "*", "id_invoice", $slug, "select");
+    $payment = select("payment_report", "*", "id_invoice", $slug, "select");
 }
 if (!$payment) {
     error_log("variza webhook: unknown slug {$slug}");
@@ -119,7 +121,7 @@ if ($cashback > 0) {
     if ($buyer) {
         $reward = intval($billed * $cashback / 100);
         if ($reward > 0) {
-            update("user", "Balance", intval($buyer['Balance']) + $reward, "id", $payment['id_user']);
+            addBalance($payment['id_user'], $reward);
             $text_gift = sprintf($textbotlang['paymentGateway']['giftReport'], $reward);
             sendmessage($payment['id_user'], $text_gift, null, 'HTML');
         }
@@ -127,8 +129,8 @@ if ($cashback > 0) {
 }
 
 // Report to Channel_Report like zarinpal does.
-$setting = select("setting", "*");
-$paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'] ?? null;
+$setting = config_all('setting');
+$paymentreports = config_get('topic', "paymentreport") ?? null;
 if (!empty($setting['Channel_Report']) && $paymentreports) {
     $buyer = select("user", "*", "id", $payment['id_user'], "select");
     $text_report = sprintf(

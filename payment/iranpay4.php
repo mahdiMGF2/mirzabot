@@ -39,7 +39,7 @@ if ($order_id === '') {
     iranpay4_finish(false, $failedTitle, 'شناسه سفارش ارسال نشد.');
 }
 
-$payment = select("Payment_report", "*", "id_order", $order_id, "select");
+$payment = select("payment_report", "*", "id_order", $order_id, "select");
 if (!$payment) {
     iranpay4_finish(false, $failedTitle, 'این سفارش پیدا نشد.');
 }
@@ -103,7 +103,7 @@ try {
 }
 
 $statement = $pdo->prepare(
-    "UPDATE Payment_report SET dec_not_confirmed = :answer WHERE id_order = :id_order"
+    "UPDATE payment_report SET dec_not_confirmed = :answer WHERE id_order = :id_order"
 );
 $statement->bindValue(':answer', json_encode($response, JSON_UNESCAPED_UNICODE));
 $statement->bindValue(':id_order', $order_id);
@@ -115,7 +115,7 @@ $cashback = intval(getPaySettingValue('chashbackiranpay4', '0'));
 if ($cashback > 0 && $buyer) {
     $reward = intval($price * $cashback / 100);
     if ($reward > 0) {
-        update("user", "Balance", intval($buyer['Balance']) + $reward, "id", $payment['id_user']);
+        addBalance($payment['id_user'], $reward);
         sendmessage(
             $buyer['id'],
             sprintf($textbotlang['paymentGateway']['giftReport'], number_format($reward)),
@@ -126,7 +126,7 @@ if ($cashback > 0 && $buyer) {
 }
 
 if ($buyer && strlen((string) ($setting['Channel_Report'] ?? '')) > 0) {
-    $paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
+    $paymentreports = config_get('topic', "paymentreport");
     telegram('sendmessage', [
         'chat_id' => $setting['Channel_Report'],
         'message_thread_id' => $paymentreports,

@@ -46,7 +46,7 @@ try {
             if ($scorestatus === null) {
                 require_once dirname($cronbotDir) . '/config.php';
                 require_once dirname($cronbotDir) . '/function.php';
-                $setting = select('setting', '*');
+                $setting = config_all('setting');
                 $scorestatus = intval($setting['scorestatus'] ?? 0);
             }
             if ($scorestatus !== 1) {

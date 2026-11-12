@@ -9,7 +9,7 @@ require_once __DIR__ . '/../function.php';
 $textbotlang = languagechange();
 $ManagePanel = new ManagePanel();
 
-$setting = select("setting", "*");
+$setting = config_all('setting');
 // buy service 
 $stmt = $pdo->prepare("SELECT * FROM marzban_panel WHERE type = 'marzban'  ORDER BY RAND() LIMIT 25");
 $stmt->execute();

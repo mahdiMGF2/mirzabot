@@ -7,7 +7,7 @@ $currentUser = $_SESSION['admin_user'] ?? $textbotlang['panel']['layoutDefaultAd
 $initials = mb_strtoupper(mb_substr($currentUser, 0, 1, 'UTF-8'), 'UTF-8');
 ?>
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="<?= $panelLang ?>" dir="<?= $panelLang === 'fa' ? 'rtl' : 'ltr' ?>">
 
 <head>
   <meta charset="UTF-8">
@@ -17,7 +17,7 @@ $initials = mb_strtoupper(mb_substr($currentUser, 0, 1, 'UTF-8'), 'UTF-8');
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title><?= $textbotlang['panel']['layoutBrandName'] ?></title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/<?= $panelLang === 'fa' ? 'style' : 'style-ltr' ?>.css">
   <script>
     (function () {
       var t = localStorage.getItem('panel-theme') || 'navy';
@@ -177,6 +177,7 @@ $initials = mb_strtoupper(mb_substr($currentUser, 0, 1, 'UTF-8'), 'UTF-8');
           </div>
         </div>
         <div class="topbar-tools">
+          <?php include __DIR__ . '/lang_menu.php'; ?>
           <a href="settings.php" class="icon-btn"
             title="<?= $textbotlang['panel']['layoutPageTitleSettings'] ?>"><?= icon('settings', 16) ?></a>
           <a href="logout.php" class="icon-btn"

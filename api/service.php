@@ -10,7 +10,7 @@ ini_set('default_charset', 'UTF-8');
 ini_set('error_log', 'error_log');
 
 $headrs = getallheaders();
-$setting = select("setting", "*");
+$setting = config_all('setting');
 if (!validateToken($headrs)) {
     sendJsonResponse(false, "token invalid", [], 403);
 }

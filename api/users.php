@@ -14,7 +14,7 @@ ini_set('error_log', 'error_log');
 
 list($headers, $data, $action) = apiRequestContext();
 $method = $_SERVER['REQUEST_METHOD'];
-$setting = select("setting", "*");
+$setting = config_all('setting');
 
 function usr_users(array $data, string $method): void
 {
@@ -102,7 +102,7 @@ function usr_user(array $data, string $method): void
         $invoice = $stmt->fetch(PDO::FETCH_ASSOC);
         $users[0]['count_invoice'] = $invoice['count_invoice'];
         $users[0]['sum_invoice'] = $invoice['sum_price'];
-        $stmt = $pdo->prepare("SELECT SUM(price) as sum_price,COUNT(*) as count_payment FROM Payment_report WHERE id_user = :user_id AND payment_Status = 'paid'");
+        $stmt = $pdo->prepare("SELECT SUM(price) as sum_price,COUNT(*) as count_payment FROM payment_report WHERE id_user = :user_id AND payment_Status = 'paid'");
         $stmt->bindValue(':user_id', intval($users[0]['user_id']), PDO::PARAM_INT);
         $stmt->execute();
         $payment_report = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -439,11 +439,11 @@ function usr_transfer_account(array $data, string $method): void
     $stmt = $pdo->prepare("DELETE FROM user WHERE id = :id_user");
     $stmt->execute([':id_user' => $data["new_userid"]]);
     update("user", "id", $data["new_userid"], "id", $data['chat_id']);
-    update("Payment_report", "id_user", $data["new_userid"], "id_user", $data['chat_id']);
+    update("payment_report", "id_user", $data["new_userid"], "id_user", $data['chat_id']);
     update("invoice", "id_user", $data["new_userid"], "id_user", $data['chat_id']);
     update("support_message", "iduser", $data["new_userid"], "iduser", $data['chat_id']);
     update("service_other", "id_user", $data["new_userid"], "id_user", $data['chat_id']);
-    update("Giftcodeconsumed", "id_user", $data["new_userid"], "id_user", $data['chat_id']);
+    update("giftcodeconsumed", "id_user", $data["new_userid"], "id_user", $data['chat_id']);
     update("botsaz", "id_user", $data["new_userid"], "id_user", $data['chat_id']);
     sendJsonResponse(true, "Successful");
 }

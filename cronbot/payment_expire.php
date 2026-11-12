@@ -8,14 +8,14 @@ require_once __DIR__ . '/../panels.php';
 require_once __DIR__ . '/../function.php';
 require __DIR__ . '/../vendor/autoload.php';
 $ManagePanel = new ManagePanel();
-$setting = select("setting", "*");
+$setting = config_all('setting');
 $textbotlang = languagechange();
 $month_date_time_start = time() - 86400;
 $month_date_time_start = date('Y/m/d H:i:s',$month_date_time_start);
-$stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE time < :mp1 AND payment_Status = 'Unpaid'");
+$stmt = $pdo->prepare("SELECT * FROM payment_report WHERE time < :mp1 AND payment_Status = 'Unpaid'");
 $stmt->execute([':mp1' => $month_date_time_start]);
 
-$expireStmt = $pdo->prepare("UPDATE Payment_report SET payment_Status = 'expire' WHERE id_order = ? AND payment_Status = 'Unpaid'");
+$expireStmt = $pdo->prepare("UPDATE payment_report SET payment_Status = 'expire' WHERE id_order = ? AND payment_Status = 'Unpaid'");
 while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $expireStmt->execute([$result['id_order']]);
     if ($expireStmt->rowCount() === 0) {

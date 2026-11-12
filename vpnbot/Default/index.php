@@ -78,7 +78,7 @@ if (!isset($setting['active_step_note'])) {
     $setting['active_step_note'] = false;
     update("botsaz", "setting", json_encode($setting), "bot_token", $ApiToken);
 }
-$settingmain = select("setting", "*", null, null, "select");
+$settingmain = config_all('setting');
 $showcard = 1;
 $users_ids = select("user", "*", "bottype", $ApiToken, "FETCH_COLUMN");
 if (!is_dir('data')) {
@@ -117,15 +117,15 @@ if ($from_id != 0) {
 $user = select("user", "*", "id", $from_id, "select");
 $user['Balance'] = json_decode(file_get_contents("data/$from_id/$from_id.json"), true)['Balance'];
 $usernameinvoice = select("invoice", "username", null, null, "FETCH_COLUMN");
-$buyreport = select("topicid", "idreport", "report", "buyreport", "select")['idreport'];
-$reportnight = select("topicid", "idreport", "report", "reportnight", "select")['idreport'];
-$reporttest = select("topicid", "idreport", "report", "reporttest", "select")['idreport'];
-$errorreport = select("topicid", "idreport", "report", "errorreport", "select")['idreport'];
-$porsantreport = select("topicid", "idreport", "report", "porsantreport", "select")['idreport'];
-$reportcron = select("topicid", "idreport", "report", "reportcron", "select")['idreport'];
-$otherservice = select("topicid", "idreport", "report", "otherservice", "select")['idreport'];
+$buyreport = config_get('topic', "buyreport");
+$reportnight = config_get('topic', "reportnight");
+$reporttest = config_get('topic', "reporttest");
+$errorreport = config_get('topic', "errorreport");
+$porsantreport = config_get('topic', "porsantreport");
+$reportcron = config_get('topic', "reportcron");
+$otherservice = config_get('topic', "otherservice");
 
-$paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
+$paymentreports = config_get('topic', "paymentreport");
 $admin_idsmain = select("admin", "id_admin", "rule", "administrator", "FETCH_COLUMN");
 $id_invoice = select("invoice", "id_invoice", null, null, "FETCH_COLUMN");
 $userbot = select("user", "*", "id", $dataBase['id_user'], "select");
@@ -171,7 +171,7 @@ if ($text == "/start") {
     $timeacc = jdate('H:i:s', $current_time);
     $first_name = htmlspecialchars($first_name);
     $Balanceuser = number_format($user['Balance'], 0);
-    $stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE id_user = :from_id AND payment_Status = 'paid' AND bottype = :apibot");
+    $stmt = $pdo->prepare("SELECT * FROM payment_report WHERE id_user = :from_id AND payment_Status = 'paid' AND bottype = :apibot");
     $stmt->execute([
         ':from_id' => $from_id,
         ':apibot' => $ApiToken
@@ -577,7 +577,7 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         update("user", "number_username", $value, "id", $from_id);
         if (in_array(usernameMethodKey($marzban_list_get['MethodUsername']), ['customTextSequential', 'agentCustomTextSequential'], true)) {
             $value = intval($settingmain['numbercount']) + 1;
-            update("setting", "numbercount", $value);
+            config_set('setting', "numbercount", $value);
         }
     }
     $timejalali = jdate('Y/m/d H:i:s');
@@ -1062,12 +1062,12 @@ if ($text == $text_bot_var['btn_keyboard']['buy'] && $setting['active_step_note'
     $Status = "unpaid";
     $stmt->execute([$from_id, $randomString, $username_ac, $date, $marzban_list_get['name_panel'], $datafactor['name_product'], $datafactor['price_product'], $datafactor['Volume_constraint'], $datafactor['Service_time'], $Status, $ApiToken, $userdate['note'], $notifctions]);
     if ($datafactor['price_product'] > $user['Balance'] && intval($datafactor['price_product']) != 0) {
-        $marzbandirectpay = select("shopSetting", "*", "Namevalue", "statusdirectpabuy", "select")['value'];
+        $marzbandirectpay = config_get('shop', "statusdirectpabuy");
         $Balance_prim = $datafactor['price_product'] - $user['Balance'];
         if ($Balance_prim <= 1)
             $Balance_prim = 0;
-        $minbalance = number_format(json_decode(select("PaySetting", "*", "NamePay", "minbalance", "select")['ValuePay'], true)[$userbot['agent']]);
-        $maxbalance = number_format(json_decode(select("PaySetting", "*", "NamePay", "maxbalance", "select")['ValuePay'], true)[$userbot['agent']]);
+        $minbalance = number_format(json_decode(config_get('pay', "minbalance"), true)[$userbot['agent']]);
+        $maxbalance = number_format(json_decode(config_get('pay', "maxbalance"), true)[$userbot['agent']]);
         $bakinfos = json_encode([
             'inline_keyboard' => [
                 [
@@ -1243,7 +1243,7 @@ if ($text == $text_bot_var['btn_keyboard']['buy'] && $setting['active_step_note'
         update("user", "number_username", $value, "id", $from_id);
         if (in_array(usernameMethodKey($marzban_list_get['MethodUsername']), ['customTextSequential', 'agentCustomTextSequential'], true)) {
             $value = intval($settingmain['numbercount']) + 1;
-            update("setting", "numbercount", $value);
+            config_set('setting', "numbercount", $value);
         }
     }
     $balanceformatsell = number_format(select("user", "Balance", "id", $from_id, "select")['Balance'], 0);
@@ -1306,7 +1306,7 @@ $textonebuy
     }
     $dateacc = date('Y/m/d H:i:s');
     $randomString = bin2hex(random_bytes(5));
-    $stmt = $pdo->prepare("INSERT INTO Payment_report (id_user,id_order,time,price,payment_Status,Payment_Method,id_invoice,bottype) VALUES (?,?,?,?,?,?,?,?)");
+    $stmt = $pdo->prepare("INSERT INTO payment_report (id_user,id_order,time,price,payment_Status,Payment_Method,id_invoice,bottype) VALUES (?,?,?,?,?,?,?,?)");
     $payment_Status = "Unpaid";
     $Payment_Method = "cart to cart";
     $invoice = "0 | 0";
@@ -1316,7 +1316,7 @@ $textonebuy
     savedata("clear", "id_order", $randomString);
 } elseif ($user['step'] == "getresidcart") {
     $userdate = json_decode($user['Processing_value'], true);
-    $PaymentReport = select("Payment_report", '*', "id_order", $userdate['id_order'], "select");
+    $PaymentReport = select("payment_report", '*', "id_order", $userdate['id_order'], "select");
     $Confirm_pay = json_encode([
         'inline_keyboard' => [
             [
@@ -1762,6 +1762,10 @@ $output
     if (isset($userdate['code_product'])) {
         $product = $userdate['code_product'];
         $product = select("product", "*", "code_product", $product);
+        if ($product == false) {
+            sendmessage($from_id, "❌ تمدید با خطا مواجه گردید مراحل تمدید را مجددا انجام دهید.", null, 'HTML');
+            return;
+        }
         $productlist = json_decode(file_get_contents('product.json'), true);
         $priceproductmain = $product['price_product'];
         if (isset($productlist[$product['code_product']])) {
@@ -1820,12 +1824,12 @@ $output
         }
     }
     if ($datafactor['price_product'] > $user['Balance'] && intval($datafactor['price_product']) != 0) {
-        $marzbandirectpay = select("shopSetting", "*", "Namevalue", "statusdirectpabuy", "select")['value'];
+        $marzbandirectpay = config_get('shop', "statusdirectpabuy");
         $Balance_prim = $datafactor['price_product'] - $user['Balance'];
         if ($Balance_prim <= 1)
             $Balance_prim = 0;
-        $minbalance = number_format(json_decode(select("PaySetting", "*", "NamePay", "minbalance", "select")['ValuePay'], true)[$userbot['agent']]);
-        $maxbalance = number_format(json_decode(select("PaySetting", "*", "NamePay", "maxbalance", "select")['ValuePay'], true)[$userbot['agent']]);
+        $minbalance = number_format(json_decode(config_get('pay', "minbalance"), true)[$userbot['agent']]);
+        $maxbalance = number_format(json_decode(config_get('pay', "maxbalance"), true)[$userbot['agent']]);
         $bakinfos = json_encode([
             'inline_keyboard' => [
                 [

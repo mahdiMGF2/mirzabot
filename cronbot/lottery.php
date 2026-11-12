@@ -8,7 +8,7 @@ require_once __DIR__ . '/../function.php';
 require __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../jdf.php';
 
-$setting = select("setting", "*");
+$setting = config_all('setting');
 
 if (!$setting || !isset($setting['scorestatus'])) {
     error_log("Setting data is missing or incomplete.");
@@ -18,7 +18,7 @@ if (!$setting || !isset($setting['scorestatus'])) {
 $lotteryDateFile = dirname(__DIR__) . '/storage/lottery_date';
 
 if (intval($setting['scorestatus']) == 1) {
-    $otherreport = select("topicid", "idreport", "report", "otherreport", "select")['idreport'];
+    $otherreport = config_get('topic', "otherreport");
 
     if (date("H") == "00" && @file_get_contents($lotteryDateFile) !== date("Y-m-d")) {
         file_put_contents($lotteryDateFile, date("Y-m-d"));

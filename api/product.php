@@ -13,7 +13,7 @@ ini_set('error_log', 'error_log');
 
 list($headers, $data, $action) = apiRequestContext();
 $method = $_SERVER['REQUEST_METHOD'];
-$setting = select("setting", "*");
+$setting = config_all('setting');
 
 function prod_products(array $data, string $method): void
 {
@@ -187,6 +187,11 @@ function prod_product_edit(array $data, string $method): void
         }
     }
 
+    foreach (['price', 'volume', 'data_limit', 'time'] as $numericField) {
+        if (isset($data[$numericField])) {
+            $data[$numericField] = requireInt($data, $numericField, 0);
+        }
+    }
     try {
         $productData = [
             'name_product' => isset($data['name']) ? $data['name'] : $product['name_product'],
@@ -280,7 +285,7 @@ function prod_set_inbounds(array $data, string $method): void
             sendJsonResponse(false, "User Not Found", [], 200);
 
         if (!$isNewMarzban) {
-            foreach ($DataUserOut['proxies'] as $key => $value) {
+            foreach (array_keys($DataUserOut['proxies']) as $key) {
                 if ($key == "shadowsocks" || $key == "trojan") {
                     unset($DataUserOut['proxies'][$key]['password']);
                 } elseif ($key == "wireguard") {

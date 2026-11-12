@@ -1,6 +1,6 @@
 <?php
 require_once 'config.php';
-$setting = select("setting", "*", null, null, "select");
+$setting = config_all('setting');
 $textbotlang = languagechange();
 //-----------------------------[  text panel  ]-------------------------------
 $adminrulecheck = select("admin", "*", "id_admin", $from_id, "select");
@@ -264,7 +264,7 @@ $usernamecart = getPaySettingValue("CartDirect");
 $Swapino = getPaySettingValue("statusSwapWallet");
 $trnadoo = getPaySettingValue("statustarnado");
 $paymentverify = getPaySettingValue("checkpaycartfirst");
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM Payment_report WHERE id_user = :user_id AND payment_Status = 'paid'");
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM payment_report WHERE id_user = :user_id AND payment_Status = 'paid'");
 $stmt->bindValue(':user_id', $from_id);
 $stmt->execute();
 $paymentexits = (int) $stmt->fetchColumn();
@@ -455,7 +455,7 @@ function featureIsOn($feature, $setting)
 function featureCategoryKeyboard($categoryKey)
 {
     global $featureCategories, $textbotlang;
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $rows = [];
     $settingsButtons = [];
     foreach ($featureCategories[$categoryKey]['features'] as $featureKey => $feature) {
@@ -486,7 +486,7 @@ function featureCategoryKeyboard($categoryKey)
 function wheelSettingsMenu()
 {
     global $wheelFeatures, $textbotlang;
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $rows = [];
     foreach ($wheelFeatures as $featureKey => $feature) {
         $isOn = featureIsOn($feature, $setting);
@@ -507,7 +507,7 @@ function wheelSettingsMenu()
 function lotterySettingsMenu()
 {
     global $lotteryFeatures, $textbotlang;
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $rows = [];
     foreach ($lotteryFeatures as $featureKey => $feature) {
         $rows[] = [
@@ -529,7 +529,7 @@ function lotterySettingsMenu()
 function affiliateSettingsMenu()
 {
     global $textbotlang;
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $affiliateSetting = select("affiliates", "*", null, null, "select");
     $commissionText = $textbotlang['Admin']['Status'][$affiliateSetting['status_commission'] == "oncommission" ? 'statuson' : 'statusoff'];
     $firstBuyText = $affiliateSetting['porsant_one_buy'] == "on_buy_porsant" ? $textbotlang['keyboard']['firstPurchaseBtn'] : $textbotlang['keyboard']['allPurchases'];
@@ -554,7 +554,7 @@ function cronStatusMenu()
     require_once __DIR__ . '/cronbot/jobs.php';
     $labels = $textbotlang['Admin']['cronHealth'];
     $cronStatus = json_decode((string) @file_get_contents(__DIR__ . '/storage/cron_status.json'), true) ?: [];
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $timeAgo = fn($time) => time() - $time < 60 ? $labels['justNow'] : sprintf($labels['minutesAgo'], intdiv(time() - $time, 60));
     $dispatcherRunning = isset($cronStatus['dispatcher']) && time() - $cronStatus['dispatcher'] <= 180;
     $lines = [];
@@ -593,7 +593,7 @@ function cronStatusMenu()
 function giftCodesMenu()
 {
     global $pdo, $textbotlang;
-    $giftCodes = $pdo->query("SELECT code, price FROM Discount")->fetchAll(PDO::FETCH_ASSOC);
+    $giftCodes = $pdo->query("SELECT code, price FROM discount")->fetchAll(PDO::FETCH_ASSOC);
     $rows = [[['text' => $textbotlang['keyboard']['createGiftCode'], 'callback_data' => "giftcode_create"]]];
     foreach ($giftCodes as $giftCode) {
         $rows[] = [
@@ -644,7 +644,7 @@ function discountProductsKeyboard($location)
 function discountCodesMenu()
 {
     global $pdo, $textbotlang;
-    $discountCodes = $pdo->query("SELECT codeDiscount, price FROM DiscountSell")->fetchAll(PDO::FETCH_ASSOC);
+    $discountCodes = $pdo->query("SELECT codeDiscount, price FROM discountsell")->fetchAll(PDO::FETCH_ASSOC);
     $rows = [[['text' => $textbotlang['keyboard']['createDiscountCode'], 'callback_data' => "discountcode_create"]]];
     foreach ($discountCodes as $discountCode) {
         $rows[] = [
@@ -1318,7 +1318,7 @@ function KeyboardProduct($location, $query, $pricediscount, $datakeyboard, $stat
 {
     global $pdo, $textbotlang, $from_id;
     $product = ['inline_keyboard' => []];
-    $statusshowprice = select("shopSetting", "*", "Namevalue", "statusshowprice", "select")['value'];
+    $statusshowprice = config_get('shop', "statusshowprice");
     $stmt = $pdo->prepare($query);
     $stmt->execute($queryParams);
     if ($valuetow != null) {

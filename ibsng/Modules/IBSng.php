@@ -3,24 +3,12 @@
 
 class IBSng
 {
-    static public $_instance;
-
     protected $hostname, $username, $password, $port, $timeout;
     protected $isConnected = false;
     protected $loginData = [];
-    protected $autoConnect = false;
     protected $cookiePathName = null;
     protected $handler = null;
     protected $agent = 'phpIBSng web Api';
-
-    /**
-     * @param boolean $autoConnect
-     */
-    public function setAutoConnect($autoConnect)
-    {
-        $this->autoConnect = $autoConnect;
-    }
-
 
     public function __construct(Array $loginArray)
     {
@@ -35,9 +23,6 @@ class IBSng
          * Hide LibXML parse errors
          */
         libxml_use_internal_errors(true);
-
-
-        self::$_instance = $this;
 
         $this->loginData = $loginArray;
         if (!$this->loginData['username'] ||
@@ -55,23 +40,6 @@ class IBSng
         $this->timeout = $loginArray['timeout'];
 
         $this->cookiePathName = sys_get_temp_dir() . '/.ibsng_' . md5((string) $this->hostname . '|' . (string) $this->username);
-
-        if ($this->autoConnect) {
-            $this->connect();
-        }
-
-    }
-
-    protected function hostNameHealth($hostname = false, $port = false)
-    {
-        if ($hostname == false) {
-            $hostname = $this->hostname;
-        }
-        if ($port == false) {
-            $port = $this->port;
-        }
-        $fp = @fsockopen($hostname, $port);
-        return $fp;
     }
 
     protected function getCookie()
@@ -121,21 +89,6 @@ class IBSng
     public function deleteUser($username)
     {
         return $this->_delUser($username);
-    }
-
-    public function listUser()
-    {
-        return $this->fetchAllUsers(1, 100);
-    }
-
-    public function isUserValid()
-    {
-        // TODO: Implement isUserValid() method.
-    }
-
-    public function isUserExpired()
-    {
-        // TODO: Implement isUserExpired() method.
     }
 
     public function getUser($username)
@@ -439,45 +392,6 @@ class IBSng
     }
 
 
-    public function fetchAllUsers($startUID, $pagePerRequest)
-    {
-//        $bench = new \Ubench();
-//        $bench->start();
-        $totalPages = $this->_csvPages($startUID, $pagePerRequest);
-//        $bench->end();
-//        echo 'Total Pages: ' . $totalPages . ' (time: ' . $bench->getTime(true) . ')' . PHP_EOL;
-//        unset($bench);
-        if ($totalPages < 1) {
-            return false;
-        }
-
-        $processed = 1;
-        $userPages = array();
-
-//        $bench = new \Ubench();
-//        $bench->start();
-        while ($processed <= $totalPages) {
-//            $userPages[] = is_array($this->_csv($startUID, $pagePerRequest, $processed)) ? $this->_csv($startUID, $pagePerRequest, $processed) : array();
-
-            $temp = $this->_csv($startUID, $pagePerRequest, $processed);
-            if (is_array($temp)) {
-                $userPages[] = $temp;
-            } else {
-                $userPages[] = array();
-            }
-
-            $processed++;
-        }
-
-        $arrayMerge = new \ReflectionFunction("array_merge");
-        $usersList = $arrayMerge->invokeArgs($userPages);
-
-//        $bench->end();
-//        echo 'got ' . count($usersList) . ' users (' . $bench->getTime(true) . ')' . PHP_EOL;
-        return $usersList;
-    }
-
-
     /**
      * Checks for user existence
      * @param $username
@@ -501,190 +415,6 @@ class IBSng
             $sub2 = substr($sub1, 0, $pos2);
             return $sub2;
         }
-    }
-
-    private function _csvPages($startUid = 1, $limit = 10)
-    {
-        $url = $this->hostname . '/IBSng/admin/user/search_user.php';
-        $post_data['user_id_op'] = '>=';
-        $post_data['user_id'] = $startUid;
-        $post_data['normal_username_op'] = 'equals';
-        $post_data['normal_username'] = '';
-        $post_data['voip_username_op'] = 'equals';
-        $post_data['voip_username'] = '';
-        $post_data['caller_id_op'] = 'equals';
-        $post_data['caller_id'] = '';
-        $post_data['credit_op'] = '=';
-        $post_data['credit'] = '';
-        $post_data['abs_exp_date_op'] = '=';
-        $post_data['abs_exp_date'] = '';
-        $post_data['abs_exp_date_unit'] = 'days';
-        $post_data['rel_exp_date_op'] = '=';
-        $post_data['rel_exp_date'] = '';
-        $post_data['rel_exp_date_unit'] = 'days';
-        $post_data['rel_exp_value_op'] = '=';
-        $post_data['rel_exp_value'] = '';
-        $post_data['rel_exp_value_unit'] = 'Days';
-        $post_data['first_login_op'] = '=';
-        $post_data['first_login'] = '';
-        $post_data['first_login_unit'] = 'days';
-        $post_data['lock_reason_op'] = 'equals';
-        $post_data['lock_reason'] = '';
-        $post_data['persistent_lan_mac'] = '';
-        $post_data['persistent_lan_ip'] = '';
-        $post_data['persistent_lan_ras_ip'] = '';
-        $post_data['limit_mac_op'] = 'equals';
-        $post_data['limit_mac'] = '';
-        $post_data['limit_station_ip_op'] = 'equals';
-        $post_data['limit_station_ip'] = '';
-        $post_data['comment_op'] = 'equals';
-        $post_data['comment'] = '';
-        $post_data['name_op'] = 'equals';
-        $post_data['name'] = '';
-        $post_data['phone_op'] = 'equals';
-        $post_data['phone'] = '';
-        $post_data['email_address_op'] = 'equals';
-        $post_data['email_address'] = '';
-        $post_data['multi_login_op'] = '=';
-        $post_data['multi_login'] = '';
-        $post_data['ippool'] = '';
-        $post_data['assign_ip_op'] = 'equals';
-        $post_data['assign_ip'] = '';
-        $post_data['order_by'] = 'creation_date';
-        $post_data['rpp'] = $limit;
-        $post_data['view_options'] = '0';
-        $post_data['Internet_Username'] = 'show__attrs_normal_username';
-        $post_data['Credit'] = 'show__basic_credit|price';
-        $post_data['Group'] = 'show__basic_group_name';
-        $post_data['Owner'] = 'show__basic_owner_name';
-        $post_data['Creation_Date'] = 'show__basic_creation_date';
-        $post_data['Relative_ExpDate'] = 'show__attrs_rel_exp_date,show__attrs_rel_exp_date_unit';
-        $post_data['Lock'] = 'show__attrs_lock|lockFormat';
-        $post_data['Multi_Login'] = 'show__attrs_multi_login';
-        $post_data['x'] = '18';
-        $post_data['y'] = '9';
-        $post_data['search'] = '1';
-        $post_data['show_reports'] = '1';
-        $post_data['page'] = 1;
-        $post_data['order_by'] = 'creation_date';
-//        $post_data['desc'] = 'on';
-        $post_data['Absolute_ExpDate'] = 'show__attrs_abs_exp_date';
-
-        $output = $this->request($url, $post_data);
-
-        $phrase = ');" title="Last Page"';
-        $phrasePosition = strpos($output, $phrase);
-        $output2 = substr($output, $phrasePosition - 20);
-
-        $phrase2 = 'Page(';
-        $phrasePosition2 = strpos($output2, $phrase2) + strlen($phrase2);
-
-        $output3 = substr($output2, $phrasePosition2);
-
-        $pages = substr($output3, 0, strpos($output3, $phrase));
-
-        return $pages;
-    }
-
-    private function _csv($startUid = 1, $limit = 10, $page = 1)
-    {
-        $url = $this->hostname . '/IBSng/admin/user/search_user.php';
-        $post_data['user_id_op'] = '>=';
-        $post_data['user_id'] = $startUid;
-        $post_data['normal_username_op'] = 'equals';
-        $post_data['normal_username'] = '';
-        $post_data['voip_username_op'] = 'equals';
-        $post_data['voip_username'] = '';
-        $post_data['caller_id_op'] = 'equals';
-        $post_data['caller_id'] = '';
-        $post_data['credit_op'] = '=';
-        $post_data['credit'] = '';
-        $post_data['abs_exp_date_op'] = '=';
-        $post_data['abs_exp_date'] = '';
-        $post_data['abs_exp_date_unit'] = 'days';
-        $post_data['rel_exp_date_op'] = '=';
-        $post_data['rel_exp_date'] = '';
-        $post_data['rel_exp_date_unit'] = 'days';
-        $post_data['rel_exp_value_op'] = '=';
-        $post_data['rel_exp_value'] = '';
-        $post_data['rel_exp_value_unit'] = 'Days';
-        $post_data['first_login_op'] = '=';
-        $post_data['first_login'] = '';
-        $post_data['first_login_unit'] = 'days';
-        $post_data['lock_reason_op'] = 'equals';
-        $post_data['lock_reason'] = '';
-        $post_data['persistent_lan_mac'] = '';
-        $post_data['persistent_lan_ip'] = '';
-        $post_data['persistent_lan_ras_ip'] = '';
-        $post_data['limit_mac_op'] = 'equals';
-        $post_data['limit_mac'] = '';
-        $post_data['limit_station_ip_op'] = 'equals';
-        $post_data['limit_station_ip'] = '';
-        $post_data['comment_op'] = 'equals';
-        $post_data['comment'] = '';
-        $post_data['name_op'] = 'equals';
-        $post_data['name'] = '';
-        $post_data['phone_op'] = 'equals';
-        $post_data['phone'] = '';
-        $post_data['email_address_op'] = 'equals';
-        $post_data['email_address'] = '';
-        $post_data['multi_login_op'] = '=';
-        $post_data['multi_login'] = '';
-        $post_data['ippool'] = '';
-        $post_data['assign_ip_op'] = 'equals';
-        $post_data['assign_ip'] = '';
-        $post_data['order_by'] = 'creation_date';
-        $post_data['rpp'] = $limit;
-        $post_data['view_options'] = '1';
-        $post_data['Internet_Username'] = 'show__attrs_normal_username';
-        $post_data['Credit'] = 'show__basic_credit|price';
-        $post_data['Group'] = 'show__basic_group_name';
-        $post_data['Owner'] = 'show__basic_owner_name';
-        $post_data['Creation_Date'] = 'show__basic_creation_date';
-        $post_data['Relative_ExpDate'] = 'show__attrs_rel_exp_date,show__attrs_rel_exp_date_unit';
-        $post_data['Lock'] = 'show__attrs_lock|lockFormat';
-        $post_data['Multi_Login'] = 'show__attrs_multi_login';
-        $post_data['x'] = '18';
-        $post_data['y'] = '9';
-        $post_data['search'] = '1';
-        $post_data['show_reports'] = '1';
-        $post_data['page'] = $page;
-        $post_data['order_by'] = 'creation_date';
-//        $post_data['desc'] = 'on';
-        $post_data['Absolute_ExpDate'] = 'show__attrs_abs_exp_date';
-
-        $output = $this->request($url, $post_data);
-
-        $lines = explode("\n", $output);
-        $i = 0;
-        $j = 0;
-        foreach ($lines as $line) {
-            if ($line == "")
-                continue;
-            $line_splited = explode(",", $line);
-            if (!isset($line_splited))
-                continue;
-            if ($line_splited[0] == 'User ID')
-                continue;
-            $j++;
-            if ($line_splited[1] == '-') {
-                continue;
-
-            }
-            $ibsid = $line_splited[0];
-//            $ibsid = $j - 1;
-            $users[$ibsid]['ibsid'] = $line_splited[0];
-            $users[$ibsid]['username'] = $line_splited[1];
-            $users[$ibsid]['credit'] = $line_splited[2];
-            $users[$ibsid]['group'] = $line_splited[3];
-            $users[$ibsid]['creation'] = $line_splited[5];
-            $users[$ibsid]['relexpdate'] = $line_splited[6];
-            $users[$ibsid]['locked'] = (trim($line_splited[7]) == '-') ? 0 : 1;
-            $users[$ibsid]['multiLogin'] = (trim($line_splited[8]) == '-') ? 1 : $line_splited[8];
-            $users[$ibsid]['absoluteExpire'] = (trim($line_splited[9]) == '-') ? 0 : $line_splited[9];
-            $i++;
-        }
-        return isset($users) ? $users : $j;
     }
 
     protected function _addUser($group_name, $username, $password, $credit)
