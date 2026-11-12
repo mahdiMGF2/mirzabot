@@ -12,7 +12,14 @@ $schema = new Schema($pdo, [
     'textbotlang' => static fn() => languagechange(),
 ]);
 
-$schema->renameTables(require __DIR__ . '/renames.php');
+$renames = require __DIR__ . '/renames.php';
+$tableFiles = scandir(__DIR__ . '/tables') ?: [];
+foreach (array_keys($renames) as $oldTable) {
+    if (in_array("$oldTable.php", $tableFiles, true)) {
+        @unlink(__DIR__ . "/tables/$oldTable.php");
+    }
+}
+$schema->renameTables($renames);
 $schema->applyTables(__DIR__ . '/tables', require __DIR__ . '/tables.php');
 $schema->runMigrations(__DIR__ . '/migrations');
 $schema->applyIndexes(require __DIR__ . '/indexes.php');
