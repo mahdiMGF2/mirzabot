@@ -6,10 +6,10 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../botapi.php';
 require_once __DIR__ . '/../function.php';
 $textbotlang = languagechange();
-$setting = select("setting","*",null,null,"select");
+$setting = config_all('setting');
 
 //________________[ time 12 report]________________
-$reportnight = select("topicid","idreport","report","reportnight","select")['idreport'];
+$reportnight = config_get('topic', "reportnight");
 // if(true){
 if (date("H") == "00" && intval(date("i")) < 15) {
 $datefirst = date("Y-m-d", strtotime("-1 day")) . " 00:00:00";

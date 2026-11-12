@@ -720,10 +720,10 @@ function mirza_install_webhook_secret(array $values): string
             PDO::ATTR_TIMEOUT => 10,
         ]);
 
-        $statement = $pdo->prepare("UPDATE setting SET webhook_secret = ? WHERE webhook_secret IS NULL OR webhook_secret = ''");
+        $statement = $pdo->prepare("INSERT INTO config (scope, name, value) VALUES ('setting', 'webhook_secret', ?) ON DUPLICATE KEY UPDATE value = IF(value IS NULL OR value = '', VALUES(value), value)");
         $statement->execute([bin2hex(random_bytes(24))]);
 
-        $secret = $pdo->query('SELECT webhook_secret FROM setting LIMIT 1')->fetchColumn();
+        $secret = $pdo->query("SELECT value FROM config WHERE scope = 'setting' AND name = 'webhook_secret'")->fetchColumn();
     } catch (Throwable $exception) {
         error_log('Unable to read the webhook secret from the database: ' . $exception->getMessage());
 

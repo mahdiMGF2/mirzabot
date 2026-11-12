@@ -244,11 +244,9 @@ final class Schema
         foreach ($order as $name) {
             if (isset($files[$name])) {
                 $ordered[$name] = $files[$name];
-                unset($files[$name]);
             }
         }
-        ksort($files);
-        return $ordered + $files;
+        return $ordered;
     }
 
     private function logFailure(string $scope, Throwable $e): void

@@ -13,7 +13,7 @@ ini_set('error_log', 'error_log');
 
 list($headers, $data, $action) = apiRequestContext();
 $method = $_SERVER['REQUEST_METHOD'];
-$setting = select("setting", "*");
+$setting = config_all('setting');
 
 $editableColumns = [
     'name' => 'name_panel',

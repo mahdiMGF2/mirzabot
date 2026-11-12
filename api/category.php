@@ -12,7 +12,7 @@ ini_set('error_log', 'error_log');
 
 list($headers, $data, $action) = apiRequestContext();
 $method = $_SERVER['REQUEST_METHOD'];
-$setting = select("setting", "*");
+$setting = config_all('setting');
 
 function cat_categorys(array $data, string $method): void
 {

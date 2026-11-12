@@ -126,7 +126,7 @@ if ($cashback > 0 && $buyer) {
 }
 
 if ($buyer && strlen((string) ($setting['Channel_Report'] ?? '')) > 0) {
-    $paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
+    $paymentreports = config_get('topic', "paymentreport");
     telegram('sendmessage', [
         'chat_id' => $setting['Channel_Report'],
         'message_thread_id' => $paymentreports,

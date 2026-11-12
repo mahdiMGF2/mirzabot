@@ -8,7 +8,7 @@ require_once __DIR__ . '/../panels.php';
 require_once __DIR__ . '/../function.php';
 require __DIR__ . '/../vendor/autoload.php';
 $ManagePanel = new ManagePanel();
-$setting = select("setting", "*");
+$setting = config_all('setting');
 $textbotlang = languagechange();
 $month_date_time_start = time() - 86400;
 $month_date_time_start = date('Y/m/d H:i:s',$month_date_time_start);

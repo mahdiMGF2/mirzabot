@@ -315,7 +315,7 @@ if ($datain == "paygwback") {
     sendmessage($from_id, $textbotlang['Admin']['getlimitusertest']['setLimitAll'], $keyboardadmin, 'HTML');
     step('home', $from_id);
     update("user", "limit_usertest", $text);
-    update("setting", "limit_usertest_all", $text);
+    config_set('setting', "limit_usertest_all", $text);
 } elseif ($text == $textbotlang['keyboard']['channelSettings'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['channel']['description'], $channelkeyboard, 'HTML');
 } elseif ($text == $textbotlang['Admin']['Status']['btn'] || $datain == "stat_all_bot") {
@@ -1452,24 +1452,24 @@ elseif ($datain == "systemsms") {
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['featureStatus'] && $adminrulecheck['rule'] == "administrator") {
     if ($setting['Bot_Status'] == $textbotlang['Admin']['Status']['botOn']) {
-        update("setting", "Bot_Status", "botstatuson");
+        config_set('setting', "Bot_Status", "botstatuson");
     } elseif ($setting['Bot_Status'] == $textbotlang['Admin']['Status']['botOff']) {
-        update("setting", "Bot_Status", "botstatusoff");
+        config_set('setting', "Bot_Status", "botstatusoff");
     }
     if ($setting['roll_Status'] == $textbotlang['Admin']['Status']['rulesOn']) {
-        update("setting", "roll_Status", "rolleon");
+        config_set('setting', "roll_Status", "rolleon");
     } elseif ($setting['roll_Status'] == $textbotlang['Admin']['Status']['rulesOff']) {
-        update("setting", "roll_Status", "rolleoff");
+        config_set('setting', "roll_Status", "rolleoff");
     }
     if ($setting['get_number'] == $textbotlang['Admin']['Status']['phoneVerifyOn']) {
-        update("setting", "get_number", "onAuthenticationphone");
+        config_set('setting', "get_number", "onAuthenticationphone");
     } elseif ($setting['get_number'] == $textbotlang['Admin']['Status']['phoneVerifyOff']) {
-        update("setting", "get_number", "offAuthenticationphone");
+        config_set('setting', "get_number", "offAuthenticationphone");
     }
     if ($setting['iran_number'] == $textbotlang['Admin']['Status']['iranPhoneOn']) {
-        update("setting", "iran_number", "onAuthenticationiran");
+        config_set('setting', "iran_number", "onAuthenticationiran");
     } elseif ($setting['iran_number'] == $textbotlang['Admin']['Status']['iranPhoneOff']) {
-        update("setting", "iran_number", "offAuthenticationiran");
+        config_set('setting', "iran_number", "offAuthenticationiran");
     }
     $firstCategoryKey = array_key_first($featureCategories);
     $categoryText = sprintf($textbotlang['Admin']['Status']['categoryTitle'], $featureCategories[$firstCategoryKey]['label']);
@@ -1483,9 +1483,9 @@ elseif ($datain == "systemsms") {
     if (isset($feature['cron'])) {
         $status_cron = json_decode($setting['cron_status'], true);
         $status_cron[$feature['cron']] = empty($status_cron[$feature['cron']]);
-        update("setting", "cron_status", json_encode($status_cron));
+        config_set('setting', "cron_status", json_encode($status_cron));
     } else {
-        update("setting", $feature['setting'], featureIsOn($feature, $setting) ? $feature['off'] : $feature['on']);
+        config_set('setting', $feature['setting'], featureIsOn($feature, $setting) ? $feature['off'] : $feature['on']);
     }
     $categoryText = sprintf($textbotlang['Admin']['Status']['categoryTitle'], $featureCategories[$categoryKey]['label']);
     Editmessagetext($from_id, $message_id, $categoryText, featureCategoryKeyboard($categoryKey));
@@ -1513,13 +1513,15 @@ elseif ($datain == "systemsms") {
         return;
     }
     if ($sharedChatId != $setting['Channel_Report']) {
-        update("topicid", "idreport", "0");
+        foreach (array_keys(config_all('topic')) as $report) {
+            config_set('topic', $report, "0");
+        }
     }
     if (!syncReportTopics($sharedChatId, $textbotlang)) {
         sendmessage($from_id, $textbotlang['Admin']['Channel']['botNotGroupAdmin'], null, 'HTML');
         return;
     }
-    update("setting", "Channel_Report", $sharedChatId);
+    config_set('setting', "Channel_Report", $sharedChatId);
     sendmessage($from_id, $textbotlang['Admin']['Channel']['setChannelReport'], $setting_panel, 'HTML');
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['shopSettings'] && $adminrulecheck['rule'] == "administrator") {
@@ -1748,7 +1750,7 @@ elseif ($datain == "systemsms") {
         return;
     }
     DirectPayment($order_id);
-    $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackcart", "select")['ValuePay'];
+    $pricecashback = config_get('pay', "chashbackcart");
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
     if ($pricecashback != "0") {
         $result = ($Payment_report['price'] * $pricecashback) / 100;
@@ -2454,58 +2456,58 @@ elseif ($datain == "systemsms") {
         step('home', $from_id);
     }
 } elseif ($text == "🧩 api plisio" && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "apinowpayment")['ValuePay'];
+    $PaySetting = config_get('pay', "apinowpayment");
     $textcart = sprintf($textbotlang['Admin']['gateway']['askPlisioApi'], $PaySetting);
     sendmessage($from_id, $textcart, $backadmin, 'HTML');
     step('apinowpayment', $from_id);
 } elseif ($user['step'] == "apinowpayment") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $NowPaymentsManage, 'HTML');
-    update("paysetting", "ValuePay", $text, "NamePay", "apinowpayment");
+    config_set('pay', "apinowpayment", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['apiNowPayment']) {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "marchent_tronseller")['ValuePay'];
+    $PaySetting = config_get('pay', "marchent_tronseller");
     $texttronseller = sprintf($textbotlang['Admin']['gateway']['askNowPaymentsApi'], $PaySetting);
     sendmessage($from_id, $texttronseller, $backadmin, 'HTML');
     step('marchent_tronseller', $from_id);
 } elseif ($user['step'] == "marchent_tronseller") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $nowpayment_setting_keyboard, 'HTML');
-    update("paysetting", "ValuePay", $text, "NamePay", "marchent_tronseller");
+    config_set('pay', "marchent_tronseller", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['setAqayePardakhtMerchant'] && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "merchant_id_aqayepardakht")['ValuePay'];
+    $PaySetting = config_get('pay', "merchant_id_aqayepardakht");
     $textaqayepardakht = sprintf($textbotlang['Admin']['gateway']['askAqayePardakhtMerchant'], $PaySetting);
     sendmessage($from_id, $textaqayepardakht, $backadmin, 'HTML');
     step('merchant_id_aqayepardakht', $from_id);
 } elseif ($user['step'] == "merchant_id_aqayepardakht") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $aqayepardakht, 'HTML');
-    update("paysetting", "ValuePay", $text, "NamePay", "merchant_id_aqayepardakht");
+    config_set('pay', "merchant_id_aqayepardakht", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['zarinPalMerchant'] && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "merchant_zarinpal")['ValuePay'];
+    $PaySetting = config_get('pay', "merchant_zarinpal");
     $textaqayepardakht = sprintf($textbotlang['Admin']['gateway']['askZarinpalMerchant'], $PaySetting);
     sendmessage($from_id, $textaqayepardakht, $backadmin, 'HTML');
     step('merchant_zarinpal', $from_id);
 } elseif ($user['step'] == "merchant_zarinpal") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $keyboardzarinpal, 'HTML');
-    update("paysetting", "ValuePay", $text, "NamePay", "merchant_zarinpal");
+    config_set('pay', "merchant_zarinpal", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['varizaApiToken'] && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "variza_api_token")['ValuePay'];
+    $PaySetting = config_get('pay', "variza_api_token");
     $msg = sprintf($textbotlang['Admin']['gateway']['askVarizaApiToken'], $PaySetting);
     sendmessage($from_id, $msg, $backadmin, 'HTML');
     step('variza_api_token', $from_id);
 } elseif ($user['step'] == "variza_api_token") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $keyboardvariza, 'HTML');
-    update("paysetting", "ValuePay", trim($text), "NamePay", "variza_api_token");
+    config_set('pay', "variza_api_token", trim($text));
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['varizaWebhookSecret'] && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "variza_webhook_secret")['ValuePay'];
+    $PaySetting = config_get('pay', "variza_webhook_secret");
     $msg = sprintf($textbotlang['Admin']['gateway']['askVarizaWebhookSecret'], $PaySetting, 'https://' . $domainhosts . '/payment/variza_webhook.php');
     sendmessage($from_id, $msg, $backadmin, 'HTML');
     step('variza_webhook_secret', $from_id);
 } elseif ($user['step'] == "variza_webhook_secret") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $keyboardvariza, 'HTML');
-    update("paysetting", "ValuePay", trim($text), "NamePay", "variza_webhook_secret");
+    config_set('pay', "variza_webhook_secret", trim($text));
     step('home', $from_id);
 } elseif ($text == $textbotlang['Admin']['btnKeyboard']['managementPanel'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['managepanel']['getLoc'], $json_list_marzban_panel, 'HTML');
@@ -4020,16 +4022,15 @@ elseif ($datain == "systemsms") {
     return;
 
 } elseif ($text == $textbotlang['keyboard']['supportId'] && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "CartDirect");
-    $textcart = sprintf($textbotlang['Admin']['card']['askUsername'], $PaySetting['ValuePay']);
+    $textcart = sprintf($textbotlang['Admin']['card']['askUsername'], config_get('pay', "CartDirect"));
     sendmessage($from_id, $textcart, $backadmin, 'HTML');
     step('CartDirect', $from_id);
 } elseif ($user['step'] == "CartDirect") {
     sendmessage($from_id, $textbotlang['Admin']['SettingPayment']['cartDirect'], $CartManage, 'HTML');
-    update("paysetting", "ValuePay", $text, "NamePay", "CartDirect");
+    config_set('pay', "CartDirect", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['offlineGatewayPv'] && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "Cartstatuspv")['ValuePay'];
+    $PaySetting = config_get('pay', "Cartstatuspv");
     $card_Statuspv = json_encode([
         'inline_keyboard' => [
             [
@@ -4039,10 +4040,10 @@ elseif ($datain == "systemsms") {
     ]);
     sendmessage($from_id, $textbotlang['Admin']['Status']['cardTitlePv'], $card_Statuspv, 'HTML');
 } elseif ($datain == "oncardpv" && $adminrulecheck['rule'] == "administrator") {
-    update("paysetting", "ValuePay", "offcardpv", "NamePay", "Cartstatuspv");
+    config_set('pay', "Cartstatuspv", "offcardpv");
     Editmessagetext($from_id, $message_id, $textbotlang['Admin']['Status']['cardStatusOffPv'], null);
 } elseif ($datain == "offcardpv" && $adminrulecheck['rule'] == "administrator") {
-    update("paysetting", "ValuePay", "oncardpv", "NamePay", "Cartstatuspv");
+    config_set('pay', "Cartstatuspv", "oncardpv");
     Editmessagetext($from_id, $message_id, $textbotlang['Admin']['Status']['cardStatusOnPv'], null);
 } elseif (preg_match('/addbalamceuser_(\w+)/', $datain, $datagetr) && ($adminrulecheck['rule'] == "administrator" || $adminrulecheck['rule'] == "Seller")) {
     $id_order = $datagetr[1];
@@ -4087,7 +4088,6 @@ elseif ($datain == "systemsms") {
     }
     step('home', $from_id);
 } elseif ($datain == "mainbalanceaccount" && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = json_decode(select("paysetting", "ValuePay", "NamePay", "minbalance", "select")[$user['agent']], true);
     $textmin = $textbotlang['Admin']['Balance']['askMinCharge'];
     sendmessage($from_id, $textmin, $backadmin, 'HTML');
     step('minbalance', $from_id);
@@ -4106,15 +4106,14 @@ elseif ($datain == "systemsms") {
         return;
     }
     step('home', $from_id);
-    $balancemaax = json_decode(select("paysetting", "ValuePay", "NamePay", "minbalance", "select")['ValuePay'], true);
+    $balancemaax = json_decode(config_get('pay', "minbalance"), true);
     foreach ($text == "allusers" ? ["f", "n", "n2"] : [$text] as $agentKey) {
         $balancemaax[$agentKey] = $user['Processing_value'];
     }
     $balancemaax = json_encode($balancemaax);
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $keyboardadmin, 'HTML');
-    update("paysetting", "ValuePay", $balancemaax, "NamePay", "minbalance");
+    config_set('pay', "minbalance", $balancemaax);
 } elseif ($datain == "maxbalanceaccount" && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "maxbalance", "select");
     $textmax = $textbotlang['Admin']['Balance']['askMaxCharge'];
     sendmessage($from_id, $textmax, $backadmin, 'HTML');
     step('maxbalance', $from_id);
@@ -4133,13 +4132,13 @@ elseif ($datain == "systemsms") {
         return;
     }
     step('home', $from_id);
-    $balancemaax = json_decode(select("paysetting", "ValuePay", "NamePay", "maxbalance", "select")['ValuePay'], true);
+    $balancemaax = json_decode(config_get('pay', "maxbalance"), true);
     foreach ($text == "allusers" ? ["f", "n", "n2"] : [$text] as $agentKey) {
         $balancemaax[$agentKey] = $user['Processing_value'];
     }
     $balancemaax = json_encode($balancemaax);
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $keyboardadmin, 'HTML');
-    update("paysetting", "ValuePay", $balancemaax, "NamePay", "maxbalance");
+    config_set('pay', "maxbalance", $balancemaax);
 } elseif (preg_match('/removeagent_(\w+)/', $datain, $dataget) && $adminrulecheck['rule'] == "administrator") {
     $id_user = $dataget[1];
     telegram('sendmessage', [
@@ -4413,14 +4412,14 @@ elseif ($datain == "systemsms") {
     }
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['shopFeatureStatus'] && $adminrulecheck['rule'] == "administrator") {
-    $marzbanstatusextra = select("shopsetting", "*", "Namevalue", "statusextra", "select")['value'];
-    $marzbandirectpay = select("shopsetting", "*", "Namevalue", "statusdirectpabuy", "select")['value'];
-    $statustimeextra = select("shopsetting", "*", "Namevalue", "statustimeextra", "select")['value'];
-    $statusdisorder = select("shopsetting", "*", "Namevalue", "statusdisorder", "select")['value'];
-    $statuschangeservice = select("shopsetting", "*", "Namevalue", "statuschangeservice", "select")['value'];
-    $statusshowprice = select("shopsetting", "*", "Namevalue", "statusshowprice", "select")['value'];
-    $statusshowconfig = select("shopsetting", "*", "Namevalue", "configshow", "select")['value'];
-    $statusremoveserveice = select("shopsetting", "*", "Namevalue", "backserviecstatus", "select")['value'];
+    $marzbanstatusextra = config_get('shop', "statusextra");
+    $marzbandirectpay = config_get('shop', "statusdirectpabuy");
+    $statustimeextra = config_get('shop', "statustimeextra");
+    $statusdisorder = config_get('shop', "statusdisorder");
+    $statuschangeservice = config_get('shop', "statuschangeservice");
+    $statusshowprice = config_get('shop', "statusshowprice");
+    $statusshowconfig = config_get('shop', "configshow");
+    $statusremoveserveice = config_get('shop', "backserviecstatus");
     $name_status_extra_Vloume = [
         'onextra' => $textbotlang['Admin']['Status']['statuson'],
         'offextra' => $textbotlang['Admin']['Status']['statusoff']
@@ -4519,80 +4518,80 @@ elseif ($datain == "systemsms") {
         } else {
             $valuenew = "onextra";
         }
-        update("shopsetting", "value", $valuenew, "Namevalue", "statusextra");
+        config_set('shop', "statusextra", $valuenew);
     } elseif ($type == "paydirect") {
         if ($value == "ondirectbuy") {
             $valuenew = "offdirectbuy";
         } else {
             $valuenew = "ondirectbuy";
         }
-        update("shopsetting", "value", $valuenew, "Namevalue", "statusdirectpabuy");
+        config_set('shop', "statusdirectpabuy", $valuenew);
     } elseif ($type == "statustimeextra") {
         if ($value == "ontimeextraa") {
             $valuenew = "offtimeextraa";
         } else {
             $valuenew = "ontimeextraa";
         }
-        update("shopsetting", "value", $valuenew, "Namevalue", "statustimeextra");
+        config_set('shop', "statustimeextra", $valuenew);
     } elseif ($type == "disorderss") {
         if ($value == "ondisorder") {
             $valuenew = "offdisorder";
         } else {
             $valuenew = "ondisorder";
         }
-        update("shopsetting", "value", $valuenew, "Namevalue", "statusdisorder");
+        config_set('shop', "statusdisorder", $valuenew);
     } elseif ($type == "categroygenral") {
         if ($value == "oncategorys") {
             $valuenew = "offcategorys";
         } else {
             $valuenew = "oncategorys";
         }
-        update("setting", "statuscategorygenral", $valuenew, null, null);
+        config_set('setting', "statuscategorygenral", $valuenew);
     } elseif ($type == "changgestatus") {
         if ($value == "onstatus") {
             $valuenew = "offstatus";
         } else {
             $valuenew = "onstatus";
         }
-        update("shopsetting", "value", $valuenew, "Namevalue", "statuschangeservice");
+        config_set('shop', "statuschangeservice", $valuenew);
     } elseif ($type == "showprice") {
         if ($value == "onshowprice") {
             $valuenew = "offshowprice";
         } else {
             $valuenew = "onshowprice";
         }
-        update("shopsetting", "value", $valuenew, "Namevalue", "statusshowprice");
+        config_set('shop', "statusshowprice", $valuenew);
     } elseif ($type == "showconfig") {
         if ($value == "onconfig") {
             $valuenew = "offconfig";
         } else {
             $valuenew = "onconfig";
         }
-        update("shopsetting", "value", $valuenew, "Namevalue", "configshow");
+        config_set('shop', "configshow", $valuenew);
     } elseif ($type == "removeservicebackbtn") {
         if ($value == "on") {
             $valuenew = "off";
         } else {
             $valuenew = "on";
         }
-        update("shopsetting", "value", $valuenew, "Namevalue", "backserviecstatus");
+        config_set('shop', "backserviecstatus", $valuenew);
     } elseif ($type == "categorytime") {
         if ($value == "oncategory") {
             $valuenew = "offcategory";
         } else {
             $valuenew = "oncategory";
         }
-        update("setting", "statuscategory", $valuenew);
+        config_set('setting', "statuscategory", $valuenew);
     }
-    $setting = select("setting", "*", null, null, "select");
-    $marzbanstatusextra = select("shopsetting", "*", "Namevalue", "statusextra", "select")['value'];
-    $marzbandirectpay = select("shopsetting", "*", "Namevalue", "statusdirectpabuy", "select")['value'];
-    $statustimeextra = select("shopsetting", "*", "Namevalue", "statustimeextra", "select")['value'];
-    $statusdisorder = select("shopsetting", "*", "Namevalue", "statusdisorder", "select")['value'];
-    $statuschangeservice = select("shopsetting", "*", "Namevalue", "statuschangeservice", "select")['value'];
-    $statusshowprice = select("shopsetting", "*", "Namevalue", "statusshowprice", "select")['value'];
-    $statusshowconfig = select("shopsetting", "*", "Namevalue", "configshow", "select")['value'];
-    $statusremoveserveice = select("shopsetting", "*", "Namevalue", "backserviecstatus", "select")['value'];
+    $setting = config_all('setting');
+    $marzbanstatusextra = config_get('shop', "statusextra");
+    $marzbandirectpay = config_get('shop', "statusdirectpabuy");
+    $statustimeextra = config_get('shop', "statustimeextra");
+    $statusdisorder = config_get('shop', "statusdisorder");
+    $statuschangeservice = config_get('shop', "statuschangeservice");
+    $statusshowprice = config_get('shop', "statusshowprice");
+    $statusshowconfig = config_get('shop', "configshow");
+    $statusremoveserveice = config_get('shop', "backserviecstatus");
     $name_status_extra_Vloume = [
         'onextra' => $textbotlang['Admin']['Status']['statuson'],
         'offextra' => $textbotlang['Admin']['Status']['statusoff']
@@ -4754,7 +4753,7 @@ elseif ($datain == "systemsms") {
     }
     sendmessage($from_id, $textbotlang['Admin']['cronjob']['changedData'], $setting_panel, 'HTML');
     step("home", $from_id);
-    update("setting", "cronvolumere", $text);
+    config_set('setting', "cronvolumere", $text);
 } elseif ($datain == "setting_on_holdcron" && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['cronjob']['askOnHoldDays'] . $setting['on_hold_day'] . $textbotlang['Admin']['unit']['day'], $backadmin, 'HTML');
     step("on_hold_day", $from_id);
@@ -4765,7 +4764,7 @@ elseif ($datain == "systemsms") {
     }
     sendmessage($from_id, $textbotlang['Admin']['cronjob']['changedData'], $setting_panel, 'HTML');
     step("home", $from_id);
-    update("setting", "on_hold_day", $text);
+    config_set('setting', "on_hold_day", $text);
 }
 if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['cronjob']['setDayRemove'] . $setting['removedayc'] . $textbotlang['Admin']['unit']['day'], $backadmin, 'HTML');
@@ -4777,7 +4776,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['cronjob']['changedData'], $setting_panel, 'HTML');
     step("home", $from_id);
-    update("setting", "removedayc", $text);
+    config_set('setting', "removedayc", $text);
 } elseif ($text == $textbotlang['keyboard']['editEducation'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['Help']['selectName'], $json_list_helpkey, 'HTML');
     step("getnameforedite", $from_id);
@@ -4841,17 +4840,17 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     step('home', $from_id);
     if (intval($text) == "1") {
         update("user", "cardpayment", "0");
-        update("setting", "showcard", "0");
+        config_set('setting', "showcard", "0");
     } elseif (intval($text) == 2) {
         update("user", "cardpayment", "0", "agent", "f");
-        update("setting", "showcard", "0");
+        config_set('setting', "showcard", "0");
     } else {
-        update("setting", "showcard", "0");
+        config_set('setting', "showcard", "0");
     }
 } elseif ($text == $textbotlang['keyboard']['enableShowCard']) {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['activeShowCardStatus'], null, 'HTML');
     update("user", "cardpayment", "1");
-    update("setting", "showcard", "1");
+    config_set('setting', "showcard", "1");
 } elseif ($text == $textbotlang['keyboard']['renewalMethod'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['users']['selectoption'], $Methodextend, 'HTML');
     step('updateextendmethod', $from_id);
@@ -4873,7 +4872,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['apiToken'] && $adminrulecheck['rule'] == "administrator") {
     $token = bin2hex(random_bytes(16));
-    update("setting", "api_token", $token, null, null);
+    config_set('setting', "api_token", $token);
     sendmessage($from_id, sprintf($textbotlang['Admin']['api']['token'], $token), null, 'HTML');
     $apiDocsUrl = "https://$domainhostsEscaped/api/index.html";
     sendmessage($from_id, sprintf($textbotlang['Admin']['api']['docsLink'], $apiDocsUrl), null, 'HTML');
@@ -5013,7 +5012,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     sendmessage($from_id, $textbotlang['Admin']['addorder']['stepFive'], $keyboardadmin, 'HTML');
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['minBulkBalance'] && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("shopsetting", "value", "Namevalue", "minbalancebuybulk", "select")['value'];
+    $PaySetting = config_get('shop', "minbalancebuybulk");
     $textmin = sprintf($textbotlang['Admin']['price']['askBulkMin'], $PaySetting);
     sendmessage($from_id, $textmin, $backadmin, 'HTML');
     step('minbalancebulk', $from_id);
@@ -5023,7 +5022,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         return;
     }
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $shopkeyboard, 'HTML');
-    update("shopsetting", "value", $text, "Namevalue", "minbalancebuybulk");
+    config_set('shop', "minbalancebuybulk", $text);
     step('home', $from_id);
 } elseif (preg_match('/showcarduser-(.*)/', $datain, $dataget)) {
     $id_user = $dataget[1];
@@ -5180,7 +5179,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     sendmessage($from_id, sprintf($textbotlang['Admin']['gateway']['askMerchant'], $current), $backadmin, 'HTML');
     step('apiiranpay4', $from_id);
 } elseif ($user['step'] == "apiiranpay4") {
-    update("paysetting", "ValuePay", trim($text), "NamePay", "apiiranpay4");
+    config_set('pay', "apiiranpay4", trim($text));
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $abangatewaykeyboard, 'HTML');
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['endpointIranPay4'] && $adminrulecheck['rule'] == "administrator") {
@@ -5200,7 +5199,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         sendmessage($from_id, $textbotlang['keyboard']['endpointIranPay4Invalid'], $abangatewaykeyboard, 'HTML');
         step('home', $from_id);
     } else {
-        update("paysetting", "ValuePay", $candidate, "NamePay", "endpointiranpay4");
+        config_set('pay', "endpointiranpay4", $candidate);
         sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $abangatewaykeyboard, 'HTML');
         step('home', $from_id);
     }
@@ -5208,14 +5207,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     sendmessage($from_id, $textbotlang['Admin']['gateway']['askMinAmount'] ?? $textbotlang['users']['selectoption'], $backadmin, 'HTML');
     step("getmainiranpay4", $from_id);
 } elseif ($user['step'] == "getmainiranpay4") {
-    update("paysetting", "ValuePay", intval($text), "NamePay", "minbalanceiranpay4");
+    config_set('pay', "minbalanceiranpay4", intval($text));
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $abangatewaykeyboard, 'HTML');
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['maxAmountIranPay4'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['gateway']['askMaxAmount'] ?? $textbotlang['users']['selectoption'], $backadmin, 'HTML');
     step("getmaaxiranpay4", $from_id);
 } elseif ($user['step'] == "getmaaxiranpay4") {
-    update("paysetting", "ValuePay", intval($text), "NamePay", "maxbalanceiranpay4");
+    config_set('pay', "maxbalanceiranpay4", intval($text));
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $abangatewaykeyboard, 'HTML');
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['dailyLimitIranPay4'] && $adminrulecheck['rule'] == "administrator") {
@@ -5226,31 +5225,30 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         sendmessage($from_id, $textbotlang['common']['invalidInput'], $backadmin, 'HTML');
         return;
     }
-    update("paysetting", "ValuePay", intval($text), "NamePay", "dailylimitiranpay4");
+    config_set('pay', "dailylimitiranpay4", intval($text));
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $abangatewaykeyboard, 'HTML');
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['cashbackIranPay4'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['gateway']['askCashback'] ?? $textbotlang['users']['selectoption'], $backadmin, 'HTML');
     step("getcashiranpay4", $from_id);
 } elseif ($user['step'] == "getcashiranpay4") {
-    update("paysetting", "ValuePay", intval($text), "NamePay", "chashbackiranpay4");
+    config_set('pay', "chashbackiranpay4", intval($text));
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $abangatewaykeyboard, 'HTML');
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['setEducationIranPay4'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['gateway']['askEducation'] ?? $textbotlang['users']['selectoption'], $backadmin, 'HTML');
     step("helpiranpay4", $from_id);
 } elseif ($user['step'] == "helpiranpay4") {
-    update("paysetting", "ValuePay", $text, "NamePay", "helpiranpay4");
+    config_set('pay', "helpiranpay4", $text);
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $abangatewaykeyboard, 'HTML');
     step('home', $from_id);
 }elseif ($text == "API T" && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "apiternado", "select");
-    $texttronseller = sprintf($textbotlang['Admin']['gateway']['askMerchant'], $PaySetting['ValuePay']);
+    $texttronseller = sprintf($textbotlang['Admin']['gateway']['askMerchant'], config_get('pay', "apiternado"));
     sendmessage($from_id, $texttronseller, $backadmin, 'HTML');
     step('apiternado', $from_id);
 } elseif ($user['step'] == "apiternado") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $trnado, 'HTML');
-    update("paysetting", "ValuePay", $text, "NamePay", "apiternado");
+    config_set('pay', "apiternado", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['inboundDeactivate'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['managepanel']['Inbound']['getProtocol'], $keyboardprotocol, 'HTML');
@@ -5340,7 +5338,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         sendmessage($from_id, $textbotlang['Admin']['invalidValue'], null, 'html');
         return;
     }
-    update("setting", "balance_value_alert", $text);
+    config_set('setting', "balance_value_alert", $text);
     sendmessage($from_id, $textbotlang['Admin']['changesSaved2'], $setting_panel, 'HTML');
     step("home", $from_id);
 } elseif ($datain == "settimecornvolume") {
@@ -5351,7 +5349,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         sendmessage($from_id, $textbotlang['Admin']['invalidValue'], null, 'html');
         return;
     }
-    update("setting", "volumewarn", $text);
+    config_set('setting', "volumewarn", $text);
     sendmessage($from_id, $textbotlang['Admin']['changesSaved2'], $setting_panel, 'HTML');
     step("home", $from_id);
 } elseif ($text == $textbotlang['keyboard']['manualCreateConfig']) {
@@ -5670,7 +5668,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($text == $textbotlang['keyboard']['financial'] && $adminrulecheck['rule'] == "administrator") {
     $swapWalletStatus = getPaySettingValue('statusSwapWallet', 'offSwapinoBot');
     if ($swapWalletStatus != "onSwapinoBot" && $swapWalletStatus != "offSwapinoBot") {
-        update("paysetting", "ValuePay", "onSwapinoBot", "NamePay", "statusSwapWallet");
+        config_set('pay', "statusSwapWallet", "onSwapinoBot");
     }
     sendmessage($from_id, $textbotlang['Admin']['gateway']['intro'], paymentGatewaysKeyboard(), 'HTML');
 } elseif ($text == $textbotlang['keyboard']['renewalCashback'] && $adminrulecheck['rule'] == "administrator") {
@@ -5691,11 +5689,11 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     $userdata = json_decode($user['Processing_value'], true);
     if ($text == "f") {
-        update("shopsetting", "value", $userdata['price_cashback'], "Namevalue", "chashbackextend");
+        config_set('shop', "chashbackextend", $userdata['price_cashback']);
     } else {
-        $shop_cashbackagent = json_decode(select("shopsetting", "*", "Namevalue", "chashbackextend_agent")['value'], true);
+        $shop_cashbackagent = json_decode(config_get('shop', "chashbackextend_agent"), true);
         $shop_cashbackagent[$text] = $userdata['price_cashback'];
-        update("shopsetting", "value", json_encode($shop_cashbackagent), "Namevalue", "chashbackextend_agent");
+        config_set('shop', "chashbackextend_agent", json_encode($shop_cashbackagent));
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['amountSaved'], $shopkeyboard, 'HTML');
     step('home', $from_id);
@@ -5707,7 +5705,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     $gatewayIsOn = getPaySettingValue($gateway['setting'], $gateway['off']) == $gateway['on'];
     if ($isToggle) {
         $gatewayIsOn = !$gatewayIsOn;
-        update("paysetting", "ValuePay", $gatewayIsOn ? $gateway['on'] : $gateway['off'], "NamePay", $gateway['setting']);
+        config_set('pay', $gateway['setting'], $gatewayIsOn ? $gateway['on'] : $gateway['off']);
     }
     $gatewayStatusText = $textbotlang['Admin']['Status'][$gatewayIsOn ? 'statuson' : 'statusoff'];
     $gatewayRows = json_decode($gateway['keyboard'], true)['inline_keyboard'];
@@ -5723,7 +5721,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $CartManage, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "chashbackcart");
+    config_set('pay', "chashbackcart", $text);
 } elseif ($text == $textbotlang['keyboard']['cashbackAqayePardakht']) {
     sendmessage($from_id, $textbotlang['Admin']['price']['askPaymentCashback'], $backadmin, 'HTML');
     step("getcashahaypar", $from_id);
@@ -5734,11 +5732,11 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $CartManage, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "chashbackaqaypardokht");
+    config_set('pay', "chashbackaqaypardokht", $text);
 } elseif ($text == $textbotlang['keyboard']['feeStatusIranPay2'] && $adminrulecheck['rule'] == "administrator") {
-    $feeStatusNow = select("paysetting", "ValuePay", "NamePay", "feestatusternado", "select")['ValuePay'] ?? 'offfeeternado';
+    $feeStatusNow = config_get('pay', "feestatusternado") ?? 'offfeeternado';
     $feeStatusNew = ($feeStatusNow === 'onfeeternado') ? 'offfeeternado' : 'onfeeternado';
-    update("paysetting", "ValuePay", $feeStatusNew, "NamePay", "feestatusternado");
+    config_set('pay', "feestatusternado", $feeStatusNew);
     if ($feeStatusNew === 'onfeeternado') {
         $feeValueNow = cubepayFeeValue();
         $feeDescNow = $feeValueNow <= 100
@@ -5757,7 +5755,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         sendmessage($from_id, $textbotlang['common']['invalidInput'], $backadmin, 'HTML');
         return;
     }
-    update("paysetting", "ValuePay", (string) $text, "NamePay", "feeternado");
+    config_set('pay', "feeternado", (string) $text);
     $feeExample = number_format(cubepayApplyFee(100000, $text));
     $feeSavedText = $text <= 100
         ? sprintf($textbotlang['Admin']['gateway']['cubepayFeeSavedPercent'], $text, $feeExample)
@@ -5774,7 +5772,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $trnado, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "chashbackiranpay2");
+    config_set('pay', "chashbackiranpay2", $text);
 } elseif ($text == $textbotlang['keyboard']['cashbackIranPay3']) {
     sendmessage($from_id, $textbotlang['Admin']['price']['askPaymentCashback'], $backadmin, 'HTML');
     step("getcashiranpay3", $from_id);
@@ -5785,7 +5783,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $CartManage, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "chashbackiranpay3");
+    config_set('pay', "chashbackiranpay3", $text);
 } elseif ($text == $textbotlang['keyboard']['cashbackIranPay1']) {
     sendmessage($from_id, $textbotlang['Admin']['price']['askPaymentCashback'], $backadmin, 'HTML');
     step("getcashiranpay1", $from_id);
@@ -5796,7 +5794,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $Swapinokey, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "chashbackiranpay1");
+    config_set('pay', "chashbackiranpay1", $text);
 } elseif ($text == $textbotlang['keyboard']['cashbackPlisio']) {
     sendmessage($from_id, $textbotlang['Admin']['price']['askPaymentCashback'], $backadmin, 'HTML');
     step("getcashplisio", $from_id);
@@ -5807,7 +5805,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $CartManage, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "chashbackplisio");
+    config_set('pay', "chashbackplisio", $text);
 } elseif ($text == $textbotlang['keyboard']['cashbackNowPayment']) {
     sendmessage($from_id, $textbotlang['Admin']['price']['askPaymentCashback'], $backadmin, 'HTML');
     step("getcashnowpayment", $from_id);
@@ -5818,7 +5816,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $nowpayment_setting_keyboard, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "cashbacknowpayment");
+    config_set('pay', "cashbacknowpayment", $text);
 } elseif ($text == $textbotlang['keyboard']['cashbackZarinPal']) {
     sendmessage($from_id, $textbotlang['Admin']['price']['askPaymentCashback'], $backadmin, 'HTML');
     step("getcashzarinpal", $from_id);
@@ -5829,7 +5827,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $keyboardzarinpal, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "chashbackzarinpal");
+    config_set('pay', "chashbackzarinpal", $text);
 } elseif ($text == $textbotlang['keyboard']['cashbackVariza']) {
     sendmessage($from_id, $textbotlang['Admin']['price']['askPaymentCashback'], $backadmin, 'HTML');
     step("getcashvariza", $from_id);
@@ -5840,7 +5838,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $keyboardvariza, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "chashbackvariza");
+    config_set('pay', "chashbackvariza", $text);
 } elseif ($text == $textbotlang['keyboard']['addConfig']) {
     $product = [];
     $stmt = $pdo->prepare("SELECT * FROM product WHERE Location = :text or Location = '/all' ORDER BY display_order, id");
@@ -6070,7 +6068,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     update("user", "Processing_value", $userdata['namepanel'], "id", $from_id);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['showCartAfterFirstPay'] && $adminrulecheck['rule'] == "administrator") {
-    $paymentverify = select("paysetting", "ValuePay", "NamePay", "checkpaycartfirst", "select")['ValuePay'];
+    $paymentverify = config_get('pay', "checkpaycartfirst");
     $keyboardverify = json_encode([
         'inline_keyboard' => [
             [
@@ -6080,8 +6078,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     ]);
     sendmessage($from_id, $textbotlang['Admin']['card']['afterFirstPayDesc'], $keyboardverify, 'HTML');
 } elseif ($datain == "onpayverify") {
-    update("paysetting", "ValuePay", "offpayverify", "NamePay", "checkpaycartfirst");
-    $paymentverify = select("paysetting", "ValuePay", "NamePay", "checkpaycartfirst", "select")['ValuePay'];
+    config_set('pay', "checkpaycartfirst", "offpayverify");
+    $paymentverify = config_get('pay', "checkpaycartfirst");
     $keyboardverify = json_encode([
         'inline_keyboard' => [
             [
@@ -6091,8 +6089,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     ]);
     Editmessagetext($from_id, $message_id, $textbotlang['Admin']['card']['afterFirstPayOff'], $keyboardverify);
 } elseif ($datain == "offpayverify") {
-    update("paysetting", "ValuePay", "onpayverify", "NamePay", "checkpaycartfirst");
-    $paymentverify = select("paysetting", "ValuePay", "NamePay", "checkpaycartfirst", "select")['ValuePay'];
+    config_set('pay', "checkpaycartfirst", "onpayverify");
+    $paymentverify = config_get('pay', "checkpaycartfirst");
     $keyboardverify = json_encode([
         'inline_keyboard' => [
             [
@@ -6234,7 +6232,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $CartManage, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalancecart");
+    config_set('pay', "minbalancecart", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountCartToCart']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("getmaxcart", $from_id);
@@ -6245,7 +6243,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $CartManage, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalancecart");
+    config_set('pay', "maxbalancecart", $text);
 } elseif ($text == $textbotlang['keyboard']['minAmountPlisio']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
     step("getmainplisio", $from_id);
@@ -6256,7 +6254,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $NowPaymentsManage, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalanceplisio");
+    config_set('pay', "minbalanceplisio", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountPlisio']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("getmaxplisio", $from_id);
@@ -6267,7 +6265,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $NowPaymentsManage, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalanceplisio");
+    config_set('pay', "maxbalanceplisio", $text);
 } elseif ($text == $textbotlang['keyboard']['minAmountCryptoOffline']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
     step("getmaindigitaltron", $from_id);
@@ -6278,7 +6276,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $tronnowpayments, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalancedigitaltron");
+    config_set('pay', "minbalancedigitaltron", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountCryptoOffline']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("getmaxdigitaltron", $from_id);
@@ -6289,7 +6287,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $tronnowpayments, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalancedigitaltron");
+    config_set('pay', "maxbalancedigitaltron", $text);
 } elseif ($text == $textbotlang['keyboard']['minAmountIranPay1']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
     step("getmainiranpay1", $from_id);
@@ -6300,7 +6298,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $Swapinokey, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalanceiranpay1");
+    config_set('pay', "minbalanceiranpay1", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountIranPay1']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("getmaaxiranpay1", $from_id);
@@ -6311,7 +6309,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $Swapinokey, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalanceiranpay1");
+    config_set('pay', "maxbalanceiranpay1", $text);
 } elseif ($text == $textbotlang['keyboard']['minAmountIranPay2']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
     step("getmainiranpay2", $from_id);
@@ -6322,7 +6320,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $trnado, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalanceiranpay2");
+    config_set('pay', "minbalanceiranpay2", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountIranPay2']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("getmaaxiranpay2", $from_id);
@@ -6333,7 +6331,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $Swapinokey, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalanceiranpay2");
+    config_set('pay', "maxbalanceiranpay2", $text);
 } elseif ($text == $textbotlang['keyboard']['minAmountAqayePardakht']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
     step("getmainaqayepardakht", $from_id);
@@ -6344,7 +6342,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $aqayepardakht, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalanceaqayepardakht");
+    config_set('pay', "minbalanceaqayepardakht", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountAqayePardakht']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("getmaaxaqayepardakht", $from_id);
@@ -6355,7 +6353,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $aqayepardakht, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalanceaqayepardakht");
+    config_set('pay', "maxbalanceaqayepardakht", $text);
 } elseif ($text == $textbotlang['keyboard']['minAmountZarinPal']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
     step("getmainaqzarinpal", $from_id);
@@ -6366,7 +6364,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $aqayepardakht, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalancezarinpal");
+    config_set('pay', "minbalancezarinpal", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountZarinPal']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("getmaaxzarinpal", $from_id);
@@ -6377,7 +6375,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $aqayepardakht, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalancezarinpal");
+    config_set('pay', "maxbalancezarinpal", $text);
 } elseif ($text == $textbotlang['keyboard']['minAmountVariza']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
     step("getmainvariza", $from_id);
@@ -6388,7 +6386,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $keyboardvariza, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalancevariza");
+    config_set('pay', "minbalancevariza", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountVariza']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("getmaaxvariza", $from_id);
@@ -6399,24 +6397,23 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $keyboardvariza, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalancevariza");
+    config_set('pay', "maxbalancevariza", $text);
 } elseif ($datain == "walletaddress") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "walletaddress", "select");
-    $texttronseller = sprintf($textbotlang['Admin']['gateway']['askTronWallet'], $PaySetting['ValuePay']);
+    $texttronseller = sprintf($textbotlang['Admin']['gateway']['askTronWallet'], config_get('pay', "walletaddress"));
     sendmessage($from_id, $texttronseller, $backadmin, 'HTML');
     step('walletaddresssiranpay', $from_id);
 } elseif ($user['step'] == "walletaddresssiranpay") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $keyboardadmin, 'HTML');
-    update("paysetting", "ValuePay", $text, "NamePay", "walletaddress");
+    config_set('pay', "walletaddress", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['apiIranPay'] && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "apiiranpay", "select")['ValuePay'];
+    $PaySetting = config_get('pay', "apiiranpay");
     $texttronseller = sprintf($textbotlang['Admin']['gateway']['askApiCode'], $PaySetting);
     sendmessage($from_id, $texttronseller, $backadmin, 'HTML');
     step('apiiranpay', $from_id);
 } elseif ($user['step'] == "apiiranpay") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $iranpaykeyboard, 'HTML');
-    update("paysetting", "ValuePay", $text, "NamePay", "apiiranpay");
+    config_set('pay', "apiiranpay", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['minAmountIranPay3']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
@@ -6428,7 +6425,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $iranpaykeyboard, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalanceiranpay");
+    config_set('pay', "minbalanceiranpay", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountIranPay3']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("maxbalanceiranpay", $from_id);
@@ -6439,7 +6436,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $iranpaykeyboard, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalanceiranpay");
+    config_set('pay', "maxbalanceiranpay", $text);
 } elseif ($text == $textbotlang['keyboard']['minCustomVolume'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['price']['askMinVolume'], $backadmin, 'HTML');
     step('GetmaineExtra', $from_id);
@@ -6600,7 +6597,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     step('idsupportset', $from_id);
 } elseif ($user['step'] == "idsupportset") {
     sendmessage($from_id, $textbotlang['Admin']['SettingPayment']['cartDirect'], $supportcenter, 'HTML');
-    update("setting", "id_support", $text, null, null);
+    config_set('setting', "id_support", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['setEducationCartToCart'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['Help']['askTutorialMedia'], $backadmin, 'HTML');
@@ -6608,13 +6605,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "gethelpcart") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "2", "NamePay", "helpcart");
+            config_set('pay', "helpcart", "2");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpcart");
+            config_set('pay', "helpcart", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6622,14 +6619,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpcart");
+        config_set('pay', "helpcart", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpcart");
+        config_set('pay', "helpcart", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6642,13 +6639,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "gethelpnowpayment") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "2", "NamePay", "helpnowpayment");
+            config_set('pay', "helpnowpayment", "2");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpnowpayment");
+            config_set('pay', "helpnowpayment", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6656,14 +6653,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpnowpayment");
+        config_set('pay', "helpnowpayment", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpnowpayment");
+        config_set('pay', "helpnowpayment", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6676,13 +6673,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "gethelpplisio") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "0", "NamePay", "helpplisio");
+            config_set('pay', "helpplisio", "0");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpplisio");
+            config_set('pay', "helpplisio", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6690,14 +6687,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpplisio");
+        config_set('pay', "helpplisio", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpplisio");
+        config_set('pay', "helpplisio", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6710,13 +6707,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "gethelpiranpay1") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "0", "NamePay", "helpiranpay1");
+            config_set('pay', "helpiranpay1", "0");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpiranpay1");
+            config_set('pay', "helpiranpay1", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6724,14 +6721,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpiranpay1");
+        config_set('pay', "helpiranpay1", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpiranpay1");
+        config_set('pay', "helpiranpay1", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6744,13 +6741,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "helpiranpay2") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "0", "NamePay", "helpiranpay2");
+            config_set('pay', "helpiranpay2", "0");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpiranpay2");
+            config_set('pay', "helpiranpay2", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6758,14 +6755,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpiranpay2");
+        config_set('pay', "helpiranpay2", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpiranpay2");
+        config_set('pay', "helpiranpay2", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6778,13 +6775,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "helpiranpay3") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "0", "NamePay", "helpiranpay3");
+            config_set('pay', "helpiranpay3", "0");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpiranpay3");
+            config_set('pay', "helpiranpay3", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6792,14 +6789,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpiranpay3");
+        config_set('pay', "helpiranpay3", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpiranpay3");
+        config_set('pay', "helpiranpay3", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6812,13 +6809,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "helpaqayepardakht") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "0", "NamePay", "helpaqayepardakht");
+            config_set('pay', "helpaqayepardakht", "0");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpaqayepardakht");
+            config_set('pay', "helpaqayepardakht", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6826,14 +6823,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpaqayepardakht");
+        config_set('pay', "helpaqayepardakht", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpaqayepardakht");
+        config_set('pay', "helpaqayepardakht", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6846,13 +6843,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "helpzarinpal") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "0", "NamePay", "helpzarinpal");
+            config_set('pay', "helpzarinpal", "0");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpzarinpal");
+            config_set('pay', "helpzarinpal", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6860,14 +6857,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpzarinpal");
+        config_set('pay', "helpzarinpal", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpzarinpal");
+        config_set('pay', "helpzarinpal", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6880,13 +6877,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "helpvariza") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "0", "NamePay", "helpvariza");
+            config_set('pay', "helpvariza", "0");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpvariza");
+            config_set('pay', "helpvariza", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6894,14 +6891,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpvariza");
+        config_set('pay', "helpvariza", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpvariza");
+        config_set('pay', "helpvariza", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6914,13 +6911,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($user['step'] == "helpofflinearze") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "0", "NamePay", "helpofflinearze");
+            config_set('pay', "helpofflinearze", "0");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpofflinearze");
+            config_set('pay', "helpofflinearze", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -6928,14 +6925,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpofflinearze");
+        config_set('pay', "helpofflinearze", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpofflinearze");
+        config_set('pay', "helpofflinearze", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -6952,9 +6949,9 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     sendmessage($from_id, $textbotlang['Admin']['cronjob']['changedData'], $setting_panel, 'HTML');
     step("home", $from_id);
-    update("setting", "agentreqprice", $text, null, null);
+    config_set('setting', "agentreqprice", $text);
 } elseif ($text == $textbotlang['keyboard']['autoConfirmNoCheck'] && $adminrulecheck['rule'] == "administrator") {
-    $paymentverify = select("paysetting", "ValuePay", "NamePay", "autoconfirmcart", "select")['ValuePay'];
+    $paymentverify = config_get('pay', "autoconfirmcart");
     $keyboardverify = json_encode([
         'inline_keyboard' => [
             [
@@ -6964,8 +6961,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     ]);
     sendmessage($from_id, $textbotlang['Admin']['Payment']['autoConfirmDesc'], $keyboardverify, 'HTML');
 } elseif ($datain == "onauto") {
-    update("paysetting", "ValuePay", "offauto", "NamePay", "autoconfirmcart");
-    $paymentverify = select("paysetting", "ValuePay", "NamePay", "autoconfirmcart", "select")['ValuePay'];
+    config_set('pay', "autoconfirmcart", "offauto");
+    $paymentverify = config_get('pay', "autoconfirmcart");
     $keyboardverify = json_encode([
         'inline_keyboard' => [
             [
@@ -6975,8 +6972,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     ]);
     Editmessagetext($from_id, $message_id, $textbotlang['Admin']['card']['afterFirstPayOff'], $keyboardverify);
 } elseif ($datain == "offauto") {
-    update("paysetting", "ValuePay", "onauto", "NamePay", "autoconfirmcart");
-    $paymentverify = select("paysetting", "ValuePay", "NamePay", "autoconfirmcart", "select")['ValuePay'];
+    config_set('pay', "autoconfirmcart", "onauto");
+    $paymentverify = config_get('pay', "autoconfirmcart");
     $keyboardverify = json_encode([
         'inline_keyboard' => [
             [
@@ -7275,7 +7272,7 @@ elseif ($text == $textbotlang['keyboard']['hidePanelForUser'] && $adminrulecheck
     Editmessagetext($from_id, $message_id, $lotteryText, $lotteryKeyboard);
 } elseif (preg_match('/^lottery-(\w+)$/', $datain, $dataget) && isset($lotteryFeatures[$dataget[1]]) && $adminrulecheck['rule'] == "administrator") {
     $feature = $lotteryFeatures[$dataget[1]];
-    update("setting", $feature['setting'], featureIsOn($feature, $setting) ? $feature['off'] : $feature['on']);
+    config_set('setting', $feature['setting'], featureIsOn($feature, $setting) ? $feature['off'] : $feature['on']);
     [$lotteryText, $lotteryKeyboard] = lotterySettingsMenu();
     Editmessagetext($from_id, $message_id, $lotteryText, $lotteryKeyboard);
 } elseif (preg_match('/^lotteryprize-(one|tow|theree)$/', $datain, $dataget) && $adminrulecheck['rule'] == "administrator") {
@@ -7289,7 +7286,7 @@ elseif ($text == $textbotlang['keyboard']['hidePanelForUser'] && $adminrulecheck
     }
     $prizes = json_decode($setting['Lottery_prize'], true);
     $prizes[json_decode($user['Processing_value'], true)['prize']] = $text;
-    update("setting", "Lottery_prize", json_encode($prizes), null, null);
+    config_set('setting', "Lottery_prize", json_encode($prizes));
     step("home", $from_id);
     [$lotteryText, $lotteryKeyboard] = lotterySettingsMenu();
     editFlowMessage($textbotlang['Admin']['price']['rewardSaved'] . "\n\n" . $lotteryText, $lotteryKeyboard);
@@ -7322,7 +7319,7 @@ elseif ($text == $textbotlang['keyboard']['hidePanelForUser'] && $adminrulecheck
         return;
     }
     if ($user['step'] == "setpercentage") {
-        update("setting", "affiliatespercentage", $text);
+        config_set('setting', "affiliatespercentage", $text);
     } elseif ($user['step'] == "getdiscont") {
         update("affiliates", "price_Discount", $text);
     } else {
@@ -7338,7 +7335,7 @@ elseif ($text == $textbotlang['keyboard']['hidePanelForUser'] && $adminrulecheck
     Editmessagetext($from_id, $message_id, $wheelText, $wheelKeyboard);
 } elseif (preg_match('/^wheel-(\w+)$/', $datain, $dataget) && isset($wheelFeatures[$dataget[1]]) && $adminrulecheck['rule'] == "administrator") {
     $feature = $wheelFeatures[$dataget[1]];
-    update("setting", $feature['setting'], featureIsOn($feature, $setting) ? $feature['off'] : $feature['on']);
+    config_set('setting', $feature['setting'], featureIsOn($feature, $setting) ? $feature['off'] : $feature['on']);
     [$wheelText, $wheelKeyboard] = wheelSettingsMenu();
     Editmessagetext($from_id, $message_id, $wheelText, $wheelKeyboard);
 } elseif ($datain == "wheelprize" && $adminrulecheck['rule'] == "administrator") {
@@ -7350,7 +7347,7 @@ elseif ($text == $textbotlang['keyboard']['hidePanelForUser'] && $adminrulecheck
         editFlowMessage($textbotlang['common']['invalidInput'], $wheelFlowKeyboard);
         return;
     }
-    update("setting", "wheelـluck_price", $text, null, null);
+    config_set('setting', "wheelـluck_price", $text);
     step("home", $from_id);
     [$wheelText, $wheelKeyboard] = wheelSettingsMenu();
     editFlowMessage($textbotlang['Admin']['price']['rewardSaved'] . "\n\n" . $wheelText, $wheelKeyboard);
@@ -8110,7 +8107,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     sendmessage($from_id, $textbotlang['Admin']['cronjob']['changedData'], $keyboardadmin, 'HTML');
     step("home", $from_id);
-    update("setting", "daywarn", $text);
+    config_set('setting', "daywarn", $text);
 } elseif ($datain == "linkappsetting") {
     sendmessage($from_id, $textbotlang['Admin']['selectOption5'], $keyboardlinkapp, 'HTML');
 } elseif ($text == $textbotlang['keyboard']['addApp']) {
@@ -8523,7 +8520,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $Startelegram, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalancestar");
+    config_set('pay', "minbalancestar", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountStar']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("maxbalancestar", $from_id);
@@ -8534,7 +8531,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $Startelegram, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalancestar");
+    config_set('pay', "maxbalancestar", $text);
 } elseif ($text == $textbotlang['keyboard']['minAmountNowPayment']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMinDeposit'], $backadmin, 'HTML');
     step("getmainaqnowpayment", $from_id);
@@ -8545,7 +8542,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['minDepositSaved'], $nowpayment_setting_keyboard, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "minbalancenowpayment");
+    config_set('pay', "minbalancenowpayment", $text);
 } elseif ($text == $textbotlang['keyboard']['maxAmountNowPayment']) {
     sendmessage($from_id, $textbotlang['Admin']['Balance']['askMaxDeposit'], $backadmin, 'HTML');
     step("maxbalancenowpayment", $from_id);
@@ -8556,20 +8553,20 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     sendmessage($from_id, $textbotlang['Admin']['Balance']['maxDepositSaved'], $nowpayment_setting_keyboard, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "maxbalancenowpayment");
+    config_set('pay', "maxbalancenowpayment", $text);
 } elseif ($text == $textbotlang['keyboard']['setEducationStar'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['Help']['askTutorialMedia'], $backadmin, 'HTML');
     step("gethelpstar", $from_id);
 } elseif ($user['step'] == "gethelpstar") {
     if ($text) {
         if (intval($text) == 2) {
-            update("paysetting", "ValuePay", "0", "NamePay", "helpstar");
+            config_set('pay', "helpstar", "0");
         } else {
             $data = json_encode(array(
                 'type' => "text",
                 'text' => $text
             ));
-            update("paysetting", "ValuePay", $data, "NamePay", "helpstar");
+            config_set('pay', "helpstar", $data);
         }
     } elseif ($photo) {
         $data = json_encode(array(
@@ -8577,14 +8574,14 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
             'text' => $caption,
             'photoid' => $photoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpstar");
+        config_set('pay', "helpstar", $data);
     } elseif ($video) {
         $data = json_encode(array(
             'type' => "video",
             'text' => $caption,
             'videoid' => $videoid
         ));
-        update("paysetting", "ValuePay", $data, "NamePay", "helpstar");
+        config_set('pay', "helpstar", $data);
     } else {
         sendmessage($from_id, $textbotlang['Admin']['Help']['invalidContent'], $backadmin, 'HTML');
         return;
@@ -8601,7 +8598,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     sendmessage($from_id, $textbotlang['Admin']['price']['priceSaved'], $Startelegram, 'HTML');
     step("home", $from_id);
-    update("paysetting", "ValuePay", $text, "NamePay", "chashbackstar");
+    config_set('pay', "chashbackstar", $text);
 } elseif ($text == $textbotlang['keyboard']['quickSetVolumePrice']) {
     sendmessage($from_id, $textbotlang['Admin']['price']['customServiceIntro'], $backadmin, 'HTML');
     step("getpricef", $from_id);
@@ -8679,7 +8676,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     step("home", $from_id);
     $value = json_decode($setting['limitnumber'], true);
     $value['all'] = intval($text);
-    update("setting", "limitnumber", json_encode($value), null, null);
+    config_set('setting', "limitnumber", json_encode($value));
 } elseif ($text == $textbotlang['keyboard']['freeLimit']) {
     $limitnumber = json_decode($setting['limitnumber'], true);
     sendmessage($from_id, sprintf($textbotlang['Admin']['changeLocation']['askFreeLimit'], $limitnumber['free']), $backadmin, 'HTML');
@@ -8689,7 +8686,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     step("home", $from_id);
     $value = json_decode($setting['limitnumber'], true);
     $value['free'] = intval($text);
-    update("setting", "limitnumber", json_encode($value), null, null);
+    config_set('setting', "limitnumber", json_encode($value));
 } elseif ($text == $textbotlang['keyboard']['resetAllUsersLimit']) {
     $keyboarddata = json_encode([
         'inline_keyboard' => [
@@ -9281,7 +9278,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
         sendmessage($from_id, $textbotlang['common']['invalidInput'], $backadmin, 'HTML');
         return;
     }
-    update("setting", "timeauto_not_verify", $text);
+    config_set('setting', "timeauto_not_verify", $text);
     sendmessage($from_id, $textbotlang['Admin']['cronjob']['timeSaved'], $CartManage, 'HTML');
     step("home", $from_id);
 } elseif ($text == $textbotlang['keyboard']['showFirstPurchase']) {
@@ -9375,7 +9372,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
         sendmessage($from_id, $textbotlang['Admin']['Payment']['userNotFound'], $backadmin, 'HTML');
         return;
     }
-    $list_Exceptions = select("paysetting", "ValuePay", "NamePay", "Exception_auto_cart", "select")['ValuePay'];
+    $list_Exceptions = config_get('pay', "Exception_auto_cart");
     $list_Exceptions = is_string($list_Exceptions) ? json_decode($list_Exceptions, true) : [];
     if (in_array($text, $list_Exceptions)) {
         sendmessage($from_id, $textbotlang['Admin']['Payment']['userAlreadyExcluded'], $backadmin, 'HTML');
@@ -9384,7 +9381,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     $list_Exceptions[] = $text;
     $list_Exceptions = array_values($list_Exceptions);
     sendmessage($from_id, $textbotlang['Admin']['Payment']['userExcluded'], $Exception_auto_cart_keyboard, 'HTML');
-    update("paysetting", "ValuePay", json_encode($list_Exceptions), "NamePay", "Exception_auto_cart");
+    config_set('pay', "Exception_auto_cart", json_encode($list_Exceptions));
     step("home", $from_id);
 } elseif ($text == $textbotlang['keyboard']['removeUserFromList']) {
     sendmessage($from_id, $textbotlang['Admin']['Payment']['askRemoveExcludeId'], $backadmin, 'HTML');
@@ -9394,7 +9391,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
         sendmessage($from_id, $textbotlang['Admin']['Payment']['userNotFound'], $backadmin, 'HTML');
         return;
     }
-    $list_Exceptions = select("paysetting", "ValuePay", "NamePay", "Exception_auto_cart", "select")['ValuePay'];
+    $list_Exceptions = config_get('pay', "Exception_auto_cart");
     $list_Exceptions = is_string($list_Exceptions) ? json_decode($list_Exceptions, true) : [];
     if (!in_array($text, $list_Exceptions)) {
         sendmessage($from_id, $textbotlang['Admin']['Payment']['userNotExcluded'], $backadmin, 'HTML');
@@ -9410,10 +9407,10 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     $list_Exceptions = array_values($list_Exceptions);
     sendmessage($from_id, $textbotlang['Admin']['Payment']['userExcludeRemoved'], $Exception_auto_cart_keyboard, 'HTML');
-    update("paysetting", "ValuePay", json_encode($list_Exceptions), "NamePay", "Exception_auto_cart");
+    config_set('pay', "Exception_auto_cart", json_encode($list_Exceptions));
     step("home", $from_id);
 } elseif ($text == $textbotlang['keyboard']['showUserList']) {
-    $list_Exceptions = select("paysetting", "ValuePay", "NamePay", "Exception_auto_cart", "select")['ValuePay'];
+    $list_Exceptions = config_get('pay', "Exception_auto_cart");
     $list_Exceptions = is_string($list_Exceptions) ? json_decode($list_Exceptions, true) : [];
     if (count($list_Exceptions) == 0) {
         sendmessage($from_id, $textbotlang['Admin']['Payment']['excludeListEmpty'], null, 'HTML');
@@ -9426,13 +9423,13 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['Payment']['excludeListTitle'], null, 'HTML');
     sendmessage($from_id, $list, null, 'HTML');
 } elseif ($text == $textbotlang['keyboard']['setApi'] && $adminrulecheck['rule'] == "administrator") {
-    $PaySetting = select("paysetting", "ValuePay", "NamePay", "marchent_floypay")['ValuePay'];
+    $PaySetting = config_get('pay', "marchent_floypay");
     $textaqayepardakht = sprintf($textbotlang['Admin']['gateway']['askApiCode2'], $PaySetting);
     sendmessage($from_id, $textaqayepardakht, $backadmin, 'HTML');
     step('marchent_floypay', $from_id);
 } elseif ($user['step'] == "marchent_floypay") {
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $Swapinokey, 'HTML');
-    update("paysetting", "ValuePay", $text, "NamePay", "marchent_floypay");
+    config_set('pay', "marchent_floypay", $text);
     step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['panelSetting']) {
     $panel = select("marzban_panel", "*", "name_panel", $user['Processing_value'], "select");
@@ -9530,7 +9527,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     } else {
         $bt_map[$bt_lang][$bt_p0][$bt_p1] = $bt_new;
     }
-    update("setting", "text_edit", empty($bt_map) ? null : json_encode($bt_map, JSON_UNESCAPED_UNICODE), null, null);
+    config_set('setting', "text_edit", empty($bt_map) ? null : json_encode($bt_map, JSON_UNESCAPED_UNICODE));
     step('home', $from_id);
     $textbotlang = languagechange();
     $bt_home = strtr($textbotlang['bottext']['home_text'], ['{lang}' => $textbotlang['bottext']['langs'][$bt_lang] ?? $bt_lang]);

@@ -17,8 +17,8 @@ if ($invoice_id === '' || $transid === '') {
     http_response_code(400);
     exit('invalid request');
 }
-$setting = select("setting", "*");
-$PaySetting = select("paysetting", "ValuePay", "NamePay", "merchant_id_aqayepardakht","select")['ValuePay'];
+$setting = config_all('setting');
+$PaySetting = config_get('pay', "merchant_id_aqayepardakht");
 $payment_row = select("payment_report", "*", "id_order", $invoice_id, "select");
 if (!is_array($payment_row) || $payment_row['Payment_Method'] !== "aqayepardakht") {
     http_response_code(404);
@@ -66,7 +66,7 @@ if (is_object($result) && $result->code == "1") {
         error_log("DirectPayment failed for order {$invoice_id}: " . $directPaymentError->getMessage());
         return;
     }
-    $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackaqaypardokht","select")['ValuePay'];
+    $pricecashback = config_get('pay', "chashbackaqaypardokht");
     $__q16 = $pdo->prepare("SELECT * FROM user WHERE id = ? LIMIT 1");
     $__q16->bindValue(1, $Payment_report['id_user'], PDO::PARAM_STR);
     $__q16->execute();
@@ -78,7 +78,7 @@ if (is_object($result) && $result->code == "1") {
         $text_report = sprintf($textbotlang['paymentGateway']['giftReport'], $result);
         sendmessage($Balance_id['id'], $text_report, null, 'HTML');
     }
-    $paymentreports = select("topicid","idreport","report","paymentreport","select")['idreport'];
+    $paymentreports = config_get('topic', "paymentreport");
 
 $text_report = sprintf($textbotlang['paymentGateway']['reportAqayepardakht'], $Payment_report['id_user'], $Balance_id['username'], $price);
     if (strlen($setting['Channel_Report']) > 0) {

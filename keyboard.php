@@ -1,6 +1,6 @@
 <?php
 require_once 'config.php';
-$setting = select("setting", "*", null, null, "select");
+$setting = config_all('setting');
 $textbotlang = languagechange();
 //-----------------------------[  text panel  ]-------------------------------
 $adminrulecheck = select("admin", "*", "id_admin", $from_id, "select");
@@ -455,7 +455,7 @@ function featureIsOn($feature, $setting)
 function featureCategoryKeyboard($categoryKey)
 {
     global $featureCategories, $textbotlang;
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $rows = [];
     $settingsButtons = [];
     foreach ($featureCategories[$categoryKey]['features'] as $featureKey => $feature) {
@@ -486,7 +486,7 @@ function featureCategoryKeyboard($categoryKey)
 function wheelSettingsMenu()
 {
     global $wheelFeatures, $textbotlang;
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $rows = [];
     foreach ($wheelFeatures as $featureKey => $feature) {
         $isOn = featureIsOn($feature, $setting);
@@ -507,7 +507,7 @@ function wheelSettingsMenu()
 function lotterySettingsMenu()
 {
     global $lotteryFeatures, $textbotlang;
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $rows = [];
     foreach ($lotteryFeatures as $featureKey => $feature) {
         $rows[] = [
@@ -529,7 +529,7 @@ function lotterySettingsMenu()
 function affiliateSettingsMenu()
 {
     global $textbotlang;
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $affiliateSetting = select("affiliates", "*", null, null, "select");
     $commissionText = $textbotlang['Admin']['Status'][$affiliateSetting['status_commission'] == "oncommission" ? 'statuson' : 'statusoff'];
     $firstBuyText = $affiliateSetting['porsant_one_buy'] == "on_buy_porsant" ? $textbotlang['keyboard']['firstPurchaseBtn'] : $textbotlang['keyboard']['allPurchases'];
@@ -554,7 +554,7 @@ function cronStatusMenu()
     require_once __DIR__ . '/cronbot/jobs.php';
     $labels = $textbotlang['Admin']['cronHealth'];
     $cronStatus = json_decode((string) @file_get_contents(__DIR__ . '/storage/cron_status.json'), true) ?: [];
-    $setting = select("setting", "*");
+    $setting = config_all('setting');
     $timeAgo = fn($time) => time() - $time < 60 ? $labels['justNow'] : sprintf($labels['minutesAgo'], intdiv(time() - $time, 60));
     $dispatcherRunning = isset($cronStatus['dispatcher']) && time() - $cronStatus['dispatcher'] <= 180;
     $lines = [];
@@ -1318,7 +1318,7 @@ function KeyboardProduct($location, $query, $pricediscount, $datakeyboard, $stat
 {
     global $pdo, $textbotlang, $from_id;
     $product = ['inline_keyboard' => []];
-    $statusshowprice = select("shopsetting", "*", "Namevalue", "statusshowprice", "select")['value'];
+    $statusshowprice = config_get('shop', "statusshowprice");
     $stmt = $pdo->prepare($query);
     $stmt->execute($queryParams);
     if ($valuetow != null) {

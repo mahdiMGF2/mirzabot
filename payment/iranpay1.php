@@ -18,8 +18,8 @@ if (!is_array($data) || !isset($data['hashid'], $data['authority'], $data['statu
 $hashid = $data['hashid'];
 $authority = $data['authority'];
 $StatusPayment = $data['status'];
-$setting = select("setting", "*");
-$PaySetting = select("paysetting", "*", "NamePay", "marchent_floypay", "select")['ValuePay'];
+$setting = config_all('setting');
+$PaySetting = config_get('pay', "marchent_floypay");
 $Payment_reports = select("payment_report", "*", "id_order", $hashid, "select");
 if (!is_array($Payment_reports) || $Payment_reports['Payment_Method'] !== "Currency Rial 1") {
     http_response_code(404);
@@ -69,7 +69,7 @@ if ($StatusPayment == 100) {
                 error_log("DirectPayment failed for order {$invoice_id}: " . $directPaymentError->getMessage());
                 return;
             }
-            $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackiranpay1", "select")['ValuePay'];
+            $pricecashback = config_get('pay', "chashbackiranpay1");
             $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
             if ($pricecashback != "0") {
                 $result = ($Payment_report['price'] * $pricecashback) / 100;
@@ -78,7 +78,7 @@ if ($StatusPayment == 100) {
                 $text_report = sprintf($textbotlang['paymentGateway']['giftReport'], $result);
                 sendmessage($Balance_id['id'], $text_report, null, 'HTML');
             }
-            $paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
+            $paymentreports = config_get('topic', "paymentreport");
             $price = number_format($price);
             $text_report = sprintf($textbotlang['paymentGateway']['reportIranpay'], $Payment_report['id_user'], $Balance_id['username'], $price);
             if (strlen($setting['Channel_Report']) > 0) {

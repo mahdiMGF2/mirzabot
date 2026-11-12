@@ -14,7 +14,7 @@ ini_set('default_charset', 'UTF-8');
 ini_set('error_log', 'error_log');
 $ManagePanel = new ManagePanel();
 $headers = getallheaders();
-$setting = select("setting", "*");
+$setting = config_all('setting');
 $method = $_SERVER['REQUEST_METHOD'];
 $data = null;
 if ($method == "GET") {
@@ -386,7 +386,7 @@ function mini_countries(array $data, string $method): void
         $stmt->bindParam(':agent', $user_info['agent']);
         $stmt->execute();
         $panel_list = [];
-        $setting = select("setting", "*", null, null, "select");
+        $setting = config_all('setting');
         ;
         $is_note = false;
         if ($setting['statusnamecustom'] == 'onnamecustom')
@@ -443,7 +443,7 @@ function mini_categories(array $data, string $method): void
     }
     $user_info = select("user", "*", "token", $tokencheck, "select");
     if ($user_info) {
-        $setting = select("setting", "*", null, null, "select");
+        $setting = config_all('setting');
         if ($setting['statuscategorygenral'] == "offcategorys") {
             echo json_encode(array(
                 'status' => true,
@@ -503,7 +503,7 @@ function mini_time_ranges(array $data, string $method): void
     }
     $user_info = select("user", "*", "token", $tokencheck, "select");
     if ($user_info) {
-        $setting = select("setting", "*", null, null, "select");
+        $setting = config_all('setting');
         if ($setting['statuscategory'] == "offcategory") {
             echo json_encode(array(
                 'status' => true,
@@ -1082,7 +1082,7 @@ function mini_purchase(array $data, string $method): void
         update("user", "number_username", $value, "id", $user_info['id']);
         if (in_array(usernameMethodKey($panel['MethodUsername']), ['customTextSequential', 'agentCustomTextSequential'], true)) {
             $value = intval($setting['numbercount']) + 1;
-            update("setting", "numbercount", $value);
+            config_set('setting', "numbercount", $value);
         }
     }
     $affiliatescommission = select("affiliates", "*", null, null, "select");

@@ -17,8 +17,8 @@ if ($Authority === '') {
     http_response_code(400);
     exit('invalid request');
 }
-$setting = select("setting", "*");
-$PaySetting = select("paysetting", "ValuePay", "NamePay", "merchant_zarinpal","select")['ValuePay'];
+$setting = config_all('setting');
+$PaySetting = config_get('pay', "merchant_zarinpal");
 $stmt = $pdo->prepare("SELECT * FROM payment_report WHERE dec_not_confirmed = ? AND Payment_Method = 'zarinpal' LIMIT 1");
 $stmt->execute([$Authority]);
 $Payment_reports = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -72,7 +72,7 @@ $payment_status = $textbotlang['paymentGateway']['zarinpalErrors'][$response['er
         error_log("DirectPayment failed for order {$invoice_id}: " . $directPaymentError->getMessage());
         return;
     }
-    $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackzarinpal","select")['ValuePay'];
+    $pricecashback = config_get('pay', "chashbackzarinpal");
     $Balance_id = select("user","*","id",$Payment_report['id_user'],"select");
     if($pricecashback != "0"){
         $result = ($Payment_report['price'] * $pricecashback) / 100;
@@ -81,7 +81,7 @@ $payment_status = $textbotlang['paymentGateway']['zarinpalErrors'][$response['er
         $text_report = sprintf($textbotlang['paymentGateway']['giftReport'], $result);
         sendmessage($Balance_id['id'], $text_report, null, 'HTML');
     }
-    $paymentreports = select("topicid","idreport","report","paymentreport","select")['idreport'];
+    $paymentreports = config_get('topic', "paymentreport");
     $refcode = $response['data']['ref_id'];
     $cart_number = $response['data']['card_pan'];
     $price = number_format($price);

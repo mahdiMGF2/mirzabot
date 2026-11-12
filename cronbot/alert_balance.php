@@ -5,7 +5,7 @@ date_default_timezone_set('Asia/Tehran');
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../botapi.php';
 require_once __DIR__ . '/../function.php';
-$setting = select("setting", "*");
+$setting = config_all('setting');
 $textbotlang = languagechange();
 if ($setting['alert_balance'] != "1" || $setting['Bot_Status'] == "botstatusoff") {
     return;

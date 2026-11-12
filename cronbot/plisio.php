@@ -8,8 +8,8 @@ require_once __DIR__ . '/../function.php';
 require_once __DIR__ . '/../jdf.php';
 require __DIR__ . '/../vendor/autoload.php';
 $ManagePanel = new ManagePanel();
-$setting = select("setting", "*");
-$paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
+$setting = config_all('setting');
+$paymentreports = config_get('topic', "paymentreport");
 
 function statusplisio($tx_id)
 {
@@ -57,7 +57,7 @@ while ($Payment_report = ($list_service)->fetch(PDO::FETCH_ASSOC)) {
         if (!claimPaymentPaid($Payment_report['id_order']))
             continue;
         DirectPayment($Payment_report['id_order'], "../images.jpg");
-        $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackplisio", "select")['ValuePay'];
+        $pricecashback = config_get('pay', "chashbackplisio");
         $__q18 = $pdo->prepare("SELECT * FROM user WHERE id = ? LIMIT 1");
         $__q18->bindValue(1, $Payment_report['id_user'], PDO::PARAM_STR);
         $__q18->execute();

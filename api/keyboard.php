@@ -13,8 +13,7 @@ requireApiTokenOrAdminSession(getallheaders());
 
 $textbotlang = languagechange();
 
-$keyboardSetting = select("setting", "keyboardmain", null, null, "select");
-$keyboardmain = json_decode($keyboardSetting['keyboardmain'] ?? '', true);
+$keyboardmain = json_decode(config_get('setting', 'keyboardmain') ?? '', true);
 if (!is_array($keyboardmain) || !isset($keyboardmain['keyboard']) || !is_array($keyboardmain['keyboard'])) {
     $keyboardmain = ['keyboard' => []];
 }

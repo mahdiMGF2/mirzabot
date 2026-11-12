@@ -106,7 +106,7 @@ if (!$Payment_report) {
     cubepay_emit('notfound', languagechange(dirname(__DIR__)), $data_order_id, null);
     return;
 }
-$token_cubepay = trim((string) select("paysetting", "*", "NamePay", "apiternado", "select")['ValuePay']);
+$token_cubepay = trim((string) config_get('pay', "apiternado"));
 if ($token_cubepay === '' || $token_cubepay === '0' || $Payment_report['Payment_Method'] !== "Currency Rial 2") {
     cubepay_emit('notfound', languagechange(dirname(__DIR__)), $data_order_id, null);
     return;
@@ -120,7 +120,7 @@ if ($Payment_report['payment_Status'] == "expire") {
     cubepay_emit('expired', $page_texts, $data_order_id, $Payment_report['price'], $page_lang);
     return;
 }
-$setting = select("setting", "*", null, null, "select");
+$setting = config_all('setting');
 $price = $Payment_report['price'];
 
 if ($Payment_report['payment_Status'] == "paid") {
@@ -187,7 +187,7 @@ try {
     error_log("DirectPayment failed for order {$data_order_id}: " . $directPaymentError->getMessage());
     return;
 }
-$pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackiranpay2", "select")['ValuePay'];
+$pricecashback = config_get('pay', "chashbackiranpay2");
 $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
 if ($pricecashback != "0") {
     $result_cashback = ($Payment_report['price'] * $pricecashback) / 100;
@@ -196,7 +196,7 @@ if ($pricecashback != "0") {
     $text_report = sprintf($textbotlang['paymentGateway']['giftReport'], $result_cashback);
     sendmessage($Balance_id['id'], $text_report, null, 'HTML');
 }
-$paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
+$paymentreports = config_get('topic', "paymentreport");
 $text_reportpayment = sprintf($textbotlang['paymentGateway']['reportTronado'], $Balance_id['username'], $Balance_id['id'], $price);
 $database = json_encode($response);
 $statement = $pdo->prepare("UPDATE payment_report SET dec_not_confirmed = :dec_not_confirmed WHERE id_order = :id_order");

@@ -129,8 +129,8 @@ if ($cashback > 0) {
 }
 
 // Report to Channel_Report like zarinpal does.
-$setting = select("setting", "*");
-$paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'] ?? null;
+$setting = config_all('setting');
+$paymentreports = config_get('topic', "paymentreport") ?? null;
 if (!empty($setting['Channel_Report']) && $paymentreports) {
     $buyer = select("user", "*", "id", $payment['id_user'], "select");
     $text_report = sprintf(

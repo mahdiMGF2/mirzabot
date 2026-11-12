@@ -10,8 +10,8 @@ require_once __DIR__ . '/../function.php';
 $ManagePanel = new ManagePanel();
 
 
-$setting = select("setting", "*");
-$errorreport = select("topicid","idreport","report","errorreport","select")['idreport'];
+$setting = config_all('setting');
+$errorreport = config_get('topic', "errorreport");
 
 $textbotlang = languagechange();
 if(!is_file('gift'))return;

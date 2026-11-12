@@ -11,7 +11,7 @@ ini_set('default_charset', 'UTF-8');
 ini_set('error_log', 'error_log');
 $ManagePanel = new ManagePanel();
 
-$setting = select("setting", "*");
+$setting = config_all('setting');
 
 list($headers, $data, $action) = apiRequestContext();
 $method = $_SERVER['REQUEST_METHOD'];

@@ -10,7 +10,7 @@ foreach (['Marzban.php', 'marzneshin.php', 'hiddify.php', 'ibsng.php', 'mikrotik
 
 global $domainhosts;
 
-$setting = select("setting", "*");
+$setting = config_all('setting');
 if (intval($setting['Channel_Report'] ?? 0) != 0) {
     syncReportTopics($setting['Channel_Report'], languagechange());
 }

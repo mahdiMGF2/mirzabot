@@ -13,7 +13,7 @@ ini_set('error_log', 'error_log');
 $ManagePanel = new ManagePanel();
 
 $errorreport = topicId('errorreport');
-$setting = select("setting", "*");
+$setting = config_all('setting');
 
 list($headers, $data, $action) = apiRequestContext();
 $method = $_SERVER['REQUEST_METHOD'];

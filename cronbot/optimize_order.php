@@ -5,7 +5,7 @@ date_default_timezone_set('Asia/Tehran');
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../botapi.php';
 require_once __DIR__ . '/../function.php';
-$setting = select("setting", "*");
+$setting = config_all('setting');
 $textbotlang = languagechange();
 
 $staleInvoice = "Status IN ('unpaid', 'Unsuccessful') AND CAST(time_sell AS UNSIGNED) < :olderThan AND NOT EXISTS (SELECT 1 FROM payment_report pr WHERE pr.id_order = invoice.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
@@ -38,7 +38,7 @@ $deletedLogs = $stmt->rowCount();
 if (($deletedInvoices > 0 || $deletedLogs > 0) && !isTelegramChatIdEmpty($setting['Channel_Report'] ?? '')) {
     telegram('sendmessage', [
         'chat_id' => $setting['Channel_Report'],
-        'message_thread_id' => select("topicid", "idreport", "report", "otherreport", "select")['idreport'],
+        'message_thread_id' => config_get('topic', "otherreport"),
         'text' => sprintf($textbotlang['Admin']['report']['autoCleanup'], $deletedInvoices, $deletedLogs),
         'parse_mode' => "HTML",
     ]);

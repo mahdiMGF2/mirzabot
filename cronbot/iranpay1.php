@@ -8,8 +8,8 @@ require_once __DIR__ . '/../jdf.php';
 require_once __DIR__ . '/../function.php';
 require __DIR__ . '/../vendor/autoload.php';
 $ManagePanel = new ManagePanel();
-$setting = select("setting", "*", null, null, "select");
-$paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
+$setting = config_all('setting');
+$paymentreports = config_get('topic', "paymentreport");
 $textbotlang = languagechange();
 $list_service = $pdo->prepare("SELECT * FROM payment_report WHERE payment_Status = 'Unpaid' AND Payment_Method = 'Currency Rial 3' ORDER BY RAND() LIMIT 10");
 $list_service->execute();
@@ -28,7 +28,7 @@ while ($Payment_report = ($list_service)->fetch(PDO::FETCH_ASSOC)) {
         continue;
     update("payment_report", "dec_not_confirmed", json_encode($StatusPayment['data']), "id_order", $Payment_report['id_order']);
     DirectPayment($Payment_report['id_order']);
-    $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackiranpay1", "select")['ValuePay'];
+    $pricecashback = config_get('pay', "chashbackiranpay1");
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
     if ($pricecashback != "0") {
         $result = ($Payment_report['price'] * $pricecashback) / 100;

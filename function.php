@@ -297,7 +297,7 @@ function syncReportTopics($chatId, $textbotlang)
         'backupfile' => $textbotlang['Admin']['report']['btnBackup'],
     ];
     foreach ($topicNames as $report => $name) {
-        $topicId = intval(select("topicid", "idreport", "report", $report, "select")['idreport'] ?? 0);
+        $topicId = intval(config_get('topic', $report) ?? 0);
         if ($topicId > 0) {
             $editTopic = telegram('editForumTopic', ['chat_id' => $chatId, 'message_thread_id' => $topicId, 'name' => $name]);
             if ($editTopic['ok'] || str_contains($editTopic['description'] ?? '', 'TOPIC_NOT_MODIFIED')) {
@@ -308,7 +308,7 @@ function syncReportTopics($chatId, $textbotlang)
         if (!$createForumTopic['ok']) {
             return false;
         }
-        update("topicid", "idreport", $createForumTopic['result']['message_thread_id'], "report", $report);
+        config_set('topic', $report, $createForumTopic['result']['message_thread_id']);
     }
     return true;
 }
@@ -583,6 +583,40 @@ function select($table, $field, $whereField = null, $whereValue = null, $type = 
     return $result;
 }
 
+function config_all(string $scope, bool $fresh = false): array
+{
+    global $pdo;
+    static $cache = [];
+    if ($fresh || !isset($cache[$scope])) {
+        try {
+            $stmt = $pdo->prepare("SELECT name, value FROM config WHERE scope = ?");
+            $stmt->execute([$scope]);
+            $cache[$scope] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        } catch (PDOException $e) {
+            error_log("Query failed: " . $e->getMessage());
+            return [];
+        }
+    }
+    return $cache[$scope];
+}
+
+function config_get(string $scope, string $name, $default = null)
+{
+    $all = config_all($scope);
+    return array_key_exists($name, $all) ? $all[$name] : $default;
+}
+
+function config_set(string $scope, string $name, $value): void
+{
+    global $pdo;
+    if (is_array($value)) {
+        $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+    }
+    $value = $value === null ? null : (string) $value;
+    $pdo->prepare("INSERT INTO config (scope, name, value) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)")->execute([$scope, $name, $value]);
+    config_all($scope, true);
+}
+
 function rowExists($table, $field, $value)
 {
     global $pdo;
@@ -601,12 +635,9 @@ function rowExists($table, $field, $value)
 }
 function getPaySettingValue($name, $default = null)
 {
-    $rows = select("paysetting", "*", null, null, "fetchAll");
-    if (is_array($rows)) {
-        foreach ($rows as $row) {
-            if (isset($row['NamePay']) && strcasecmp(trim((string) $row['NamePay']), trim((string) $name)) === 0) {
-                return array_key_exists('ValuePay', $row) ? $row['ValuePay'] : $default;
-            }
+    foreach (config_all('pay') as $payName => $payValue) {
+        if (strcasecmp(trim((string) $payName), trim((string) $name)) === 0) {
+            return $payValue;
         }
     }
 
@@ -663,7 +694,7 @@ function updatePaymentMessageId($response, $orderId)
 function nowPayments($payment, $price_amount, $order_id, $order_description)
 {
     global $domainhosts;
-    $apinowpayments = select("paysetting", "*", "NamePay", "marchent_tronseller", "select")['ValuePay'];
+    $apinowpayments = config_get('pay', "marchent_tronseller");
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://api.nowpayments.io/v1/' . $payment,
@@ -691,7 +722,7 @@ function nowPayments($payment, $price_amount, $order_id, $order_description)
 }
 function StatusPayment($paymentid)
 {
-    $apinowpayments = select("paysetting", "*", "NamePay", "marchent_tronseller", "select")['ValuePay'];
+    $apinowpayments = config_get('pay', "marchent_tronseller");
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://api.nowpayments.io/v1/payment/' . $paymentid,
@@ -744,7 +775,7 @@ function invoiceBelongsToUser($invoice, $userId)
 }
 function cubepayFeeValue()
 {
-    $raw = select("paysetting", "ValuePay", "NamePay", "feeternado", "select")['ValuePay'] ?? '0';
+    $raw = config_get('pay', "feeternado") ?? '0';
 
     return (float) str_replace([',', '،'], '', (string) $raw);
 }
@@ -761,7 +792,7 @@ function cubepayApplyFee($base, $fee)
 }
 function cubepayPayableAmount($price)
 {
-    $status = select("paysetting", "ValuePay", "NamePay", "feestatusternado", "select")['ValuePay'] ?? 'offfeeternado';
+    $status = config_get('pay', "feestatusternado") ?? 'offfeeternado';
     if ($status !== 'onfeeternado') {
         return intval($price);
     }
@@ -857,7 +888,7 @@ function createPayiranpay4($price, $order_id, $user_id)
 function cubepay($order_id, $price, $customer_user_id)
 {
     global $domainhosts;
-    $token_cubepay = select("paysetting", "*", "NamePay", "apiternado", "select")['ValuePay'];
+    $token_cubepay = config_get('pay', "apiternado");
     $amount_toman = cubepayPayableAmount($price);
     $curl = curl_init();
     curl_setopt_array($curl, array(
@@ -940,7 +971,7 @@ function formatBytes($bytes, $precision = 2): string
 }
 function generateUsername($from_id, $Metode, $username, $randomString, $text, $namecustome, $usernamecustom)
 {
-    $setting = select("setting", "*", null, null, "select");
+    $setting = config_all('setting');
     $user = select("user", "*", "id", $from_id, "select");
     if ($user == false) {
         $user = array('number_username' => '');
@@ -1100,13 +1131,13 @@ function claimPaymentPaid($order_id)
 function DirectPayment($order_id, $image = 'images.jpg')
 {
     global $pdo, $ManagePanel, $textbotlang, $keyboardextendfnished, $keyboard, $Confirm_pay, $from_id, $message_id;
-    $buyreport = select("topicid", "idreport", "report", "buyreport", "select")['idreport'];
+    $buyreport = config_get('topic', "buyreport");
     $admin_ids = select("admin", "id_admin", null, null, "FETCH_COLUMN");
-    $otherservice = select("topicid", "idreport", "report", "otherservice", "select")['idreport'];
-    $otherreport = select("topicid", "idreport", "report", "otherreport", "select")['idreport'];
-    $errorreport = select("topicid", "idreport", "report", "errorreport", "select")['idreport'];
-    $porsantreport = select("topicid", "idreport", "report", "porsantreport", "select")['idreport'];
-    $setting = select("setting", "*");
+    $otherservice = config_get('topic', "otherservice");
+    $otherreport = config_get('topic', "otherreport");
+    $errorreport = config_get('topic', "errorreport");
+    $porsantreport = config_get('topic', "porsantreport");
+    $setting = config_all('setting');
     $Payment_report = select("payment_report", "*", "id_order", $order_id, "select");
     $format_price_cart = number_format($Payment_report['price']);
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
@@ -1317,7 +1348,7 @@ function DirectPayment($order_id, $image = 'images.jpg')
             update("user", "number_username", $value, "id", $Balance_id['id']);
             if (in_array(usernameMethodKey($marzban_list_get['MethodUsername']), ['customTextSequential', 'agentCustomTextSequential'], true)) {
                 $value = intval($setting['numbercount']) + 1;
-                update("setting", "numbercount", $value);
+                config_set('setting', "numbercount", $value);
             }
         }
         $balanceformatsell = select("user", "Balance", "id", $get_invoice['id_user'], "select")['Balance'];
@@ -1424,9 +1455,9 @@ function DirectPayment($order_id, $image = 'images.jpg')
             ]
         ]);
         if ($Balance_id['agent'] == "f") {
-            $valurcashbackextend = select("shopsetting", "*", "Namevalue", "chashbackextend", "select")['value'];
+            $valurcashbackextend = config_get('shop', "chashbackextend");
         } else {
-            $valurcashbackextend = json_decode(select("shopsetting", "*", "Namevalue", "chashbackextend_agent", "select")['value'], true)[$Balance_id['agent']];
+            $valurcashbackextend = json_decode(config_get('shop', "chashbackextend_agent"), true)[$Balance_id['agent']];
         }
         if (intval($valurcashbackextend) != 0) {
             $result = ($orderPrice * $valurcashbackextend) / 100;
@@ -1588,7 +1619,7 @@ function DirectPayment($order_id, $image = 'images.jpg')
 }
 function plisio($order_id, $price, $from_id)
 {
-    $apinowpayments = select("paysetting", "ValuePay", "NamePay", "apinowpayment", "select")['ValuePay'];
+    $apinowpayments = config_get('pay', "apinowpayment");
     $api_key = $apinowpayments;
 
     $url = 'https://api.plisio.net/api/v1/invoices/new';
@@ -1834,15 +1865,15 @@ function ensureWebhookSecret()
 {
     global $domainhosts;
 
-    $stored = (string) (select("setting", "*")['webhook_secret'] ?? '');
+    $stored = (string) (config_all('setting')['webhook_secret'] ?? '');
     if ($stored !== '') {
         return ['secret' => $stored, 'created' => false];
     }
 
     $secret = bin2hex(random_bytes(24));
-    update("setting", "webhook_secret", $secret, null, null);
+    config_set('setting', "webhook_secret", $secret);
 
-    $stored = (string) (select("setting", "*", null, null, "select", ['cache' => false])['webhook_secret'] ?? '');
+    $stored = (string) (config_all('setting', true)['webhook_secret'] ?? '');
     if ($stored !== '') {
         $secret = $stored;
     }
@@ -1990,8 +2021,8 @@ function activecron()
 }
 function createInvoice($amount)
 {
-    $PaySetting = select("paysetting", "*", "NamePay", "apiiranpay", "select")['ValuePay'];
-    $walletaddress = select("paysetting", "*", "NamePay", "walletaddress", "select")['ValuePay'];
+    $PaySetting = config_get('pay', "apiiranpay");
+    $walletaddress = config_get('pay', "walletaddress");
 
     $curl = curl_init();
 
@@ -2015,7 +2046,7 @@ function createInvoice($amount)
 }
 function verifpay($id)
 {
-    $PaySetting = select("paysetting", "*", "NamePay", "apiiranpay", "select")['ValuePay'];
+    $PaySetting = config_get('pay', "apiiranpay");
     $curl = curl_init();
 
     curl_setopt_array($curl, array(
@@ -2040,7 +2071,7 @@ function verifpay($id)
 function createInvoiceiranpay1($amount, $id_invoice)
 {
     global $domainhosts;
-    $PaySetting = select("paysetting", "*", "NamePay", "marchent_floypay", "select")['ValuePay'];
+    $PaySetting = config_get('pay', "marchent_floypay");
     $curl = curl_init();
     $amount = intval($amount);
     $data = [
@@ -2288,7 +2319,7 @@ function bottext_apply_overrides(array &$base, $lang)
     if (is_file($overrideFile) && is_array($overrideTexts = include $overrideFile))
         $base = array_replace_recursive($base, $overrideTexts);
     customEmojiLabels([]);
-    $row = select("setting", "*", null, null, "select");
+    $row = config_all('setting');
     $raw = is_array($row) ? ($row['text_edit'] ?? null) : null;
     if (!is_string($raw) || $raw === '')
         return;
@@ -2619,7 +2650,7 @@ function isValidInvitationCode($setting, $fromId, $verfy_status)
 function createPayZarinpal($price, $order_id)
 {
     global $domainhosts;
-    $marchent_zarinpal = select("paysetting", "ValuePay", "NamePay", "merchant_zarinpal", "select")['ValuePay'];
+    $marchent_zarinpal = config_get('pay', "merchant_zarinpal");
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://payment.zarinpal.com/pg/v4/payment/request.json',
@@ -2695,7 +2726,7 @@ function createPayVariza($price, $order_id)
 function createPayaqayepardakht($price, $order_id)
 {
     global $domainhosts;
-    $merchant_aqayepardakht = select("paysetting", "ValuePay", "NamePay", "merchant_id_aqayepardakht", "select")['ValuePay'];
+    $merchant_aqayepardakht = config_get('pay', "merchant_id_aqayepardakht");
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://panel.aqayepardakht.ir/api/v2/create',

@@ -147,9 +147,9 @@ function backupDumpDatabaseWithPdo(PDO $pdo, $targetFile)
     return is_file($targetFile) && filesize($targetFile) > 0;
 }
 
-$reportbackup = select("topicid", "idreport", "report", "backupfile", "select")['idreport'];
+$reportbackup = config_get('topic', "backupfile");
 $destination = getcwd();
-$setting = select("setting", "*");
+$setting = config_all('setting');
 $canSendReport = !isTelegramChatIdEmpty($setting['Channel_Report'] ?? '');
 if (!$canSendReport) {
     return;

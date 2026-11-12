@@ -68,7 +68,7 @@ function apiTokens()
 
     $tokens = [];
 
-    $settingToken = trim((string) (select("setting", "*", null, null, "select", ['cache' => false])['api_token'] ?? ''));
+    $settingToken = trim((string) (config_all('setting', true)['api_token'] ?? ''));
     if ($settingToken !== '') {
         $tokens[] = $settingToken;
     }
@@ -206,9 +206,7 @@ function panelAgentValue($json, $agent, $default = 0)
 
 function topicId($name)
 {
-    $row = select("topicid", "idreport", "report", $name, "select");
-
-    return is_array($row) && isset($row['idreport']) ? $row['idreport'] : null;
+    return config_get('topic', $name);
 }
 
 function paginationParams(array $data, $defaultLimit = 50, $maxLimit = 1000)

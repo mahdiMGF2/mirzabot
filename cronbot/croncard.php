@@ -10,15 +10,15 @@ require_once __DIR__ . '/../keyboard.php';
 require __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../jdf.php';
 $ManagePanel = new ManagePanel();
-$setting = select("setting", "*");
+$setting = config_all('setting');
 if ($setting['Bot_Status'] == "botstatusoff")
     return;
-$autoconfirm = select("paysetting", "ValuePay", "NamePay", "autoconfirmcart", "select")['ValuePay'];
+$autoconfirm = config_get('pay', "autoconfirmcart");
 if ($autoconfirm != "onauto")
     return;
-$paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
+$paymentreports = config_get('topic', "paymentreport");
 $textbotlang = languagechange();
-$list_Exceptions = select("paysetting", "ValuePay", "NamePay", "Exception_auto_cart", "select")['ValuePay'];
+$list_Exceptions = config_get('pay', "Exception_auto_cart");
 $list_Exceptions = is_string($list_Exceptions) ? json_decode($list_Exceptions, true) : [];
 if (!is_array($list_Exceptions)) {
     $list_Exceptions = [];
@@ -46,7 +46,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     if ($stmtPaid->rowCount() === 0)
         continue;
     DirectPayment($Payment_report['id_order'], "../images.jpg");
-    $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackcart", "select")['ValuePay'];
+    $pricecashback = config_get('pay', "chashbackcart");
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
     if ($pricecashback != "0") {
         $result = ($Payment_report['price'] * $pricecashback) / 100;
