@@ -158,9 +158,9 @@ class ServiceMonitor
         if (!in_array($userData['status'], ['limited', 'expired']))
             return false;
         $panel = select("marzban_panel", "*", "name_panel", $invoice['Service_location'], "select");
-        if ($panel['type'] != "marzban")
+        if (!in_array($panel['type'], ["marzban", "x-ui_single"]))
             return;
-        if ($userData['data_limit_reset'] != "no_reset")
+        if (($userData['data_limit_reset'] ?? null) != "no_reset")
             return;
         if ($userData['status'] == "Unsuccessful")
             return;
@@ -170,6 +170,8 @@ class ServiceMonitor
             $timelastconect = 0;
         } else {
             $time = strtotime($userData['online_at']);
+            if ($time === false)
+                return;
             $timelastconect = (time() - $time) / 86400;
         }
         if ($timelastconect == 0)

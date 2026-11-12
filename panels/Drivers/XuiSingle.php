@@ -125,6 +125,9 @@ class XuiSinglePanelDriver extends BasePanelDriver
             $user_data['client']['enable'] = "on_hold";
             $expire = 0;
         }
+        $resetDays = intval($user_data['client']['reset'] ?? 0);
+        $resetMode = $user_data['client']['trafficReset'] ?? 'never';
+        $autoReset = $resetDays > 0 || !in_array($resetMode, ['', 'never'], true);
         $linksub = $Get_Data_Panel['linksubx'] . "/{$user_data['client']['subId']}";
         $used_data_3xui['obj']['lastOnline'] = $used_data_3xui['obj']['lastOnline'] == 0 ? "offline" : date('Y-m-d H:i:s', $used_data_3xui['obj']['lastOnline'] / 1000);
         $links_user = outputlink($linksub);
@@ -140,6 +143,7 @@ class XuiSinglePanelDriver extends BasePanelDriver
             'expire' => $expire,
             'expiry_time' => $user_data['client']['expiryTime'],
             'online_at' => $used_data_3xui['obj']['lastOnline'],
+            'data_limit_reset' => $autoReset ? 'month' : 'no_reset',
             'used_traffic' => $used_data_3xui['obj']['up'] + $used_data_3xui['obj']['down'],
             'links' => $links_user,
             'subscription_url' => $linksub,
