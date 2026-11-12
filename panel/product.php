@@ -3,15 +3,6 @@ require_once __DIR__ . '/inc/config.php';
 require_once __DIR__ . '/inc/icons.php';
 require_auth();
 
-// Older installs: create the limit_ip column on first visit if it is missing.
-try {
-  $have = $pdo->query("SHOW COLUMNS FROM product")->fetchAll(PDO::FETCH_COLUMN);
-  if (!in_array('limit_ip', $have, true)) {
-    $pdo->exec("ALTER TABLE product ADD COLUMN limit_ip INT NOT NULL DEFAULT 0");
-  }
-} catch (Throwable $e) {
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
   csrf_check_post();
   $name = trim($_POST['name_product'] ?? '');
@@ -229,7 +220,7 @@ include __DIR__ . '/inc/layout_head.php';
             </select>
           </div>
           <div class="field">
-            <label>محدودیت IP هم‌زمان (۰ = نامحدود؛ برای سرویس‌های x-ui)</label>
+            <label><?= $textbotlang['panel']['productLimitIp'] ?></label>
             <input type="number" min="0" name="limit_ip" class="input" value="0">
           </div>
           <div class="field full">
@@ -308,7 +299,7 @@ include __DIR__ . '/inc/layout_head.php';
             </select>
           </div>
           <div class="field">
-            <label>محدودیت IP هم‌زمان (۰ = نامحدود؛ برای سرویس‌های x-ui)</label>
+            <label><?= $textbotlang['panel']['productLimitIp'] ?></label>
             <input type="number" min="0" name="limit_ip" id="edit_limit_ip" class="input" value="0">
           </div>
           <div class="field full">
