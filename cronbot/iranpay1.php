@@ -11,7 +11,7 @@ $ManagePanel = new ManagePanel();
 $setting = select("setting", "*", null, null, "select");
 $paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
 $textbotlang = languagechange();
-$list_service = $pdo->prepare("SELECT * FROM Payment_report WHERE payment_Status = 'Unpaid' AND Payment_Method = 'Currency Rial 3' ORDER BY RAND() LIMIT 10");
+$list_service = $pdo->prepare("SELECT * FROM payment_report WHERE payment_Status = 'Unpaid' AND Payment_Method = 'Currency Rial 3' ORDER BY RAND() LIMIT 10");
 $list_service->execute();
 while ($Payment_report = ($list_service)->fetch(PDO::FETCH_ASSOC)) {
     $StatusPayment = verifpay($Payment_report['dec_not_confirmed']);
@@ -26,9 +26,9 @@ while ($Payment_report = ($list_service)->fetch(PDO::FETCH_ASSOC)) {
         continue;
     if (!claimPaymentPaid($Payment_report['id_order']))
         continue;
-    update("Payment_report", "dec_not_confirmed", json_encode($StatusPayment['data']), "id_order", $Payment_report['id_order']);
+    update("payment_report", "dec_not_confirmed", json_encode($StatusPayment['data']), "id_order", $Payment_report['id_order']);
     DirectPayment($Payment_report['id_order']);
-    $pricecashback = select("PaySetting", "ValuePay", "NamePay", "chashbackiranpay1", "select")['ValuePay'];
+    $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackiranpay1", "select")['ValuePay'];
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
     if ($pricecashback != "0") {
         $result = ($Payment_report['price'] * $pricecashback) / 100;
@@ -45,5 +45,5 @@ while ($Payment_report = ($list_service)->fetch(PDO::FETCH_ASSOC)) {
             'parse_mode' => "HTML"
         ]);
     }
-    update("Payment_report", "dec_not_confirmed", json_encode($StatusPayment), "id_order", $Payment_report['id_order']);
+    update("payment_report", "dec_not_confirmed", json_encode($StatusPayment), "id_order", $Payment_report['id_order']);
 }

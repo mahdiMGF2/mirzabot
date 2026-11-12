@@ -18,8 +18,8 @@ if ($invoice_id === '' || $transid === '') {
     exit('invalid request');
 }
 $setting = select("setting", "*");
-$PaySetting = select("PaySetting", "ValuePay", "NamePay", "merchant_id_aqayepardakht","select")['ValuePay'];
-$payment_row = select("Payment_report", "*", "id_order", $invoice_id, "select");
+$PaySetting = select("paysetting", "ValuePay", "NamePay", "merchant_id_aqayepardakht","select")['ValuePay'];
+$payment_row = select("payment_report", "*", "id_order", $invoice_id, "select");
 if (!is_array($payment_row) || $payment_row['Payment_Method'] !== "aqayepardakht") {
     http_response_code(404);
     exit('order not found');
@@ -57,7 +57,7 @@ if (is_object($result) && $result->code == "1") {
     $payment_status = $textbotlang['paymentGateway']['statusSuccess'];
     $price = $Payment_report;
     $dec_payment_status = $textbotlang['paymentGateway']['descThanks'];
-    $Payment_report = select("Payment_report", "*", "id_order", $invoice_id,"select");
+    $Payment_report = select("payment_report", "*", "id_order", $invoice_id,"select");
     if(claimPaymentPaid($invoice_id)){
     $textbotlang = languagechange();
     try {
@@ -66,7 +66,7 @@ if (is_object($result) && $result->code == "1") {
         error_log("DirectPayment failed for order {$invoice_id}: " . $directPaymentError->getMessage());
         return;
     }
-    $pricecashback = select("PaySetting", "ValuePay", "NamePay", "chashbackaqaypardokht","select")['ValuePay'];
+    $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackaqaypardokht","select")['ValuePay'];
     $__q16 = $pdo->prepare("SELECT * FROM user WHERE id = ? LIMIT 1");
     $__q16->bindValue(1, $Payment_report['id_user'], PDO::PARAM_STR);
     $__q16->execute();

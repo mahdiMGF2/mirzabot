@@ -264,7 +264,7 @@ $usernamecart = getPaySettingValue("CartDirect");
 $Swapino = getPaySettingValue("statusSwapWallet");
 $trnadoo = getPaySettingValue("statustarnado");
 $paymentverify = getPaySettingValue("checkpaycartfirst");
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM Payment_report WHERE id_user = :user_id AND payment_Status = 'paid'");
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM payment_report WHERE id_user = :user_id AND payment_Status = 'paid'");
 $stmt->bindValue(':user_id', $from_id);
 $stmt->execute();
 $paymentexits = (int) $stmt->fetchColumn();
@@ -593,7 +593,7 @@ function cronStatusMenu()
 function giftCodesMenu()
 {
     global $pdo, $textbotlang;
-    $giftCodes = $pdo->query("SELECT code, price FROM Discount")->fetchAll(PDO::FETCH_ASSOC);
+    $giftCodes = $pdo->query("SELECT code, price FROM discount")->fetchAll(PDO::FETCH_ASSOC);
     $rows = [[['text' => $textbotlang['keyboard']['createGiftCode'], 'callback_data' => "giftcode_create"]]];
     foreach ($giftCodes as $giftCode) {
         $rows[] = [
@@ -644,7 +644,7 @@ function discountProductsKeyboard($location)
 function discountCodesMenu()
 {
     global $pdo, $textbotlang;
-    $discountCodes = $pdo->query("SELECT codeDiscount, price FROM DiscountSell")->fetchAll(PDO::FETCH_ASSOC);
+    $discountCodes = $pdo->query("SELECT codeDiscount, price FROM discountsell")->fetchAll(PDO::FETCH_ASSOC);
     $rows = [[['text' => $textbotlang['keyboard']['createDiscountCode'], 'callback_data' => "discountcode_create"]]];
     foreach ($discountCodes as $discountCode) {
         $rows[] = [
@@ -1318,7 +1318,7 @@ function KeyboardProduct($location, $query, $pricediscount, $datakeyboard, $stat
 {
     global $pdo, $textbotlang, $from_id;
     $product = ['inline_keyboard' => []];
-    $statusshowprice = select("shopSetting", "*", "Namevalue", "statusshowprice", "select")['value'];
+    $statusshowprice = select("shopsetting", "*", "Namevalue", "statusshowprice", "select")['value'];
     $stmt = $pdo->prepare($query);
     $stmt->execute($queryParams);
     if ($valuetow != null) {

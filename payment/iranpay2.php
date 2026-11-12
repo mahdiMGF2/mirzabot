@@ -101,12 +101,12 @@ $isSignedCallback = ($callback_sig !== '' && $callback_order_id !== '');
 $authority = htmlspecialchars($jsonInput['authority'] ?? ($_REQUEST['authority'] ?? ''), ENT_QUOTES, 'UTF-8');
 $data_order_id = htmlspecialchars($callback_order_id, ENT_QUOTES, 'UTF-8');
 
-$Payment_report = select("Payment_report", "*", "id_order", $data_order_id, "select");
+$Payment_report = select("payment_report", "*", "id_order", $data_order_id, "select");
 if (!$Payment_report) {
     cubepay_emit('notfound', languagechange(dirname(__DIR__)), $data_order_id, null);
     return;
 }
-$token_cubepay = trim((string) select("PaySetting", "*", "NamePay", "apiternado", "select")['ValuePay']);
+$token_cubepay = trim((string) select("paysetting", "*", "NamePay", "apiternado", "select")['ValuePay']);
 if ($token_cubepay === '' || $token_cubepay === '0' || $Payment_report['Payment_Method'] !== "Currency Rial 2") {
     cubepay_emit('notfound', languagechange(dirname(__DIR__)), $data_order_id, null);
     return;
@@ -187,7 +187,7 @@ try {
     error_log("DirectPayment failed for order {$data_order_id}: " . $directPaymentError->getMessage());
     return;
 }
-$pricecashback = select("PaySetting", "ValuePay", "NamePay", "chashbackiranpay2", "select")['ValuePay'];
+$pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackiranpay2", "select")['ValuePay'];
 $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
 if ($pricecashback != "0") {
     $result_cashback = ($Payment_report['price'] * $pricecashback) / 100;
@@ -199,7 +199,7 @@ if ($pricecashback != "0") {
 $paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
 $text_reportpayment = sprintf($textbotlang['paymentGateway']['reportTronado'], $Balance_id['username'], $Balance_id['id'], $price);
 $database = json_encode($response);
-$statement = $pdo->prepare("UPDATE Payment_report SET dec_not_confirmed = :dec_not_confirmed WHERE id_order = :id_order");
+$statement = $pdo->prepare("UPDATE payment_report SET dec_not_confirmed = :dec_not_confirmed WHERE id_order = :id_order");
 $statement->bindValue(':dec_not_confirmed', $database);
 $statement->bindValue(':id_order', $Payment_report['id_order']);
 $statement->execute();

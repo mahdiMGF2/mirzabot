@@ -23,8 +23,8 @@ try {
 }
 
 try {
-    $pendingPay = db_count($pdo, "SELECT COUNT(*) FROM Payment_report WHERE payment_Status='waiting'");
-    $txToday = db_count($pdo, "SELECT COUNT(*) FROM Payment_report WHERE time LIKE ?", [date('Y/m/d') . '%']);
+    $pendingPay = db_count($pdo, "SELECT COUNT(*) FROM payment_report WHERE payment_Status='waiting'");
+    $txToday = db_count($pdo, "SELECT COUNT(*) FROM payment_report WHERE time LIKE ?", [date('Y/m/d') . '%']);
 } catch (Exception $e) {
 }
 
@@ -54,7 +54,7 @@ try {
             $salesAmount[$slot] += (int) $row['price_product'];
         }
     }
-    $rows = db_fetchAll($pdo, "SELECT time, price FROM Payment_report WHERE payment_Status = 'paid' AND time >= ?", [date('Y/m/d H:i:s', $chartStart)]);
+    $rows = db_fetchAll($pdo, "SELECT time, price FROM payment_report WHERE payment_Status = 'paid' AND time >= ?", [date('Y/m/d H:i:s', $chartStart)]);
     foreach ($rows as $row) {
         $paidAt = strtotime((string) $row['time']);
         $slot = $paidAt ? date($chartKey, $paidAt) : null;

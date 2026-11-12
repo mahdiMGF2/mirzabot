@@ -8,7 +8,7 @@ require_once __DIR__ . '/../function.php';
 $setting = select("setting", "*");
 $textbotlang = languagechange();
 
-$staleInvoice = "Status IN ('unpaid', 'Unsuccessful') AND CAST(time_sell AS UNSIGNED) < :olderThan AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = invoice.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
+$staleInvoice = "Status IN ('unpaid', 'Unsuccessful') AND CAST(time_sell AS UNSIGNED) < :olderThan AND NOT EXISTS (SELECT 1 FROM payment_report pr WHERE pr.id_order = invoice.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
 $stmt = $pdo->prepare("SELECT id_user, discount_code FROM invoice WHERE $staleInvoice AND discount_code IS NOT NULL AND discount_code != ''");
 $stmt->execute([':olderThan' => time() - 86400]);
 foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -18,7 +18,7 @@ $stmt = $pdo->prepare("DELETE FROM invoice WHERE $staleInvoice");
 $stmt->execute([':olderThan' => time() - 86400]);
 $deletedInvoices = $stmt->rowCount();
 
-$staleService = "status = 'unpaid' AND time < :olderThan AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = service_other.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
+$staleService = "status = 'unpaid' AND time < :olderThan AND NOT EXISTS (SELECT 1 FROM payment_report pr WHERE pr.id_order = service_other.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
 $stmt = $pdo->prepare("SELECT id_user, value FROM service_other WHERE $staleService");
 $stmt->execute([':olderThan' => date('Y/m/d H:i:s', time() - 86400)]);
 foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {

@@ -76,12 +76,12 @@ if ($slug === '') {
 }
 
 // Variza stores slug in dec_not_confirmed (like zarinpal Authority).
-$stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE dec_not_confirmed = ? AND Payment_Method = 'variza' LIMIT 1");
+$stmt = $pdo->prepare("SELECT * FROM payment_report WHERE dec_not_confirmed = ? AND Payment_Method = 'variza' LIMIT 1");
 $stmt->execute([$slug]);
 $payment = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$payment) {
     // Fallback: some installs may have slug in id_invoice; try there too.
-    $payment = select("Payment_report", "*", "id_invoice", $slug, "select");
+    $payment = select("payment_report", "*", "id_invoice", $slug, "select");
 }
 if (!$payment) {
     error_log("variza webhook: unknown slug {$slug}");

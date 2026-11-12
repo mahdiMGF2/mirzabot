@@ -19,8 +19,8 @@ $hashid = $data['hashid'];
 $authority = $data['authority'];
 $StatusPayment = $data['status'];
 $setting = select("setting", "*");
-$PaySetting = select("PaySetting", "*", "NamePay", "marchent_floypay", "select")['ValuePay'];
-$Payment_reports = select("Payment_report", "*", "id_order", $hashid, "select");
+$PaySetting = select("paysetting", "*", "NamePay", "marchent_floypay", "select")['ValuePay'];
+$Payment_reports = select("payment_report", "*", "id_order", $hashid, "select");
 if (!is_array($Payment_reports) || $Payment_reports['Payment_Method'] !== "Currency Rial 1") {
     http_response_code(404);
     exit('order not found');
@@ -60,7 +60,7 @@ if ($StatusPayment == 100) {
     if (!empty($response['status']) && $response['status'] == 100) {
         $payment_status = $textbotlang['paymentGateway']['statusSuccess'];
         $dec_payment_status = $textbotlang['paymentGateway']['descThanks'];
-        $Payment_report = select("Payment_report", "*", "id_order", $invoice_id, "select");
+        $Payment_report = select("payment_report", "*", "id_order", $invoice_id, "select");
         if (claimPaymentPaid($invoice_id)) {
             $textbotlang = languagechange();
             try {
@@ -69,7 +69,7 @@ if ($StatusPayment == 100) {
                 error_log("DirectPayment failed for order {$invoice_id}: " . $directPaymentError->getMessage());
                 return;
             }
-            $pricecashback = select("PaySetting", "ValuePay", "NamePay", "chashbackiranpay1", "select")['ValuePay'];
+            $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackiranpay1", "select")['ValuePay'];
             $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
             if ($pricecashback != "0") {
                 $result = ($Payment_report['price'] * $pricecashback) / 100;

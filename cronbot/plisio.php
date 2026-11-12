@@ -26,10 +26,10 @@ function statusplisio($tx_id)
     }
     return json_decode($response, true);
 }
-$list_service = $pdo->prepare("SELECT * FROM Payment_report WHERE payment_Status = 'Unpaid' AND Payment_Method = 'plisio'");
+$list_service = $pdo->prepare("SELECT * FROM payment_report WHERE payment_Status = 'Unpaid' AND Payment_Method = 'plisio'");
 $list_service->execute();
 $textbotlang = languagechange();
-$statusCheck = $pdo->prepare("SELECT payment_Status FROM Payment_report WHERE id_order = ? LIMIT 1");
+$statusCheck = $pdo->prepare("SELECT payment_Status FROM payment_report WHERE id_order = ? LIMIT 1");
 while ($Payment_report = ($list_service)->fetch(PDO::FETCH_ASSOC)) {
     $statusCheck->execute([$Payment_report['id_order']]);
     if ($statusCheck->fetchColumn() != "Unpaid")
@@ -51,13 +51,13 @@ while ($Payment_report = ($list_service)->fetch(PDO::FETCH_ASSOC)) {
     if (in_array($operationStatus, ["cancelled", "expired"], true)) {
         $textexpire = sprintf($textbotlang['users']['Balance']['plisioExpired'], $Payment_report['id_order'], $Payment_report['price']);
         sendmessage($Payment_report['id_user'], $textexpire, null, 'html');
-        update("Payment_report", "payment_Status", "expire", "id_order", $Payment_report['id_order']);
+        update("payment_report", "payment_Status", "expire", "id_order", $Payment_report['id_order']);
     }
     if ($operationStatus == "completed") {
         if (!claimPaymentPaid($Payment_report['id_order']))
             continue;
         DirectPayment($Payment_report['id_order'], "../images.jpg");
-        $pricecashback = select("PaySetting", "ValuePay", "NamePay", "chashbackplisio", "select")['ValuePay'];
+        $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackplisio", "select")['ValuePay'];
         $__q18 = $pdo->prepare("SELECT * FROM user WHERE id = ? LIMIT 1");
         $__q18->bindValue(1, $Payment_report['id_user'], PDO::PARAM_STR);
         $__q18->execute();

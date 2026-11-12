@@ -18,8 +18,8 @@ if ($Authority === '') {
     exit('invalid request');
 }
 $setting = select("setting", "*");
-$PaySetting = select("PaySetting", "ValuePay", "NamePay", "merchant_zarinpal","select")['ValuePay'];
-$stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE dec_not_confirmed = ? AND Payment_Method = 'zarinpal' LIMIT 1");
+$PaySetting = select("paysetting", "ValuePay", "NamePay", "merchant_zarinpal","select")['ValuePay'];
+$stmt = $pdo->prepare("SELECT * FROM payment_report WHERE dec_not_confirmed = ? AND Payment_Method = 'zarinpal' LIMIT 1");
 $stmt->execute([$Authority]);
 $Payment_reports = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!is_array($Payment_reports)) {
@@ -63,7 +63,7 @@ $payment_status = $textbotlang['paymentGateway']['zarinpalErrors'][$response['er
  if(($response['data']['message'] ?? '') == "Verified" || ($response['data']['message'] ?? '') == "Paid"){
     $payment_status = $textbotlang['paymentGateway']['statusSuccess'];
     $dec_payment_status = $textbotlang['paymentGateway']['descThanks'];
-    $Payment_report = select("Payment_report", "*", "id_order", $invoice_id,"select");
+    $Payment_report = select("payment_report", "*", "id_order", $invoice_id,"select");
     if(claimPaymentPaid($invoice_id)){
     $textbotlang = languagechange();
     try {
@@ -72,7 +72,7 @@ $payment_status = $textbotlang['paymentGateway']['zarinpalErrors'][$response['er
         error_log("DirectPayment failed for order {$invoice_id}: " . $directPaymentError->getMessage());
         return;
     }
-    $pricecashback = select("PaySetting", "ValuePay", "NamePay", "chashbackzarinpal","select")['ValuePay'];
+    $pricecashback = select("paysetting", "ValuePay", "NamePay", "chashbackzarinpal","select")['ValuePay'];
     $Balance_id = select("user","*","id",$Payment_report['id_user'],"select");
     if($pricecashback != "0"){
         $result = ($Payment_report['price'] * $pricecashback) / 100;

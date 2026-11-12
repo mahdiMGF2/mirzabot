@@ -41,6 +41,29 @@ final class Schema
         return isset($this->catalog[strtolower($table)][strtolower($column)]);
     }
 
+    public function renameTables(array $renames): void
+    {
+        $existing = $this->pdo
+            ->query('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()')
+            ->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($renames as $from => $to) {
+            if (!in_array($from, $existing, true)) {
+                continue;
+            }
+            if (in_array($to, $existing, true)) {
+                error_log("[db:rename:$from] both `$from` and `$to` exist; skipped");
+                continue;
+            }
+            try {
+                assertSqlIdentifier($from);
+                assertSqlIdentifier($to);
+                $this->pdo->exec("RENAME TABLE `$from` TO `{$to}_renaming`, `{$to}_renaming` TO `$to`");
+            } catch (Throwable $e) {
+                $this->logFailure("rename:$from", $e);
+            }
+        }
+    }
+
     public function applyTables(string $directory, array $order = []): void
     {
         foreach ($this->orderedFiles($directory, $order) as $table => $file) {

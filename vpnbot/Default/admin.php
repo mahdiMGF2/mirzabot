@@ -78,7 +78,7 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
             ]
         ]
     ]);
-    $stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE id_order = ? AND bottype = ?");
+    $stmt = $pdo->prepare("SELECT * FROM payment_report WHERE id_order = ? AND bottype = ?");
     $stmt->execute([$order_id, $ApiToken]);
     $Payment_report = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($Payment_report == false) {
@@ -126,13 +126,13 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
             'parse_mode' => "HTML"
         ]);
     }
-    update("Payment_report", "payment_Status", "paid", "id_order", $Payment_report['id_order']);
+    update("payment_report", "payment_Status", "paid", "id_order", $Payment_report['id_order']);
     update("user", "Processing_value_one", "none", "id", $Balance_id['id']);
     update("user", "Processing_value_tow", "none", "id", $Balance_id['id']);
     update("user", "Processing_value_four", "none", "id", $Balance_id['id']);
 } elseif (preg_match('/reject_pay_(\w+)/', $datain, $datagetr)) {
     $id_order = $datagetr[1];
-    $stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE id_order = ? AND bottype = ?");
+    $stmt = $pdo->prepare("SELECT * FROM payment_report WHERE id_order = ? AND bottype = ?");
     $stmt->execute([$id_order, $ApiToken]);
     $Payment_report = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($Payment_report == false) {
@@ -155,14 +155,14 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
         ));
         return;
     }
-    update("Payment_report", "payment_Status", "reject", "id_order", $id_order);
+    update("payment_report", "payment_Status", "reject", "id_order", $id_order);
 
     sendmessage($from_id, $textbotlang['Admin']['Payment']['reasonRejecting'], $backadmin, 'HTML');
     step('reject-dec', $from_id);
     Editmessagetext($from_id, $message_id, $text_inline, null);
 } elseif ($user['step'] == "reject-dec") {
-    $Payment_report = select("Payment_report", "*", "id_order", $user['Processing_value_one'], "select");
-    update("Payment_report", "dec_not_confirmed", $text, "id_order", $user['Processing_value_one']);
+    $Payment_report = select("payment_report", "*", "id_order", $user['Processing_value_one'], "select");
+    update("payment_report", "dec_not_confirmed", $text, "id_order", $user['Processing_value_one']);
     $text_reject = "❌ کاربر گرامی پرداخت شما به دلیل زیر رد گردید.
 ✍️ $text
 🛒 کد پیگیری پرداخت: {$user['Processing_value_one']}
@@ -245,7 +245,7 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     $__q20->bindValue(2, $ApiToken, PDO::PARAM_STR);
     $__q20->execute();
     $dayListSell = $__q20->fetch(PDO::FETCH_ASSOC);
-    $__q21 = $pdo->prepare("SELECT SUM(price) FROM Payment_report WHERE payment_Status = 'paid' AND id_user = ? AND Payment_Method != 'low balance by admin' AND bottype = ?");
+    $__q21 = $pdo->prepare("SELECT SUM(price) FROM payment_report WHERE payment_Status = 'paid' AND id_user = ? AND Payment_Method != 'low balance by admin' AND bottype = ?");
     $__q21->bindValue(1, $id_user, PDO::PARAM_STR);
     $__q21->bindValue(2, $ApiToken, PDO::PARAM_STR);
     $__q21->execute();
@@ -372,7 +372,7 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     }
     $dateacc = date('Y/m/d H:i:s');
     $randomString = bin2hex(random_bytes(5));
-    $stmt = $pdo->prepare("INSERT INTO Payment_report (id_user,id_order,time,price,payment_Status,Payment_Method,id_invoice,bottype) VALUES (?,?,?,?,?,?,?,?)");
+    $stmt = $pdo->prepare("INSERT INTO payment_report (id_user,id_order,time,price,payment_Status,Payment_Method,id_invoice,bottype) VALUES (?,?,?,?,?,?,?,?)");
     $payment_Status = "paid";
     $Payment_Method = "add balance by admin";
     $invoice = null;
@@ -402,7 +402,7 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     }
     $dateacc = date('Y/m/d H:i:s');
     $randomString = bin2hex(random_bytes(5));
-    $stmt = $pdo->prepare("INSERT INTO Payment_report (id_user,id_order,time,price,payment_Status,Payment_Method,id_invoice,bottype) VALUES (?,?,?,?,?,?,?,?)");
+    $stmt = $pdo->prepare("INSERT INTO payment_report (id_user,id_order,time,price,payment_Status,Payment_Method,id_invoice,bottype) VALUES (?,?,?,?,?,?,?,?)");
     $payment_Status = "paid";
     $Payment_Method = "low balance by admin";
     $invoice = null;

@@ -601,7 +601,7 @@ function rowExists($table, $field, $value)
 }
 function getPaySettingValue($name, $default = null)
 {
-    $rows = select("PaySetting", "*", null, null, "fetchAll");
+    $rows = select("paysetting", "*", null, null, "fetchAll");
     if (is_array($rows)) {
         foreach ($rows as $row) {
             if (isset($row['NamePay']) && strcasecmp(trim((string) $row['NamePay']), trim((string) $name)) === 0) {
@@ -657,13 +657,13 @@ function updatePaymentMessageId($response, $orderId)
         return false;
     }
 
-    update("Payment_report", "message_id", intval($response['result']['message_id']), "id_order", $orderId);
+    update("payment_report", "message_id", intval($response['result']['message_id']), "id_order", $orderId);
     return true;
 }
 function nowPayments($payment, $price_amount, $order_id, $order_description)
 {
     global $domainhosts;
-    $apinowpayments = select("PaySetting", "*", "NamePay", "marchent_tronseller", "select")['ValuePay'];
+    $apinowpayments = select("paysetting", "*", "NamePay", "marchent_tronseller", "select")['ValuePay'];
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://api.nowpayments.io/v1/' . $payment,
@@ -691,7 +691,7 @@ function nowPayments($payment, $price_amount, $order_id, $order_description)
 }
 function StatusPayment($paymentid)
 {
-    $apinowpayments = select("PaySetting", "*", "NamePay", "marchent_tronseller", "select")['ValuePay'];
+    $apinowpayments = select("paysetting", "*", "NamePay", "marchent_tronseller", "select")['ValuePay'];
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://api.nowpayments.io/v1/payment/' . $paymentid,
@@ -744,7 +744,7 @@ function invoiceBelongsToUser($invoice, $userId)
 }
 function cubepayFeeValue()
 {
-    $raw = select("PaySetting", "ValuePay", "NamePay", "feeternado", "select")['ValuePay'] ?? '0';
+    $raw = select("paysetting", "ValuePay", "NamePay", "feeternado", "select")['ValuePay'] ?? '0';
 
     return (float) str_replace([',', '،'], '', (string) $raw);
 }
@@ -761,7 +761,7 @@ function cubepayApplyFee($base, $fee)
 }
 function cubepayPayableAmount($price)
 {
-    $status = select("PaySetting", "ValuePay", "NamePay", "feestatusternado", "select")['ValuePay'] ?? 'offfeeternado';
+    $status = select("paysetting", "ValuePay", "NamePay", "feestatusternado", "select")['ValuePay'] ?? 'offfeeternado';
     if ($status !== 'onfeeternado') {
         return intval($price);
     }
@@ -857,7 +857,7 @@ function createPayiranpay4($price, $order_id, $user_id)
 function cubepay($order_id, $price, $customer_user_id)
 {
     global $domainhosts;
-    $token_cubepay = select("PaySetting", "*", "NamePay", "apiternado", "select")['ValuePay'];
+    $token_cubepay = select("paysetting", "*", "NamePay", "apiternado", "select")['ValuePay'];
     $amount_toman = cubepayPayableAmount($price);
     $curl = curl_init();
     curl_setopt_array($curl, array(
@@ -1029,27 +1029,27 @@ function addBalance($userId, $amount)
 function consumeDiscountCode($code, $userId): bool
 {
     global $pdo;
-    $stmt = $pdo->prepare("UPDATE DiscountSell SET usedDiscount = CAST(usedDiscount AS UNSIGNED) + 1 WHERE codeDiscount = ? AND CAST(usedDiscount AS UNSIGNED) < CAST(limitDiscount AS UNSIGNED)");
+    $stmt = $pdo->prepare("UPDATE discountsell SET usedDiscount = CAST(usedDiscount AS UNSIGNED) + 1 WHERE codeDiscount = ? AND CAST(usedDiscount AS UNSIGNED) < CAST(limitDiscount AS UNSIGNED)");
     $stmt->execute([$code]);
-    clearSelectCache('DiscountSell');
+    clearSelectCache('discountsell');
     if ($stmt->rowCount() !== 1) {
         return false;
     }
-    $pdo->prepare("INSERT INTO Giftcodeconsumed (id_user, code) VALUES (?, ?)")->execute([$userId, $code]);
+    $pdo->prepare("INSERT INTO giftcodeconsumed (id_user, code) VALUES (?, ?)")->execute([$userId, $code]);
     return true;
 }
 function releaseDiscountCode($code, $userId): void
 {
     global $pdo;
-    $pdo->prepare("UPDATE DiscountSell SET usedDiscount = CAST(usedDiscount AS UNSIGNED) - 1 WHERE codeDiscount = ? AND CAST(usedDiscount AS UNSIGNED) > 0")->execute([$code]);
-    $pdo->prepare("DELETE FROM Giftcodeconsumed WHERE id_user = ? AND code = ? LIMIT 1")->execute([$userId, $code]);
-    clearSelectCache('DiscountSell');
+    $pdo->prepare("UPDATE discountsell SET usedDiscount = CAST(usedDiscount AS UNSIGNED) - 1 WHERE codeDiscount = ? AND CAST(usedDiscount AS UNSIGNED) > 0")->execute([$code]);
+    $pdo->prepare("DELETE FROM giftcodeconsumed WHERE id_user = ? AND code = ? LIMIT 1")->execute([$userId, $code]);
+    clearSelectCache('discountsell');
 }
 function cancelPendingGatewayOrders($id_user): void
 {
     global $pdo;
-    $pendingInvoice = "id_user = ? AND Status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = invoice.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
-    $pendingService = "id_user = ? AND status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = service_other.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
+    $pendingInvoice = "id_user = ? AND Status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM payment_report pr WHERE pr.id_order = invoice.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
+    $pendingService = "id_user = ? AND status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM payment_report pr WHERE pr.id_order = service_other.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))";
     $stmt = $pdo->prepare("SELECT discount_code FROM invoice WHERE $pendingInvoice AND discount_code IS NOT NULL AND discount_code != ''");
     $stmt->execute([$id_user]);
     foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $code) {
@@ -1090,10 +1090,10 @@ function paymentOrder($order_id): array
 function claimPaymentPaid($order_id)
 {
     global $pdo;
-    $stmt = $pdo->prepare("UPDATE Payment_report SET payment_Status = 'paid' WHERE id_order = :id_order AND payment_Status <> 'paid'");
+    $stmt = $pdo->prepare("UPDATE payment_report SET payment_Status = 'paid' WHERE id_order = :id_order AND payment_Status <> 'paid'");
     $stmt->bindValue(':id_order', $order_id);
     $stmt->execute();
-    clearSelectCache('Payment_report');
+    clearSelectCache('payment_report');
     return $stmt->rowCount() >= 1;
 }
 
@@ -1107,7 +1107,7 @@ function DirectPayment($order_id, $image = 'images.jpg')
     $errorreport = select("topicid", "idreport", "report", "errorreport", "select")['idreport'];
     $porsantreport = select("topicid", "idreport", "report", "porsantreport", "select")['idreport'];
     $setting = select("setting", "*");
-    $Payment_report = select("Payment_report", "*", "id_order", $order_id, "select");
+    $Payment_report = select("payment_report", "*", "id_order", $order_id, "select");
     $format_price_cart = number_format($Payment_report['price']);
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
     $linkedOrder = paymentOrder($Payment_report['id_order']);
@@ -1424,9 +1424,9 @@ function DirectPayment($order_id, $image = 'images.jpg')
             ]
         ]);
         if ($Balance_id['agent'] == "f") {
-            $valurcashbackextend = select("shopSetting", "*", "Namevalue", "chashbackextend", "select")['value'];
+            $valurcashbackextend = select("shopsetting", "*", "Namevalue", "chashbackextend", "select")['value'];
         } else {
-            $valurcashbackextend = json_decode(select("shopSetting", "*", "Namevalue", "chashbackextend_agent", "select")['value'], true)[$Balance_id['agent']];
+            $valurcashbackextend = json_decode(select("shopsetting", "*", "Namevalue", "chashbackextend_agent", "select")['value'], true)[$Balance_id['agent']];
         }
         if (intval($valurcashbackextend) != 0) {
             $result = ($orderPrice * $valurcashbackextend) / 100;
@@ -1574,7 +1574,7 @@ function DirectPayment($order_id, $image = 'images.jpg')
         }
     } else {
         addBalance($Payment_report['id_user'], intval($Payment_report['price']));
-        update("Payment_report", "payment_Status", "paid", "id_order", $Payment_report['id_order']);
+        update("payment_report", "payment_Status", "paid", "id_order", $Payment_report['id_order']);
         $Payment_report['price'] = number_format($Payment_report['price'], 0);
         $format_price_cart = $Payment_report['price'];
         if ($Payment_report['Payment_Method'] == "cart to cart" or $Payment_report['Payment_Method'] == "arze digital offline") {
@@ -1588,7 +1588,7 @@ function DirectPayment($order_id, $image = 'images.jpg')
 }
 function plisio($order_id, $price, $from_id)
 {
-    $apinowpayments = select("PaySetting", "ValuePay", "NamePay", "apinowpayment", "select")['ValuePay'];
+    $apinowpayments = select("paysetting", "ValuePay", "NamePay", "apinowpayment", "select")['ValuePay'];
     $api_key = $apinowpayments;
 
     $url = 'https://api.plisio.net/api/v1/invoices/new';
@@ -1990,8 +1990,8 @@ function activecron()
 }
 function createInvoice($amount)
 {
-    $PaySetting = select("PaySetting", "*", "NamePay", "apiiranpay", "select")['ValuePay'];
-    $walletaddress = select("PaySetting", "*", "NamePay", "walletaddress", "select")['ValuePay'];
+    $PaySetting = select("paysetting", "*", "NamePay", "apiiranpay", "select")['ValuePay'];
+    $walletaddress = select("paysetting", "*", "NamePay", "walletaddress", "select")['ValuePay'];
 
     $curl = curl_init();
 
@@ -2015,7 +2015,7 @@ function createInvoice($amount)
 }
 function verifpay($id)
 {
-    $PaySetting = select("PaySetting", "*", "NamePay", "apiiranpay", "select")['ValuePay'];
+    $PaySetting = select("paysetting", "*", "NamePay", "apiiranpay", "select")['ValuePay'];
     $curl = curl_init();
 
     curl_setopt_array($curl, array(
@@ -2040,7 +2040,7 @@ function verifpay($id)
 function createInvoiceiranpay1($amount, $id_invoice)
 {
     global $domainhosts;
-    $PaySetting = select("PaySetting", "*", "NamePay", "marchent_floypay", "select")['ValuePay'];
+    $PaySetting = select("paysetting", "*", "NamePay", "marchent_floypay", "select")['ValuePay'];
     $curl = curl_init();
     $amount = intval($amount);
     $data = [
@@ -2619,7 +2619,7 @@ function isValidInvitationCode($setting, $fromId, $verfy_status)
 function createPayZarinpal($price, $order_id)
 {
     global $domainhosts;
-    $marchent_zarinpal = select("PaySetting", "ValuePay", "NamePay", "merchant_zarinpal", "select")['ValuePay'];
+    $marchent_zarinpal = select("paysetting", "ValuePay", "NamePay", "merchant_zarinpal", "select")['ValuePay'];
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://payment.zarinpal.com/pg/v4/payment/request.json',
@@ -2695,7 +2695,7 @@ function createPayVariza($price, $order_id)
 function createPayaqayepardakht($price, $order_id)
 {
     global $domainhosts;
-    $merchant_aqayepardakht = select("PaySetting", "ValuePay", "NamePay", "merchant_id_aqayepardakht", "select")['ValuePay'];
+    $merchant_aqayepardakht = select("paysetting", "ValuePay", "NamePay", "merchant_id_aqayepardakht", "select")['ValuePay'];
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://panel.aqayepardakht.ir/api/v2/create',

@@ -42,7 +42,7 @@ function setting_setting_info(array $data, string $method): void
     validateMethod('GET', $method);
 
     try {
-        $shopsetting = select("shopSetting", "*", null, null, "fetchAll");
+        $shopsetting = select("shopsetting", "*", null, null, "fetchAll");
         $shop_setting = [];
         foreach (is_array($shopsetting) ? $shopsetting : [] as $row) {
             $shop_setting[$row['Namevalue']] = $row['value'];
@@ -78,7 +78,7 @@ function setting_save_setting_shop(array $data, string $method): void
             }
 
             if (($row['type'] ?? '') === "shop") {
-                update("shopSetting", "value", $value, "Namevalue", $row['name_value']);
+                update("shopsetting", "value", $value, "Namevalue", $row['name_value']);
             } else {
                 $settingField = (string) $row['name_value'];
                 if (!preg_match('/^[A-Za-z0-9_]{1,64}$/', $settingField)) {

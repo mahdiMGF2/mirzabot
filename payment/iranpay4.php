@@ -39,7 +39,7 @@ if ($order_id === '') {
     iranpay4_finish(false, $failedTitle, 'شناسه سفارش ارسال نشد.');
 }
 
-$payment = select("Payment_report", "*", "id_order", $order_id, "select");
+$payment = select("payment_report", "*", "id_order", $order_id, "select");
 if (!$payment) {
     iranpay4_finish(false, $failedTitle, 'این سفارش پیدا نشد.');
 }
@@ -103,7 +103,7 @@ try {
 }
 
 $statement = $pdo->prepare(
-    "UPDATE Payment_report SET dec_not_confirmed = :answer WHERE id_order = :id_order"
+    "UPDATE payment_report SET dec_not_confirmed = :answer WHERE id_order = :id_order"
 );
 $statement->bindValue(':answer', json_encode($response, JSON_UNESCAPED_UNICODE));
 $statement->bindValue(':id_order', $order_id);
