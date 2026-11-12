@@ -19,11 +19,6 @@ class PanelRegistry
 
     private static $instances = [];
 
-    public static function types()
-    {
-        return array_keys(self::$types);
-    }
-
     public static function driver($type, ManagePanel $manager)
     {
         $type = (string) $type;

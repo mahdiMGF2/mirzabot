@@ -13,7 +13,7 @@ ini_set('error_log', 'error_log');
 
 list($headers, $data, $action) = apiRequestContext();
 $method = $_SERVER['REQUEST_METHOD'];
-$setting = select("setting", "*");
+$setting = config_all('setting');
 
 function disc_discounts(array $data, string $method): void
 {
@@ -29,11 +29,11 @@ function disc_discounts(array $data, string $method): void
 
     try {
         $search = "%$q%";
-        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM Discount WHERE (code LIKE :code_discount)");
+        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM discount WHERE (code LIKE :code_discount)");
         $stmt->execute([':code_discount' => $search]);
         $totalDiscount = (int) $stmt->fetchColumn();
         $totalPages = (int) ceil($totalDiscount / $limit);
-        $query = "SELECT * FROM Discount WHERE (code  LIKE CONCAT('%', :code_discount, '%')) ORDER BY id LIMIT :limit OFFSET :offset";
+        $query = "SELECT * FROM discount WHERE (code  LIKE CONCAT('%', :code_discount, '%')) ORDER BY id LIMIT :limit OFFSET :offset";
         $stmt = $pdo->prepare($query);
         $stmt->bindValue(':code_discount', $q, PDO::PARAM_STR);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -65,7 +65,7 @@ function disc_discount(array $data, string $method): void
     }
 
     try {
-        $discount = select("Discount", "*", "id", $data['id'], "select");
+        $discount = select("discount", "*", "id", $data['id'], "select");
         if (!$discount) {
             sendJsonResponse(true, "Successful", [
                 'discount' => [],
@@ -92,7 +92,7 @@ function disc_discount_add(array $data, string $method): void
     if (!preg_match('/^[A-Za-z\d]+$/', $data['code'])) {
         sendJsonResponse(false, "invalid code", [], 200);
     }
-    if (select("Discount", "*", "code", $data['code'], "count") != 0) {
+    if (select("discount", "*", "code", $data['code'], "count") != 0) {
         sendJsonResponse(false, "Discount code exits", [], 200);
     }
     try {
@@ -106,7 +106,7 @@ function disc_discount_add(array $data, string $method): void
         $columns = implode(',', array_keys($productData));
         $placeholders = ':' . implode(', :', array_keys($productData));
         $stmt = $pdo->prepare(
-            "INSERT IGNORE INTO Discount ({$columns}) VALUES ({$placeholders})"
+            "INSERT IGNORE INTO discount ({$columns}) VALUES ({$placeholders})"
         );
 
         foreach ($productData as $key => $value) {
@@ -128,12 +128,12 @@ function disc_discount_delete(array $data, string $method): void
 
     validateMethod('POST', $method);
     requireFields($data, ['id']);
-    $product = select("Discount", "*", "id", $data['id'], "select");
+    $product = select("discount", "*", "id", $data['id'], "select");
     if (!$product) {
         sendJsonResponse(false, "Discount not found", [], 200);
     }
     try {
-        $stmt = $pdo->prepare("DELETE FROM Discount  WHERE id = :id");
+        $stmt = $pdo->prepare("DELETE FROM discount  WHERE id = :id");
         $stmt->bindValue(":id", $data['id'], PDO::PARAM_INT);
         $stmt->execute();
 
@@ -159,11 +159,11 @@ function disc_discount_sell_lists(array $data, string $method): void
 
     try {
         $search = "%$q%";
-        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM DiscountSell WHERE (codeDiscount LIKE :code_discount)");
+        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM discountsell WHERE (codeDiscount LIKE :code_discount)");
         $stmt->execute([':code_discount' => $search]);
         $totalDiscount = (int) $stmt->fetchColumn();
         $totalPages = (int) ceil($totalDiscount / $limit);
-        $query = "SELECT * FROM DiscountSell WHERE (codeDiscount  LIKE CONCAT('%', :code_discount, '%')) ORDER BY id LIMIT :limit OFFSET :offset";
+        $query = "SELECT * FROM discountsell WHERE (codeDiscount  LIKE CONCAT('%', :code_discount, '%')) ORDER BY id LIMIT :limit OFFSET :offset";
         $stmt = $pdo->prepare($query);
         $stmt->bindValue(':code_discount', $q, PDO::PARAM_STR);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -199,7 +199,7 @@ function disc_discount_sell(array $data, string $method): void
     }
 
     try {
-        $discount = select("DiscountSell", "*", "id", $data['id'], "select");
+        $discount = select("discountsell", "*", "id", $data['id'], "select");
         if (!$discount) {
             sendJsonResponse(true, "Successful", [
                 'discount' => [],
@@ -228,12 +228,12 @@ function disc_discount_sell_delete(array $data, string $method): void
 
     validateMethod('POST', $method);
     requireFields($data, ['id']);
-    $product = select("DiscountSell", "*", "id", $data['id'], "select");
+    $product = select("discountsell", "*", "id", $data['id'], "select");
     if (!$product) {
         sendJsonResponse(false, "DiscountSell not found", [], 200);
     }
     try {
-        $stmt = $pdo->prepare("DELETE FROM DiscountSell  WHERE id = :id");
+        $stmt = $pdo->prepare("DELETE FROM discountsell  WHERE id = :id");
         $stmt->bindValue(":id", $data['id'], PDO::PARAM_INT);
         $stmt->execute();
 
@@ -257,7 +257,7 @@ function disc_discount_sell_add(array $data, string $method): void
     if (!preg_match('/^[A-Za-z\d]+$/', $data['code'])) {
         sendJsonResponse(false, "invalid code", [], 200);
     }
-    if (select("DiscountSell", "*", "codeDiscount", $data['code'], "count") != 0) {
+    if (select("discountsell", "*", "codeDiscount", $data['code'], "count") != 0) {
         sendJsonResponse(false, "Discount code exits", [], 200);
     }
     try {
@@ -278,7 +278,7 @@ function disc_discount_sell_add(array $data, string $method): void
         $columns = implode(',', array_keys($productData));
         $placeholders = ':' . implode(', :', array_keys($productData));
         $stmt = $pdo->prepare(
-            "INSERT IGNORE INTO DiscountSell ({$columns}) VALUES ({$placeholders})"
+            "INSERT IGNORE INTO discountsell ({$columns}) VALUES ({$placeholders})"
         );
 
         foreach ($productData as $key => $value) {

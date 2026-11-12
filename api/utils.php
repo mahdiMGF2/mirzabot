@@ -68,7 +68,7 @@ function apiTokens()
 
     $tokens = [];
 
-    $settingToken = trim((string) (select("setting", "*", null, null, "select", ['cache' => false])['api_token'] ?? ''));
+    $settingToken = trim((string) (config_all('setting', true)['api_token'] ?? ''));
     if ($settingToken !== '') {
         $tokens[] = $settingToken;
     }
@@ -171,7 +171,7 @@ function logApiRequest($headers, $data, $action)
         );
         $stmt->execute([
             json_encode(array_diff_key(array_change_key_case((array) $headers), array_flip(['token', 'authorization', 'cookie']))),
-            json_encode($data),
+            json_encode(is_array($data) ? array_diff_key($data, array_flip(['password_panel', 'secret_code', 'token', 'api_token', 'password'])) : $data),
             date('Y/m/d H:i:s'),
             $_SERVER['REMOTE_ADDR'] ?? 'unknown',
             $action
@@ -206,9 +206,7 @@ function panelAgentValue($json, $agent, $default = 0)
 
 function topicId($name)
 {
-    $row = select("topicid", "idreport", "report", $name, "select");
-
-    return is_array($row) && isset($row['idreport']) ? $row['idreport'] : null;
+    return config_get('topic', $name);
 }
 
 function paginationParams(array $data, $defaultLimit = 50, $maxLimit = 1000)

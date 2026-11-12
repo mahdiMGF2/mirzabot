@@ -82,13 +82,6 @@ function sendvideo($chat_id,$videoid,$caption){
         'caption'=> $caption,
     ]);
 }
-function senddocumentsid($chat_id,$documentid,$caption){
-    telegram('sendDocument',[
-        'chat_id' => $chat_id,
-        'document'=> $documentid,
-        'caption'=> $caption,
-    ]);
-}
 function Editmessagetext($chat_id, $message_id, $text, $keyboard,$parse_mode = 'HTML'){
     return telegram('editmessagetext', [
         'chat_id' => $chat_id,

@@ -38,7 +38,7 @@ if ($order_id === '') {
     variza_finish(false, $failedTitle, 'شناسه سفارش ارسال نشد.');
 }
 
-$payment = select("Payment_report", "*", "id_order", $order_id, "select");
+$payment = select("payment_report", "*", "id_order", $order_id, "select");
 if (!$payment) {
     variza_finish(false, $failedTitle, 'این سفارش پیدا نشد.');
 }

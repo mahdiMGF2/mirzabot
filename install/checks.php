@@ -94,10 +94,10 @@ function mirza_install_php_check(): array
 {
     $items = [];
 
-    $minimumVersion = '8.5.12';
+    $minimumVersion = PHP_VERSION_ID >= 80500 ? '8.5.12' : '8.4.27';
     $items[] = version_compare(PHP_VERSION, $minimumVersion, '>=')
         ? mirza_install_item('ok', 'نسخه PHP', PHP_VERSION, 'حداقل نسخه موردنیاز ' . $minimumVersion . ' است.')
-        : mirza_install_item('fail', 'نسخه PHP', PHP_VERSION, 'نسخه PHP باید ' . $minimumVersion . ' یا بالاتر باشد. از بخش Select PHP Version (یا MultiPHP Manager) در کنترل پنل هاست نسخه 8.5 را انتخاب کنید؛ اگر هاست این نسخه را ندارد از پشتیبانی هاست ارتقای PHP را بخواهید.');
+        : mirza_install_item('fail', 'نسخه PHP', PHP_VERSION, 'نسخه PHP باید 8.5.12 یا 8.4.27 به بالا باشد. از بخش Select PHP Version (یا MultiPHP Manager) در کنترل پنل هاست نسخه 8.5 را انتخاب کنید؛ اگر هاست 8.5 را ندارد نسخه 8.4 را انتخاب کنید یا از پشتیبانی هاست ارتقای PHP را بخواهید.');
 
     if (version_compare(PHP_VERSION, '9.0.0', '>=')) {
         $items[] = mirza_install_item('warn', 'سازگاری نسخه', PHP_VERSION, 'این نسخه هنوز روی ربات تست نشده است؛ نسخه 8.5 پیشنهاد می‌شود.');
@@ -720,10 +720,10 @@ function mirza_install_webhook_secret(array $values): string
             PDO::ATTR_TIMEOUT => 10,
         ]);
 
-        $statement = $pdo->prepare("UPDATE setting SET webhook_secret = ? WHERE webhook_secret IS NULL OR webhook_secret = ''");
+        $statement = $pdo->prepare("INSERT INTO config (scope, name, value) VALUES ('setting', 'webhook_secret', ?) ON DUPLICATE KEY UPDATE value = IF(value IS NULL OR value = '', VALUES(value), value)");
         $statement->execute([bin2hex(random_bytes(24))]);
 
-        $secret = $pdo->query('SELECT webhook_secret FROM setting LIMIT 1')->fetchColumn();
+        $secret = $pdo->query("SELECT value FROM config WHERE scope = 'setting' AND name = 'webhook_secret'")->fetchColumn();
     } catch (Throwable $exception) {
         error_log('Unable to read the webhook secret from the database: ' . $exception->getMessage());
 

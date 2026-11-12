@@ -17,9 +17,11 @@ if ($Authority === '') {
     http_response_code(400);
     exit('invalid request');
 }
-$setting = select("setting", "*");
-$PaySetting = select("PaySetting", "ValuePay", "NamePay", "merchant_zarinpal","select")['ValuePay'];
-$Payment_reports = select("Payment_report", "*", "dec_not_confirmed", $Authority,"select");
+$setting = config_all('setting');
+$PaySetting = config_get('pay', "merchant_zarinpal");
+$stmt = $pdo->prepare("SELECT * FROM payment_report WHERE dec_not_confirmed = ? AND Payment_Method = 'zarinpal' LIMIT 1");
+$stmt->execute([$Authority]);
+$Payment_reports = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!is_array($Payment_reports)) {
     http_response_code(404);
     exit('order not found');
@@ -61,7 +63,7 @@ $payment_status = $textbotlang['paymentGateway']['zarinpalErrors'][$response['er
  if(($response['data']['message'] ?? '') == "Verified" || ($response['data']['message'] ?? '') == "Paid"){
     $payment_status = $textbotlang['paymentGateway']['statusSuccess'];
     $dec_payment_status = $textbotlang['paymentGateway']['descThanks'];
-    $Payment_report = select("Payment_report", "*", "id_order", $invoice_id,"select");
+    $Payment_report = select("payment_report", "*", "id_order", $invoice_id,"select");
     if(claimPaymentPaid($invoice_id)){
     $textbotlang = languagechange();
     try {
@@ -70,17 +72,16 @@ $payment_status = $textbotlang['paymentGateway']['zarinpalErrors'][$response['er
         error_log("DirectPayment failed for order {$invoice_id}: " . $directPaymentError->getMessage());
         return;
     }
-    $pricecashback = select("PaySetting", "ValuePay", "NamePay", "chashbackzarinpal","select")['ValuePay'];
+    $pricecashback = config_get('pay', "chashbackzarinpal");
     $Balance_id = select("user","*","id",$Payment_report['id_user'],"select");
     if($pricecashback != "0"){
         $result = ($Payment_report['price'] * $pricecashback) / 100;
-        $Balance_confrim = intval($Balance_id['Balance']) +$result;
-        update("user","Balance",$Balance_confrim, "id",$Balance_id['id']); 
+        addBalance($Balance_id['id'], $result);
         $pricecashback =  number_format($pricecashback);
         $text_report = sprintf($textbotlang['paymentGateway']['giftReport'], $result);
         sendmessage($Balance_id['id'], $text_report, null, 'HTML');
     }
-    $paymentreports = select("topicid","idreport","report","paymentreport","select")['idreport'];
+    $paymentreports = config_get('topic', "paymentreport");
     $refcode = $response['data']['ref_id'];
     $cart_number = $response['data']['card_pan'];
     $price = number_format($price);

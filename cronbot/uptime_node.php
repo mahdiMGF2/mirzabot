@@ -10,8 +10,8 @@ $textbotlang = languagechange();
 
 
 
-$errorreport = select("topicid","idreport","report","errorreport","select")['idreport'];
-$setting = select("setting", "*");
+$errorreport = config_get('topic', "errorreport");
+$setting = config_all('setting');
 $status_cron = json_decode($setting['cron_status'],true);
 if(!$status_cron['uptime_node'])return;
 $marzbanlist = select("marzban_panel", "*","type" ,"marzban" ,"fetchAll");

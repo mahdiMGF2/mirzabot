@@ -12,6 +12,7 @@ $schema = new Schema($pdo, [
     'textbotlang' => static fn() => languagechange(),
 ]);
 
+$schema->renameTables(require __DIR__ . '/renames.php');
 $schema->applyTables(__DIR__ . '/tables', require __DIR__ . '/tables.php');
 $schema->runMigrations(__DIR__ . '/migrations');
 $schema->applyIndexes(require __DIR__ . '/indexes.php');

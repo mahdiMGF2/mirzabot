@@ -24,8 +24,8 @@ class ServiceMonitor
         global $pdo;
         $this->pdo = $pdo;
         $this->Panel = new ManagePanel();
-        $this->reportCron = select("topicid", "idreport", "report", "reportcron", "select")['idreport'];
-        $this->setting = select("setting", "*");
+        $this->reportCron = config_get('topic', "reportcron");
+        $this->setting = config_all('setting');
         $this->status_cron = json_decode($this->setting['cron_status'], true);
         $this->textBotLang = languagechange(dirname(__DIR__));
         $this->text_Purchased_services = $this->textBotLang['textbot']['purchasedServices'] ?? '';

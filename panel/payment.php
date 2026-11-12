@@ -24,8 +24,8 @@ $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 $orderSQL = "ORDER BY time DESC";
 
 try {
-  $total = db_count($pdo, "SELECT COUNT(*) FROM Payment_report $whereSQL", $params);
-  $payments = db_fetchAll($pdo, "SELECT * FROM Payment_report $whereSQL $orderSQL LIMIT $perPage OFFSET $offset", $params);
+  $total = db_count($pdo, "SELECT COUNT(*) FROM payment_report $whereSQL", $params);
+  $payments = db_fetchAll($pdo, "SELECT * FROM payment_report $whereSQL $orderSQL LIMIT $perPage OFFSET $offset", $params);
 } catch (Exception $e) {
   $total = 0;
   $payments = [];
@@ -36,8 +36,8 @@ $totalPages = max(1, (int) ceil($total / $perPage));
 $totalSuccess = 0;
 $todayCount = 0;
 try {
-  $totalSuccess = (int) db_query($pdo, "SELECT COALESCE(SUM(price),0) FROM Payment_report WHERE payment_Status ='paid'")->fetchColumn();
-  $todayCount = db_count($pdo, "SELECT COUNT(*) FROM Payment_report WHERE time LIKE ?", [date('Y/m/d') . '%']);
+  $totalSuccess = (int) db_query($pdo, "SELECT COALESCE(SUM(price),0) FROM payment_report WHERE payment_Status ='paid'")->fetchColumn();
+  $todayCount = db_count($pdo, "SELECT COUNT(*) FROM payment_report WHERE time LIKE ?", [date('Y/m/d') . '%']);
 } catch (Exception $e) {
 }
 

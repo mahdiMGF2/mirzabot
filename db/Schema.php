@@ -41,6 +41,31 @@ final class Schema
         return isset($this->catalog[strtolower($table)][strtolower($column)]);
     }
 
+    public function renameTables(array $renames): void
+    {
+        $existing = $this->pdo
+            ->query('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()')
+            ->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($renames as $from => $to) {
+            if (!in_array($from, $existing, true)) {
+                continue;
+            }
+            try {
+                assertSqlIdentifier($from);
+                assertSqlIdentifier($to);
+                $moveExisting = '';
+                if (in_array($to, $existing, true)) {
+                    $backup = $to . '_before_rename_' . date('YmdHis');
+                    $moveExisting = "`$to` TO `$backup`, ";
+                    error_log("[db:rename:$from] both `$from` and `$to` exist; `$to` kept as `$backup`");
+                }
+                $this->pdo->exec("RENAME TABLE {$moveExisting}`$from` TO `{$to}_renaming`, `{$to}_renaming` TO `$to`");
+            } catch (Throwable $e) {
+                $this->logFailure("rename:$from", $e);
+            }
+        }
+    }
+
     public function applyTables(string $directory, array $order = []): void
     {
         foreach ($this->orderedFiles($directory, $order) as $table => $file) {
@@ -219,11 +244,9 @@ final class Schema
         foreach ($order as $name) {
             if (isset($files[$name])) {
                 $ordered[$name] = $files[$name];
-                unset($files[$name]);
             }
         }
-        ksort($files);
-        return $ordered + $files;
+        return $ordered;
     }
 
     private function logFailure(string $scope, Throwable $e): void

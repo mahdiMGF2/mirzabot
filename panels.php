@@ -248,7 +248,10 @@ class ManagePanel
             $time_new = $time_new_add;
             $data_limit_last = $data_user['data_limit'] - $data_user['used_traffic'];
             $data_limit_last = $data_limit_last < 0 ? 0 : $data_limit_last;
-            $data_limit_new = $data_limit_new + $data_limit_last;
+            // an unlimited plan (0) must stay unlimited, so the leftover volume is only carried over for limited plans
+            if ($data_limit_new != 0) {
+                $data_limit_new = $data_limit_new + $data_limit_last;
+            }
         }
         $driver = PanelRegistry::driver($panel['type'], $this);
         if ($driver !== null && ($result = $driver->extendService(get_defined_vars())) !== BasePanelDriver::UNSUPPORTED) {

@@ -59,14 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="<?= $panelLang ?>" dir="<?= $panelLang === 'fa' ? 'rtl' : 'ltr' ?>">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <meta name="theme-color" content="#0F172A" id="mtc">
   <title><?= $textbotlang['panel']['loginPanelTitle'] ?></title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/<?= $panelLang === 'fa' ? 'style' : 'style-ltr' ?>.css">
   <script>(function () { var t = localStorage.getItem('panel-theme') || 'navy'; document.documentElement.setAttribute('data-theme', t); var c = { navy: '#0F172A', purple: '#180D2E', emerald: '#0A1F1C', sunset: '#1A0D0D', slate: '#080808', light: '#F1F5F9', linen: '#FAF7F2', mint: '#F0FDF4', lavender: '#FAF5FF' }; var m = document.getElementById('mtc'); if (m && c[t]) m.content = c[t]; })();</script>
 </head>
 
@@ -113,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </button>
         </form>
         <div class="auth-bottom"><?= $textbotlang['panel']['loginHidePassword'] ?></div>
+        <div style="margin-top:16px;display:flex;justify-content:center"><?php include __DIR__ . '/inc/lang_menu.php'; ?></div>
       </div>
     </main>
   </div>

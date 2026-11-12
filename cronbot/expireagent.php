@@ -7,8 +7,8 @@ require_once __DIR__ . '/../botapi.php';
 require_once __DIR__ . '/../function.php';
 $textbotlang = languagechange();
 
-$setting = select("setting", "*");
-$otherreport = select("topicid","idreport","report","otherreport","select")['idreport'];
+$setting = config_all('setting');
+$otherreport = config_get('topic', "otherreport");
 // buy service 
 $stmt = $pdo->prepare("SELECT id, username FROM user WHERE expire IS NOT NULL AND CAST(expire AS UNSIGNED) < :now");
 $stmt->execute([':now' => time()]);

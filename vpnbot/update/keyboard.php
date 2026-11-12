@@ -186,7 +186,7 @@ function KeyboardProduct($location, $query, $pricediscount, $datakeyboard, $stat
 {
     global $pdo, $textbotlang;
     $product = ['inline_keyboard' => []];
-    $statusshowprice = select("shopSetting", "*", "Namevalue", "statusshowprice", "select")['value'];
+    $statusshowprice = config_get('shop', "statusshowprice");
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     $valuetow = $valuetow != null ? "-$valuetow" : "";

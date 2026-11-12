@@ -50,7 +50,7 @@ try {
 }
 
 try {
-    $payments = db_fetchAll($pdo, "SELECT * FROM Payment_report WHERE id_user = ? ORDER BY time DESC LIMIT 20", [$id]);
+    $payments = db_fetchAll($pdo, "SELECT * FROM payment_report WHERE id_user = ? ORDER BY time DESC LIMIT 20", [$id]);
 } catch (Exception $e) {
 }
 

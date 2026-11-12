@@ -14,7 +14,7 @@
  */
 
 return static function (PDO $pdo, Schema $schema): void {
-    if (!$schema->tableExists('PaySetting')) {
+    if (!$schema->tableExists('paysetting')) {
         return;
     }
 
@@ -30,7 +30,7 @@ return static function (PDO $pdo, Schema $schema): void {
 
     // INSERT IGNORE rather than a delete-then-insert: an admin who configured
     // this gateway before upgrading keeps what they configured.
-    $stmt = $pdo->prepare('INSERT IGNORE INTO PaySetting (NamePay, ValuePay) VALUES (:name, :value)');
+    $stmt = $pdo->prepare('INSERT IGNORE INTO paysetting (NamePay, ValuePay) VALUES (:name, :value)');
     foreach ($defaults as $name => $value) {
         $stmt->execute([':name' => $name, ':value' => $value]);
     }

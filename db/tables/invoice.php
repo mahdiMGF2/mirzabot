@@ -22,7 +22,8 @@ return [
         notifctions TEXT NOT NULL,
         Status varchar(200) NULL,
         id_payment varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
-        payable_amount varchar(20) NULL
+        payable_amount varchar(20) NULL,
+        discount_code varchar(200) NULL
         SQL,
     'columns' => [
         ['time_sell', null, 'VARCHAR(200)'],
@@ -36,5 +37,6 @@ return [
         ['Status', null, 'VARCHAR(100)'],
         ['id_payment', null, 'VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL'],
         ['payable_amount', null, 'VARCHAR(20) NULL'],
+        ['discount_code', null, 'VARCHAR(200) NULL'],
     ],
 ];

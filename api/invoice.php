@@ -13,7 +13,7 @@ ini_set('error_log', 'error_log');
 $ManagePanel = new ManagePanel();
 
 $errorreport = topicId('errorreport');
-$setting = select("setting", "*");
+$setting = config_all('setting');
 
 list($headers, $data, $action) = apiRequestContext();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -153,15 +153,19 @@ function inv_remove_service(array $data, string $method): void
     if (!isset($data['type']) || !in_array($data['type'], ['one', 'tow', 'three'], true)) {
         sendJsonResponse(false, "type empty", []);
     }
-    if ($data['type'] == "one") {
-        update("invoice", "Status", "removebyadmin", "id_invoice", $data["id_invoice"]);
+    if ($data['type'] == "one" || $data['type'] == "tow") {
+        $refund = $data['type'] == "tow" ? requireInt($data, 'amount', 0) : 0;
+        $claim = $pdo->prepare("UPDATE invoice SET Status = 'removebyadmin' WHERE id_invoice = ? AND (Status IS NULL OR Status != 'removebyadmin')");
+        $claim->execute([$data["id_invoice"]]);
+        clearSelectCache('invoice');
+        $claimed = $claim->rowCount() === 1;
+        if ($claimed && $refund > 0) {
+            addBalance($invoice['id_user'], $refund);
+        }
         $ManagePanel->RemoveUser($invoice['Service_location'], $invoice['username']);
-    } elseif ($data['type'] == "tow") {
-        $refund = requireInt($data, 'amount', 0);
-        $stmt = $pdo->prepare("UPDATE user SET Balance =  Balance + :balance WHERE id = :mp2");
-        $stmt->execute([':mp2' => $invoice['id_user'], ':balance' => $refund]);
-        update("invoice", "Status", "removebyadmin", "id_invoice", $data["id_invoice"]);
-        $ManagePanel->RemoveUser($invoice['Service_location'], $invoice['username']);
+        if (!$claimed && $refund > 0) {
+            sendJsonResponse(false, "Service was already removed; refund skipped", $invoice);
+        }
     } elseif ($data['type'] == "three") {
         $stmt = $pdo->prepare("DELETE  FROM invoice WHERE id_invoice = :id_invoice");
         $stmt->execute(['id_invoice' => $data['id_invoice']]);

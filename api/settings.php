@@ -21,7 +21,7 @@ function setting_keyboard_set(array $data, string $method): void
 
     try {
         if (!empty($data['keyboard_reset'])) {
-            update("setting", "keyboardmain", DEFAULT_MAIN_KEYBOARD, null, null);
+            config_set('setting', "keyboardmain", DEFAULT_MAIN_KEYBOARD);
             sendJsonResponse(true, "Successful", [], 200);
         }
 
@@ -29,7 +29,7 @@ function setting_keyboard_set(array $data, string $method): void
             sendJsonResponse(false, 'keyboard invalid', [], 200);
         }
 
-        update("setting", "keyboardmain", json_encode(['keyboard' => $data['keyboard']]), null, null);
+        config_set('setting', "keyboardmain", json_encode(['keyboard' => $data['keyboard']]));
         sendJsonResponse(true, "Successful", [], 200);
     } catch (Exception $e) {
         error_log("Database error in keyboard: " . $e->getMessage());
@@ -42,15 +42,9 @@ function setting_setting_info(array $data, string $method): void
     validateMethod('GET', $method);
 
     try {
-        $shopsetting = select("shopSetting", "*", null, null, "fetchAll");
-        $shop_setting = [];
-        foreach (is_array($shopsetting) ? $shopsetting : [] as $row) {
-            $shop_setting[$row['Namevalue']] = $row['value'];
-        }
-
         sendJsonResponse(true, "Successful", [
-            'setting_shop' => $shop_setting,
-            'setting_General' => select("setting", "*", null, null, "select")
+            'setting_shop' => config_all('shop'),
+            'setting_General' => config_all('setting')
         ]);
     } catch (Exception $e) {
         error_log("Database error in setting: " . $e->getMessage());
@@ -78,7 +72,7 @@ function setting_save_setting_shop(array $data, string $method): void
             }
 
             if (($row['type'] ?? '') === "shop") {
-                update("shopSetting", "value", $value, "Namevalue", $row['name_value']);
+                config_set('shop', $row['name_value'], $value);
             } else {
                 $settingField = (string) $row['name_value'];
                 if (!preg_match('/^[A-Za-z0-9_]{1,64}$/', $settingField)) {
@@ -89,7 +83,7 @@ function setting_save_setting_shop(array $data, string $method): void
                 if ((int) $columnCheck->fetchColumn() === 0) {
                     sendJsonResponse(false, "invalid setting name", [], 200);
                 }
-                update("setting", $settingField, $value, null, null);
+                config_set('setting', $settingField, $value);
             }
         }
 

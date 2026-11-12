@@ -11,7 +11,7 @@ $textbotlang = languagechange();
 
 $admin_ids = select("admin", "id_admin",null,null,"FETCH_COLUMN");
 $marzbanlist = select("marzban_panel", "*",null ,null ,"fetchAll");
-$setting = select("setting", "*");
+$setting = config_all('setting');
 $status_cron = json_decode($setting['cron_status'],true);
 if(!$status_cron['uptime_panel'])return;
 $inbounds = [];

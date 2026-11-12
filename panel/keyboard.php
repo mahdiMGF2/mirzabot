@@ -37,7 +37,7 @@ if ($method == "POST" && is_array($keyboard)) {
         exit;
     }
     $keyboardmain = ['keyboard' => $keyboard];
-    update("setting", "keyboardmain", json_encode($keyboardmain), null, null);
+    config_set('setting', "keyboardmain", json_encode($keyboardmain));
     echo json_encode(['ok' => true]);
     exit;
 } else {
@@ -45,7 +45,7 @@ if ($method == "POST" && is_array($keyboard)) {
     $action = filter_input(INPUT_GET, 'action');
     if ($action === "reaset") {
         csrf_check_get();
-        update("setting", "keyboardmain", $keyboardmain, null, null);
+        config_set('setting', "keyboardmain", $keyboardmain);
         header('Location: keyboard.php');
         exit;
     }

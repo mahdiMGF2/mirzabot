@@ -16,7 +16,7 @@ function readJsonFileIfExists($path, $default = [])
 function DirectPaymentbot($order_id, $image = 'images.jpg')
 {
     global $Confirm_pay, $from_id, $message_id;
-    $Payment_report = select("Payment_report", "*", "id_order", $order_id, "select");
+    $Payment_report = select("payment_report", "*", "id_order", $order_id, "select");
     $format_price_cart = number_format($Payment_report['price']);
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
     $Balance_id['Balance'] = json_decode(file_get_contents("data/{$Payment_report['id_user']}/{$Payment_report['id_user']}.json"), true)['Balance'];
@@ -28,7 +28,7 @@ function DirectPaymentbot($order_id, $image = 'images.jpg')
     $userbalance = json_decode(file_get_contents("data/{$Payment_report['id_user']}/{$Payment_report['id_user']}.json"), true);
     $userbalance['Balance'] = $Balance_confrim;
     file_put_contents("data/{$Payment_report['id_user']}/{$Payment_report['id_user']}.json", json_encode($userbalance));
-    update("Payment_report", "payment_Status", "paid", "id_order", $Payment_report['id_order']);
+    update("payment_report", "payment_Status", "paid", "id_order", $Payment_report['id_order']);
     $Payment_report['price'] = number_format($Payment_report['price'], 0);
     $format_price_cart = $Payment_report['price'];
     if ($Payment_report['Payment_Method'] == "cart to cart" or $Payment_report['Payment_Method'] == "arze digital offline") {
