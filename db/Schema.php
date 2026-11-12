@@ -50,14 +50,16 @@ final class Schema
             if (!in_array($from, $existing, true)) {
                 continue;
             }
-            if (in_array($to, $existing, true)) {
-                error_log("[db:rename:$from] both `$from` and `$to` exist; skipped");
-                continue;
-            }
             try {
                 assertSqlIdentifier($from);
                 assertSqlIdentifier($to);
-                $this->pdo->exec("RENAME TABLE `$from` TO `{$to}_renaming`, `{$to}_renaming` TO `$to`");
+                $moveExisting = '';
+                if (in_array($to, $existing, true)) {
+                    $backup = $to . '_before_rename_' . date('YmdHis');
+                    $moveExisting = "`$to` TO `$backup`, ";
+                    error_log("[db:rename:$from] both `$from` and `$to` exist; `$to` kept as `$backup`");
+                }
+                $this->pdo->exec("RENAME TABLE {$moveExisting}`$from` TO `{$to}_renaming`, `{$to}_renaming` TO `$to`");
             } catch (Throwable $e) {
                 $this->logFailure("rename:$from", $e);
             }

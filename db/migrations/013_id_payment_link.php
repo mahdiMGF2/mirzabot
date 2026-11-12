@@ -31,7 +31,7 @@ return static function (PDO $pdo, Schema $schema): void {
     if ((int) $idOrder['CHARACTER_MAXIMUM_LENGTH'] > 80) {
         $longest = (int) $pdo->query("SELECT COALESCE(MAX(CHAR_LENGTH(id_order)), 0) FROM payment_report")->fetchColumn();
         if ($longest > 80) {
-            error_log("[db:migration:id_payment_link] Payment_report.id_order has values longer than 80 characters; foreign keys skipped");
+            error_log("[db:migration:id_payment_link] payment_report.id_order has values longer than 80 characters; foreign keys skipped");
             return;
         }
         if ($indexExists('payment_report', 'idx_payreport_id_order')) {
