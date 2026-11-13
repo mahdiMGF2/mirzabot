@@ -69,7 +69,7 @@ $backmenu_register(["chashbackstar", "gethelpstar", "getmainaqstar", "maxbalance
 $backmenu_register(["variza_api_token", "variza_webhook_secret", "getcashvariza", "getmainvariza", "getmaaxvariza", "helpvariza"], $keyboardvariza);
 $backmenu_register([
     "addchannelid", "limit_usertest_allusers", "getimagebackgroundqr", "getpricereqagent",
-    "getcronvolumere", "on_hold_day", "getdaycron", "getvolumewarn", "getdaywarn", "getlowbalancealert"
+    "getcronvolumere", "on_hold_day", "getdaycron", "getvolumewarn", "getdaywarn", "getlowbalancealert", "getsessiontimeout"
 ], $setting_panel);
 $backmenu_register(["idsupportset", "getidadmindep", "getdeparteman", "getremovedep"], $supportcenter);
 $backmenu_register(["getnameproduct", "getconfigtext", "getnameremove", "getnameedit"], $panelOptions['Manualsale']);
@@ -9422,6 +9422,17 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     sendmessage($from_id, $textbotlang['Admin']['Payment']['excludeListTitle'], null, 'HTML');
     sendmessage($from_id, $list, null, 'HTML');
+} elseif ($text == $textbotlang['keyboard']['sessionTimeoutBtn'] && $adminrulecheck['rule'] == "administrator") {
+    sendmessage($from_id, sprintf($textbotlang['Admin']['Status']['sessionTimeoutAsk'], max(1, intval($setting['session_timeout_min'] ?? 30))), $backadmin, 'HTML');
+    step('getsessiontimeout', $from_id);
+} elseif ($user['step'] == "getsessiontimeout") {
+    if (!ctype_digit($text) || intval($text) < 1 || intval($text) > 1440) {
+        sendmessage($from_id, $textbotlang['Admin']['Status']['sessionTimeoutInvalid'], $backadmin, 'HTML');
+        return;
+    }
+    config_set('setting', "session_timeout_min", intval($text));
+    sendmessage($from_id, $textbotlang['Admin']['Status']['sessionTimeoutSaved'], $setting_panel, 'HTML');
+    step('home', $from_id);
 } elseif ($text == $textbotlang['keyboard']['setApi'] && $adminrulecheck['rule'] == "administrator") {
     $PaySetting = config_get('pay', "marchent_floypay");
     $textaqayepardakht = sprintf($textbotlang['Admin']['gateway']['askApiCode2'], $PaySetting);

@@ -233,6 +233,29 @@ if ($user['User_Status'] == "block" && !in_array($from_id, $admin_ids)) {
     sendmessage($from_id, $textblock, null, 'html');
     return;
 }
+#---------session timeout--------------#
+// If the user abandoned a multi-step flow, reset it and ask them to start over.
+$sessionTimeoutMin = max(1, intval($setting['session_timeout_min'] ?? 30));
+$lastActive = intval($user['last_message_time']);
+if (
+    $lastActive > 0
+    && !in_array($user['step'], ['none', 'home', '', null, 'cart_to_cart_user', 'getresidcurrency'], true) // never expire while a payment receipt is awaited
+    && !in_array($from_id, $admin_ids)
+    && (time() - $lastActive) > $sessionTimeoutMin * 60
+    && !in_array($text, ['/start', 'start'], true)
+    && $datain != 'start'
+    && strpos((string) $text, '/start ') === false
+) {
+    update("user", "Processing_value", "0", "id", $from_id);
+    update("user", "Processing_value_one", "0", "id", $from_id);
+    update("user", "Processing_value_tow", "0", "id", $from_id);
+    update("user", "Processing_value_four", "0", "id", $from_id);
+    step('home', $from_id);
+    $pdo->prepare("UPDATE user SET last_message_time = ?, message_count = '1' WHERE id = ?")->execute([time(), $from_id]);
+    clearSelectCache('user');
+    sendmessage($from_id, $textbotlang['users']['sessionExpired'], $keyboard, 'html');
+    return;
+}
 #---------anti spam--------------#
 $timebot = time();
 $TimeLastMessage = $timebot - intval($user['last_message_time']);

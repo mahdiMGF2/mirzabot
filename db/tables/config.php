@@ -48,6 +48,7 @@ $settingValues = [
     'statusnoteforf' => '0',
     'statuscopycart' => '0',
     'timeauto_not_verify' => '1',
+    'session_timeout_min' => '30',
     'status_keyboard_config' => '0',
     'cron_status' => json_encode([
         'day' => true,
