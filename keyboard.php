@@ -1139,6 +1139,7 @@ $Methodextend = json_encode([
         [['text' => $textbotlang['keyboard']['resetTimeAddVolume']]],
         [['text' => $textbotlang['keyboard']['resetVolumeAddTime']]],
         [['text' => $textbotlang['keyboard']['addTimeConvertVolume']]],
+        [['text' => $textbotlang['keyboard']['smartRenew']]],
         [['text' => $textbotlang['Admin']['backAdminBtn']], ['text' => $textbotlang['Admin']['backMenuBtn']]]
     ],
     'resize_keyboard' => true

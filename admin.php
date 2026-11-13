@@ -4860,7 +4860,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         $textbotlang['keyboard']['addTimeVolumeNextMonth'],
         $textbotlang['keyboard']['resetTimeAddVolume'],
         $textbotlang['keyboard']['resetVolumeAddTime'],
-        $textbotlang['keyboard']['addTimeConvertVolume']
+        $textbotlang['keyboard']['addTimeConvertVolume'],
+        $textbotlang['keyboard']['smartRenew']
     );
     if (!in_array($text, $aarayvalid)) {
         sendmessage($from_id, $textbotlang['Admin']['algorithmExtend']['invalidMethod'], null, 'HTML');
