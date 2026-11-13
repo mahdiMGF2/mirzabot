@@ -69,7 +69,7 @@ $backmenu_register(["chashbackstar", "gethelpstar", "getmainaqstar", "maxbalance
 $backmenu_register(["variza_api_token", "variza_webhook_secret", "getcashvariza", "getmainvariza", "getmaaxvariza", "helpvariza"], $keyboardvariza);
 $backmenu_register([
     "addchannelid", "limit_usertest_allusers", "getimagebackgroundqr", "getpricereqagent",
-    "getcronvolumere", "on_hold_day", "getdaycron", "getvolumewarn", "getdaywarn", "getlowbalancealert"
+    "getcronvolumere", "on_hold_day", "getdaycron", "getvolumewarn", "getdaywarn", "getlowbalancealert", "getidledays", "getidlerepeat"
 ], $setting_panel);
 $backmenu_register(["idsupportset", "getidadmindep", "getdeparteman", "getremovedep"], $supportcenter);
 $backmenu_register(["getnameproduct", "getconfigtext", "getnameremove", "getnameedit"], $panelOptions['Manualsale']);
@@ -5339,6 +5339,25 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         return;
     }
     config_set('setting', "balance_value_alert", $text);
+    sendmessage($from_id, $textbotlang['Admin']['changesSaved2'], $setting_panel, 'HTML');
+    step("home", $from_id);
+} elseif ($datain == "setidlenotice" && $adminrulecheck['rule'] == "administrator") {
+    sendmessage($from_id, sprintf($textbotlang['Admin']['cronjob']['askIdleDays'], config_get('setting', 'idle_notice_days', 7)), $backadmin, 'HTML');
+    step("getidledays", $from_id);
+} elseif ($user['step'] == "getidledays") {
+    if (!ctype_digit($text) || (int) $text < 1 || (int) $text > 3650) {
+        sendmessage($from_id, $textbotlang['Admin']['invalidValue'], null, 'html');
+        return;
+    }
+    config_set('setting', "idle_notice_days", (string) (int) $text);
+    sendmessage($from_id, sprintf($textbotlang['Admin']['cronjob']['askIdleRepeat'], config_get('setting', 'idle_notice_repeat', 0)), $backadmin, 'HTML');
+    step("getidlerepeat", $from_id);
+} elseif ($user['step'] == "getidlerepeat") {
+    if (!ctype_digit($text) || (int) $text > 3650) {
+        sendmessage($from_id, $textbotlang['Admin']['invalidValue'], null, 'html');
+        return;
+    }
+    config_set('setting', "idle_notice_repeat", (string) (int) $text);
     sendmessage($from_id, $textbotlang['Admin']['changesSaved2'], $setting_panel, 'HTML');
     step("home", $from_id);
 } elseif ($datain == "settimecornvolume") {

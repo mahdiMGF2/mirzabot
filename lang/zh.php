@@ -825,6 +825,15 @@ https://t.me/%s?start=%s',
                         'sendNote' => '📝 请发送您的新备注（最多可发送 150 个字符）。',
                 ],
                 'notify' => [
+                        'idleNotice' => '👋 尊敬的用户，您好
+您的服务“%s”已约 %s 天未使用。',
+                        'idleNoticeSupport' => '
+如果连接有问题或需要帮助，请联系客服：%s',
+                        'idleNoticeNote' => '
+
+（如果一切正常，这只是一条提醒，无需任何操作。）',
+                        'idleReport' => '📌 未使用提醒
+已发送消息数：%s',
                         'deleteInfo' => '📌 删除定时任务通知
 
 服务用户名：‌ <code>%s</code>
@@ -1782,6 +1791,10 @@ trojan://xyz',
                         'notConnected' => '未连接',
                 ],
                 'cronjob' => [
+                        'askIdleDays' => '📌 活跃服务连续多少天未使用后，向用户发送提醒？
+当前值：%s 天',
+                        'askIdleRepeat' => '📌 如果用户仍未使用，每隔多少天重复提醒？（0 = 只发送一次）
+当前值：%s',
                         'changedData' => '✅ 更改已成功保存',
                         'setDayRemove' => '📌 请发送在到期后多少天删除已到期账户
 当前时间： ',
@@ -3866,6 +3879,7 @@ f,n.n2',
                 'cronDelete' => '❌ 删除定时任务',
                 'cronDeleteVolume' => '❌ 流量删除定时任务',
                 'cronFirstConnection' => '🕚 首次连接定时任务',
+                'idleNoticeBtn' => '📭 未使用提醒',
                 'cronMessageStatus' => '🕚 定时任务消息发送状态',
                 'cronTest' => '🔓测试定时任务',
                 'cronTime' => '🕚 时间定时任务',

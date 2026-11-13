@@ -2883,3 +2883,63 @@ function mirzaEnsureInstallerRemoved()
         mirzaStopForInstaller('Mirza install folder still exists and could not be removed automatically; delete it manually to enable the bot.');
     }
 }
+
+// "Service not used" reminders: an active service whose traffic (or last-online time) has not changed for N days.
+/**
+ * Tracks the traffic of one service and says whether a reminder is due.
+ * Returns the number of idle days when a reminder should be sent now, otherwise null.
+ * Call idle_notice_mark_sent() after the message went out.
+ * $key e.g. "inv:<id_invoice>". A usage increase (or a counter reset after a renewal) restarts the idle clock.
+ */
+function idle_notice_due(string $key, int $usedBytes, ?int $idleSinceTs = null): ?int
+{
+    global $pdo;
+    $days = max(1, (int) config_get('setting', 'idle_notice_days', 7));
+    $repeat = max(0, (int) config_get('setting', 'idle_notice_repeat', 0));
+    $now = time();
+    $row = $pdo->prepare("SELECT * FROM idle_notice_state WHERE item_key = ?");
+    $row->execute([$key]);
+    $row = $row->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        // first sight: the clock starts now (or at the caller's own "last used" time), never in the past of the deployment
+        $start = $idleSinceTs ? min($idleSinceTs, $now) : $now;
+        $pdo->prepare("INSERT INTO idle_notice_state (item_key,last_bytes,changed_at) VALUES (?,?,?)")->execute([$key, $usedBytes, $start]);
+        $row = ['last_bytes' => $usedBytes, 'changed_at' => $start, 'notice_at' => 0, 'notice_count' => 0];
+    } elseif ($usedBytes != (int) $row['last_bytes']) {
+        $pdo->prepare("UPDATE idle_notice_state SET last_bytes = ?, changed_at = ?, notice_at = 0, notice_count = 0 WHERE item_key = ?")->execute([$usedBytes, $now, $key]);
+        return null;
+    }
+    $changedAt = $idleSinceTs !== null ? max((int) $row['changed_at'], min($idleSinceTs, $now)) : (int) $row['changed_at'];
+    // activity seen after the last reminder re-arms it (so a user who came back and left again is reminded again)
+    if ((int) $row['notice_count'] > 0 && $changedAt > (int) $row['notice_at']) {
+        $pdo->prepare("UPDATE idle_notice_state SET notice_at = 0, notice_count = 0, changed_at = ? WHERE item_key = ?")->execute([$changedAt, $key]);
+        $row['notice_count'] = 0;
+    }
+    $idleDays = intdiv($now - $changedAt, 86400);
+    if ($idleDays < $days)
+        return null;
+    if ((int) $row['notice_count'] > 0) {
+        if ($repeat == 0 || $now - (int) $row['notice_at'] < $repeat * 86400)
+            return null;
+    }
+    return $idleDays;
+}
+
+function idle_notice_mark_sent(string $key): void
+{
+    global $pdo;
+    $pdo->prepare("UPDATE idle_notice_state SET notice_at = ?, notice_count = notice_count + 1 WHERE item_key = ?")->execute([time(), $key]);
+}
+
+/** The reminder text (support line only when a support id is configured). */
+function idle_notice_text(array $lang, string $serviceName, int $idleDays): string
+{
+    $setting = config_all('setting');
+    $n = $lang['users']['notify'];
+    $text = sprintf($n['idleNotice'], $serviceName, $idleDays);
+    $support = trim((string) ($setting['id_support'] ?? ''));
+    if ($support !== '') {
+        $text .= sprintf($n['idleNoticeSupport'], '@' . ltrim($support, '@'));
+    }
+    return $text . $n['idleNoticeNote'];
+}

@@ -27,4 +27,5 @@ return [
     'logs_api',
     'category',
     'reagent_report',
+    'idle_notice_state',
 ];

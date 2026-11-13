@@ -48,6 +48,8 @@ $settingValues = [
     'statusnoteforf' => '0',
     'statuscopycart' => '0',
     'timeauto_not_verify' => '1',
+    'idle_notice_days' => '7',
+    'idle_notice_repeat' => '0',
     'status_keyboard_config' => '0',
     'cron_status' => json_encode([
         'day' => true,
@@ -56,6 +58,7 @@ $settingValues = [
         'remove_volume' => false,
         'test' => false,
         'on_hold' => false,
+        'idle' => false,
         'uptime_node' => false,
         'uptime_panel' => false,
     ]),
