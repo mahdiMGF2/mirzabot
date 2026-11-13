@@ -96,7 +96,7 @@ if ($adminrulecheck['rule'] != "administrator") {
         "showcarduser-", "statuscronuser-", "unbanuserr_", "unverify-", "updateinfouser_", "verify_", "vieworderuser_", "viewpaymentuser_",
     ];
     $limitedRoleSteps = [
-        "GetusernameconfigAndOrdedrs", "addbalancemanual", "addbalanceuser", "addbalanceusercurrent", "adddecriptionblock", "get_number_limit",
+        "GetusernameconfigAndOrdedrs", "addbalancemanual", "addbalancemanualnote", "addbalanceuser", "addbalanceusercurrent", "adddecriptionblock", "get_number_limit",
         "getlimitchangenewbyuser", "getmessageAsAdmin", "getpanelhidebotsaz", "getpricetimesrc", "getpricevolumesrc", "getremovehidepanel",
         "gettimecustomvolomforextendadmin", "getuserhide", "getvolumecustomuserforextendadmin", "reject-dec", "sendmessagetext",
         "sendmessagetid", "show_info",
@@ -4070,14 +4070,27 @@ elseif ($datain == "systemsms") {
         sendmessage($from_id, $textbotlang['Admin']['Balance']['invalidPrice'], $backadmin, 'HTML');
         return;
     }
+    update("user", "Processing_value_tow", $text, "id", $from_id);
+    sendmessage($from_id, $textbotlang['Admin']['Payment']['askManualAddNote'], $backadmin, 'HTML');
+    step('addbalancemanualnote', $from_id);
+} elseif ($user['step'] == "addbalancemanualnote") {
+    $amount = $user['Processing_value_tow'];
+    $note = trim($text) === '-' ? '' : trim($text);
     sendmessage($from_id, $textbotlang['Admin']['Balance']['addBalanceUser'], $keyboardadmin, 'HTML');
     $Payment_report = select("payment_report", "*", "id_order", $user['Processing_value'], "select");
     $Balance_user = select("user", "*", "id", $Payment_report['id_user'], "select");
-    $balanceusers = number_format($text, 0);
-    addBalance($Payment_report['id_user'], $text);
+    $balanceusers = number_format($amount, 0);
+    addBalance($Payment_report['id_user'], $amount);
+    // Keep the amount the receipt claimed in the log and record what was really credited.
+    $receiptPrice = $Payment_report['price'];
+    update("payment_report", "price", $amount, "id_order", $Payment_report['id_order']);
+    update("payment_report", "dec_not_confirmed", sprintf($textbotlang['Admin']['Payment']['manualAddLog'], number_format($receiptPrice), $balanceusers, $note), "id_order", $Payment_report['id_order']);
     $textadd = sprintf($textbotlang['users']['Balance']['addedNotice3'], $balanceusers);
+    if ($note !== '') {
+        $textadd .= "\n\n" . sprintf($textbotlang['users']['Balance']['manualAddNote'], htmlspecialchars($note));
+    }
     sendmessage($Payment_report['id_user'], $textadd, null, 'HTML');
-    $text_report = sprintf($textbotlang['Admin']['reportgroup']['balanceManualAdd'], $Payment_report['id_user'], $Balance_user['username'], $Payment_report['price'], $text);
+    $text_report = sprintf($textbotlang['Admin']['reportgroup']['balanceManualAdd'], $Payment_report['id_user'], $Balance_user['username'], $receiptPrice, $amount);
     if (strlen($setting['Channel_Report']) > 0) {
         telegram('sendmessage', [
             'chat_id' => $setting['Channel_Report'],
