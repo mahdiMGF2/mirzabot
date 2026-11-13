@@ -193,6 +193,7 @@ To enable it, the bot owner needs a Telegram Premium subscription, or the bot mu
                 'invalidVolume' => 'The volume is invalid',
         ],
         'users' => [
+            'sessionExpired' => '⏱ Your session expired due to inactivity. Please start again from the beginning.',
                 'Rules' => '✅ The rules have been accepted. You can now use the bot\'s services.',
                 'SendMessage' => '📩 Send message to user',
                 'back' => 'You have returned to the main page!',
@@ -1513,6 +1514,15 @@ Number of products sold: %s
                         'saveApi' => '✅ The changes were successfully saved',
                 ],
                 'Status' => [
+                        'sessionTimeoutAsk' => '⏱ Session timeout (minutes)
+
+If a user leaves in the middle of a step (for example a purchase) and comes back after this time, the step starts over. A step that waits for a payment receipt never expires.
+
+Current value: %s minutes
+
+Send the new number (1 to 1440).',
+                        'sessionTimeoutSaved' => '✅ The session timeout was saved.',
+                        'sessionTimeoutInvalid' => '⭕️ The number must be between 1 and 1440.',
                         'Authenticationiran' => '🇮🇷 Verify Iranian number',
                         'Authenticationphone' => '☎️ Phone number verification',
                         'activePanel' => '⭕️ In this section you can turn the panel off or on for sales',
@@ -4024,6 +4034,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'offlineGatewayPv' => '💳 Offline gateway in PV',
                 'operation' => 'Operation',
                 'optimizeBot' => '🗑 Optimize bot',
+                'sessionTimeoutBtn' => '⏱ Session timeout',
                 'paidSendReceipt' => '✅ I have paid | Send receipt.',
                 'panelFeatureStatus' => '⚙️ Panel feature status',
                 'panelName' => '✍️ Panel name',

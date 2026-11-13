@@ -193,6 +193,7 @@ return [
                 'invalidVolume' => '流量无效',
         ],
         'users' => [
+            'sessionExpired' => '⏱ 由于长时间未操作，会话已过期。请重新开始。',
                 'Rules' => '✅ 规则已接受。您现在可以使用机器人的服务了。',
                 'SendMessage' => '📩 向用户发送消息',
                 'back' => '您已返回主页！',
@@ -1513,6 +1514,15 @@ n2',
                         'saveApi' => '✅ 更改已成功保存',
                 ],
                 'Status' => [
+                        'sessionTimeoutAsk' => '⏱ 会话超时（分钟）
+
+如果用户在某个步骤（例如购买）中途离开并在此时间后返回，该步骤将重新开始。等待付款收据的步骤永远不会过期。
+
+当前值：%s 分钟
+
+请发送新的数字（1 到 1440）。',
+                        'sessionTimeoutSaved' => '✅ 会话超时已保存。',
+                        'sessionTimeoutInvalid' => '⭕️ 数字必须在 1 到 1440 之间。',
                         'Authenticationiran' => '🇮🇷 验证伊朗号码',
                         'Authenticationphone' => '☎️ 电话号码身份验证',
                         'activePanel' => '⭕️ 在此部分，您可以开启或关闭面板的销售功能',
@@ -4024,6 +4034,7 @@ f,n.n2',
                 'offlineGatewayPv' => '💳 私聊中的离线网关',
                 'operation' => '操作',
                 'optimizeBot' => '🗑 优化机器人',
+                'sessionTimeoutBtn' => '⏱ 会话超时',
                 'paidSendReceipt' => '✅ 我已付款 | 发送收据。',
                 'panelFeatureStatus' => '⚙️ 面板功能状态',
                 'panelName' => '✍️ 面板名称',
