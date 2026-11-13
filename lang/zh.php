@@ -663,6 +663,12 @@ https://t.me/%s?start=%s',
                         'invalidTimeRange' => '❌ 提交的时间无效。时间必须在 {maintime} 天到 {maxtime} 天之间',
                 ],
                 'extend' => [
+                        'typeLimited' => '限量',
+                        'typeUnlimited' => '不限量',
+                        'typeChangeWarning' => '⚠️ 注意：您的服务类型将从“%s”变为“%s”。
+这会完全重置流量和时间，剩余部分不会转入新周期。
+如果想保留剩余流量或时间，请续费当前类型，或购买新服务。
+请点击确认按钮继续。',
                         'confirm' => '确认续费',
                         'discount' => '🎁 使用优惠码',
                         'emptyServiceforExtend' => '❌ 您没有可续费的服务。',
