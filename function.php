@@ -1118,6 +1118,23 @@ function paymentOrder($order_id): array
         'service' => select("service_other", "*", "id_payment", $order_id, "select") ?: false,
     ];
 }
+// Incoming Telegram text has Persian digits converted to Latin (botapi.php), so a product button whose name contains
+// Persian digits never matches exactly. Returns the stored product name that corresponds to the received text.
+function product_name_resolve(string $text): string
+{
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT 1 FROM product WHERE name_product = ? LIMIT 1");
+    $stmt->execute([$text]);
+    if ($stmt->fetchColumn() !== false) {
+        return $text;
+    }
+    foreach ($pdo->query("SELECT DISTINCT name_product FROM product")->fetchAll(PDO::FETCH_COLUMN) as $name) {
+        if (convertPersianNumbersToEnglish((string) $name) === $text) {
+            return (string) $name;
+        }
+    }
+    return $text;
+}
 function claimPaymentPaid($order_id)
 {
     global $pdo;

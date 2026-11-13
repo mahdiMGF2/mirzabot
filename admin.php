@@ -1836,6 +1836,7 @@ elseif ($datain == "systemsms") {
     step('remove-product', $from_id);
     sendmessage($from_id, $textbotlang['Admin']['Product']['selectRemoveProduct'], $json_list_product_list_admin, 'HTML');
 } elseif ($user['step'] == "remove-product") {
+    $text = product_name_resolve($text);
     if (!rowExists("product", "name_product", $text)) {
         sendmessage($from_id, $textbotlang['users']['sell']['errorProduct'], null, 'HTML');
         return;
@@ -4906,6 +4907,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     sendmessage($from_id, $textbotlang['Admin']['addorder']['stepFour'], $json_list_product_list_admin, 'HTML');
     step('stependforaddorder', $from_id);
 } elseif ($user['step'] == "stependforaddorder") {
+    $text = product_name_resolve($text);
     $sql = "SELECT * FROM product  WHERE name_product = :name_product AND (Location = :location OR Location = '/all') LIMIT 1";
     $stmt = $pdo->prepare($sql);
     $stmt->bindParam(':name_product', $text, PDO::PARAM_STR);
@@ -5864,6 +5866,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     step('getnameproduct', $from_id);
     savedata("clear", "namepanel", $user['Processing_value']);
 } elseif ($user['step'] == "getnameproduct") {
+    $text = product_name_resolve($text);
     $product_check = select("product", "*", "name_product", $text, "select");
     if ($product_check == false && $text != $textbotlang['Admin']['config']['testKeyword']) {
         sendmessage($from_id, $textbotlang['Admin']['config']['productNotFound'], $backadmin, 'HTML');
