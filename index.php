@@ -1500,7 +1500,9 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         step('gettimecustomvolomforextend', $from_id);
         return;
     }
-    if ($setting['statuscategory'] == "offcategory") {
+    if ($setting['statuscategory'] == "offcategory" && $setting['statuscategorygenral'] == "oncategorys") {
+        Editmessagetext($from_id, $message_id, $textbotlang['users']['extend']['selectservice'], KeyboardCategory($nameloc['Service_location'], $user['agent'], "product_" . $nameloc['id_invoice'], "extcategorynames_"));
+    } elseif ($setting['statuscategory'] == "offcategory") {
         $stmt = $pdo->prepare("SELECT * FROM product WHERE (Location = :service_location OR Location = '/all') AND agent = :agent AND one_buy_status = '0' ORDER BY display_order, id");
         $stmt->execute([
             ':service_location' => $nameloc['Service_location'],
@@ -1570,6 +1572,11 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     $monthenumber = $dataget[1];
     $userdate = json_decode($user['Processing_value'], true);
     $nameloc = select("invoice", "*", "id_invoice", $userdate['id_invoice'], "select");
+    if ($setting['statuscategorygenral'] == "oncategorys") {
+        savedata("save", "extmonth", $monthenumber);
+        Editmessagetext($from_id, $message_id, $textbotlang['users']['extend']['selectservice'], KeyboardCategory($nameloc['Service_location'], $user['agent'], "product_" . $nameloc['id_invoice'], "extcategorynames_"));
+        return;
+    }
     $stmt = $pdo->prepare("SELECT * FROM product WHERE (Location = :service_location OR Location = '/all') AND agent = :agent AND Service_time = :monthe AND one_buy_status = '0' ORDER BY display_order, id");
     $stmt->execute([
         ':service_location' => $nameloc['Service_location'],
@@ -3728,6 +3735,23 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         $monthkeyboard = keyboardTimeCategory($marzban_list_get['name_panel'], $user['agent'], "productmonth_", "buybacktow", $statuscustom, false);
         Editmessagetext($from_id, $message_id, $textbotlang['users']['sell']['selectDuration'], $monthkeyboard);
     }
+} elseif ($datain == "extendcatback") {
+    $userdate = json_decode($user['Processing_value'], true);
+    $nameloc = select("invoice", "*", "id_invoice", $userdate['id_invoice'] ?? '', "select");
+    if (!$nameloc || !invoiceBelongsToUser($nameloc, $from_id)) {
+        sendmessage($from_id, $textbotlang['users']['extend']['error'], null, 'HTML');
+        return;
+    }
+    Editmessagetext($from_id, $message_id, $textbotlang['users']['extend']['selectservice'], KeyboardCategory($nameloc['Service_location'], $user['agent'], "product_" . $nameloc['id_invoice'], "extcategorynames_"));
+} elseif (preg_match('/^extcategorynames_(\d+)$/', $datain, $dataget)) {
+    $catname = select("category", "remark", "id", $dataget[1], "select")['remark'] ?? null;
+    $userdate = json_decode($user['Processing_value'], true);
+    $nameloc = select("invoice", "*", "id_invoice", $userdate['id_invoice'] ?? '', "select");
+    if ($catname === null || !$nameloc || !invoiceBelongsToUser($nameloc, $from_id)) {
+        sendmessage($from_id, $textbotlang['users']['extend']['error'], null, 'HTML');
+        return;
+    }
+    Editmessagetext($from_id, $message_id, $textbotlang['users']['extend']['selectservice'], extend_product_keyboard($nameloc, $user, $catname, $userdate['extmonth'] ?? null, "extendcatback"));
 } elseif (preg_match('/^categorynames_(.*)/', $datain, $dataget)) {
     $categorynames = $dataget[1];
     $categorynames = select("category", "remark", "id", $categorynames, "select")['remark'];

@@ -2883,3 +2883,44 @@ function mirzaEnsureInstallerRemoved()
         mirzaStopForInstaller('Mirza install folder still exists and could not be removed automatically; delete it manually to enable the bot.');
     }
 }
+
+/**
+ * Renewal product list filtered by general category and/or duration.
+ * Returns the inline keyboard JSON (serviceextendselect_<code> rows).
+ */
+function extend_product_keyboard(array $invoice, array $user, ?string $category, ?string $month, string $backCallback): string
+{
+    global $pdo, $textbotlang;
+    $sql = "SELECT * FROM product WHERE (Location = :loc OR Location = '/all') AND agent = :agent AND one_buy_status = '0'";
+    $params = [':loc' => $invoice['Service_location'], ':agent' => $user['agent']];
+    if ($category !== null) {
+        $sql .= " AND category = :category";
+        $params[':category'] = $category;
+    }
+    if ($month !== null && $month !== '') {
+        $sql .= " AND Service_time = :monthe";
+        $params[':monthe'] = $month;
+    }
+    $sql .= " ORDER BY display_order, id";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $showPrice = config_get('shop', "statusshowprice");
+    $kb = ['inline_keyboard' => []];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $hidden = json_decode((string) $row['hide_panel'], true);
+        if (is_array($hidden) && in_array($invoice['Service_location'], $hidden))
+            continue;
+        $price = $row['price_product'];
+        if (intval($user['pricediscount']) != 0)
+            $price = $price - ($price * $user['pricediscount']) / 100;
+        $label = $row['name_product'];
+        if ($showPrice != "offshowprice")
+            $label .= " - " . number_format($price) . $textbotlang['common']['labels']['tomanUnit'];
+        $kb['inline_keyboard'][] = [['text' => $label, 'callback_data' => "serviceextendselect_" . $row['code_product']]];
+    }
+    if ($invoice['name_product'] == $textbotlang['users']['customSellVolume']['btnVolume'] || $invoice['name_product'] == $textbotlang['users']['customSellVolume']['btnService']) {
+        $kb['inline_keyboard'][] = [['text' => $textbotlang['keyboard']['selectCurrentService'], 'callback_data' => "serviceextendselect_pre"]];
+    }
+    $kb['inline_keyboard'][] = [['text' => $textbotlang['keyboard']['backToPreviousMenu'], 'callback_data' => $backCallback]];
+    return json_encode($kb);
+}
