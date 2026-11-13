@@ -16,6 +16,61 @@ function get_clinets($username, $panel)
     $response = $req->get();
     return $response;
 }
+// Inbound ids that really exist on the panel right now, or null when the list cannot be read.
+function xui_existing_inbound_ids($panel)
+{
+    $req = new CurlRequest(rtrim($panel['url_panel'], '/') . '/panel/api/inbounds/list');
+    $req->setHeaders(array('Accept: application/json', 'Content-Type: application/json'));
+    $req->setBearerToken($panel['password_panel']);
+    $res = $req->get();
+    if (!empty($res['error']) || ($res['status'] ?? 0) != 200) {
+        return null;
+    }
+    $json = json_decode((string) ($res['body'] ?? ''), true);
+    if (!is_array($json) || empty($json['success']) || !is_array($json['obj'] ?? null)) {
+        return null;
+    }
+    $ids = array();
+    foreach ($json['obj'] as $inbound) {
+        if (isset($inbound['id'])) {
+            $ids[] = intval($inbound['id']);
+        }
+    }
+    return $ids;
+}
+// Tell the admins (at most once a day per panel and inbound) that a configured inbound no longer exists.
+function xui_notify_missing_inbounds($panel, array $missing)
+{
+    try {
+        $file = __DIR__ . '/../../storage/missing_inbounds.json';
+        $seen = is_file($file) ? (json_decode((string) file_get_contents($file), true) ?: array()) : array();
+        $today = date('Y-m-d');
+        $fresh = array();
+        foreach ($missing as $id) {
+            $key = $panel['name_panel'] . '#' . $id;
+            if (($seen[$key] ?? '') !== $today) {
+                $fresh[] = $id;
+                $seen[$key] = $today;
+            }
+        }
+        if (!$fresh) {
+            return;
+        }
+        @file_put_contents($file, json_encode($seen));
+        $group = config_get('setting', 'Channel_Report', '');
+        if ($group) {
+            $textbotlang = languagechange();
+            telegram('sendmessage', array(
+                'chat_id' => $group,
+                'message_thread_id' => config_get('topic', 'errorreport'),
+                'text' => sprintf($textbotlang['Admin']['reportgroup']['xuiMissingInbound'], $panel['name_panel'], implode(', ', $fresh)),
+                'parse_mode' => 'HTML',
+            ));
+        }
+    } catch (Throwable $e) {
+        error_log('xui missing inbound notice failed: ' . $e->getMessage());
+    }
+}
 function addClient($panel, $usernameac, $Expire, $subId, $Total, $inboundid, $name_product, $note = "")
 {
     if ($name_product == "usertest") {
@@ -50,20 +105,44 @@ function addClient($panel, $usernameac, $Expire, $subId, $Total, $inboundid, $na
         "enable" => true,
         "subId" => $subId
     ];
-    $config = array(
-        "inboundIds" => json_decode($inboundid, true),
-        'client' => $data
-    );
-    $configpanel = json_encode($config, true);
+    $inboundIds = json_decode($inboundid, true);
     $url = $panel['url_panel'] . '/panel/api/clients/add';
     $headers = array(
         'Accept: application/json',
         'Content-Type: application/json',
     );
-    $req = new CurlRequest($url);
-    $req->setHeaders($headers);
-    $req->setBearerToken($panel['password_panel']);
-    $response = $req->post($configpanel);
+    $send = function ($ids) use ($url, $headers, $panel, $data) {
+        $req = new CurlRequest($url);
+        $req->setHeaders($headers);
+        $req->setBearerToken($panel['password_panel']);
+        return $req->post(json_encode(array("inboundIds" => $ids, 'client' => $data), true));
+    };
+    $response = $send($inboundIds);
+    // Only when the panel refused the request, look for inbounds that were deleted on the panel:
+    // create the account on the ones that still exist and tell the admins about the rest.
+    $body = json_decode((string) ($response['body'] ?? ''), true);
+    $failed = !empty($response['error']) || ($response['status'] ?? 0) != 200 || !is_array($body) || empty($body['success']);
+    if ($failed && is_array($inboundIds) && $inboundIds) {
+        $alive = xui_existing_inbound_ids($panel);
+        if ($alive !== null) {
+            $kept = array();
+            $missing = array();
+            foreach ($inboundIds as $id) {
+                if (in_array(intval($id), $alive, true)) {
+                    $kept[] = $id;
+                } else {
+                    $missing[] = $id;
+                }
+            }
+            if ($missing) {
+                error_log("x-ui {$panel['name_panel']}: missing inbounds " . implode(',', $missing));
+                xui_notify_missing_inbounds($panel, $missing);
+                if ($kept) {
+                    $response = $send($kept);
+                }
+            }
+        }
+    }
     return $response;
 }
 function updateClient($panel, $uuid, array $config)

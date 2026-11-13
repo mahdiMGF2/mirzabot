@@ -2491,6 +2491,9 @@ Node status : %s
                         'panelDown' => '🚨 Dear admin, the panel named <code>%s</code> is not connected.',
                 ],
                 'reportgroup' => [
+                    'xuiMissingInbound' => '⚠️ Deleted inbound on panel "%s"
+
+Inbound(s) %s no longer exist on the panel and were skipped when creating the account (the account is created on the remaining inbounds). Please fix the inbound ids in the panel or product settings.',
                         'newUser' => '🎉 A new user started the bot
  Name: %s
 Username: @%s
