@@ -1651,6 +1651,13 @@ n2',
                         'activatedUrl' => 'https://api.telegram.org/bot%s/sendmessage?chat_id=%s&text=✅ 尊敬的用户，您的机器人已成功安装。',
                 ],
                 'algorithmExtend' => [
+                        'methodsHelp' => '📌 请选择续费方式：
+
+🔹 重置流量和时间：用量清零，套餐的流量和时长从今天开始计算；之前的剩余部分作废。
+🔹 叠加流量和时间：套餐的流量和天数叠加到当前流量和到期时间上；用量不清零。
+🔹 重置时间，叠加流量：时间从今天重新计算，套餐流量叠加到当前流量上；用量不清零。
+🔹 重置流量，叠加时间：用量清零，流量等于套餐流量；套餐天数叠加到当前到期时间上。
+🔹 剩余结转到下月：用量清零，剩余流量加到套餐流量上，天数叠加到当前到期时间上。',
                         'saveData' => '✅ 服务续费方式已成功更新',
                         'invalidMethod' => '❌ 续费方式无效；请从下方列表中选择正确的续费方式',
                 ],
@@ -3754,8 +3761,8 @@ f,n.n2',
                 'addEducation' => '📚 添加教程',
                 'addOrder' => '🛒 添加订单',
                 'addProduct' => '🛍 添加产品',
-                'addTimeConvertVolume' => '添加时间并将总流量转换为剩余流量',
-                'addTimeVolumeNextMonth' => '将时间和流量添加到下个月',
+                'addTimeConvertVolume' => '剩余结转到下月',
+                'addTimeVolumeNextMonth' => '叠加流量和时间',
                 'adminDeletedService' => '🔗 一位管理员从机器人数据库中删除了一个服务。
 
 - 管理员数字 ID：‌{from_id}
@@ -4069,8 +4076,8 @@ f,n.n2',
                 'requestNotFound' => '未找到请求的申请。',
                 'requestRejected' => '✅请求已拒绝。',
                 'resetAllUsersLimit' => '🔄 重置所有用户的限制',
-                'resetTimeAddVolume' => '重置时间并添加之前的流量',
-                'resetVolumeAddTime' => '重置流量并添加时间',
+                'resetTimeAddVolume' => '重置时间，叠加流量',
+                'resetVolumeAddTime' => '重置流量，叠加时间',
                 'resetVolumeTime' => '重置流量和时间',
                 'searchOrder' => '🛍 搜索订单',
                 'searchUserBtn' => '🔍 搜索用户',
