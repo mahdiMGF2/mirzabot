@@ -14,7 +14,7 @@ $miniAppInstructionText = sprintf($textbotlang['Admin']['webpanel']['miniAppHelp
 $backmenu_panel_steps = [
     "GetNameNew", "GeturlNew", "GeturlNewx", "GetusernameNew", "GetpaawordNew", "getagentpanel",
     "getuuidadmin", "getlimitnew", "updatetime", "val_usertest", "getinboundiid", "confirmremovepanel",
-    "updatemethodusername", "getnamecustom", "updateextendmethod", "setpricechangelocation",
+    "updatemethodusername", "getnamecustom", "getpaneldescription", "updateextendmethod", "setpricechangelocation",
     "GetPriceExtra", "gettypeextra", "GetPricecustomvo", "gettypeextracustom",
     "GetPricetimeextra", "gettypeextratime", "GetPriceExtratime", "gettypeextratimecustom",
     "GetmaineExtra", "gettypeextramain", "GetmaxeExtra", "gettypeextramax",
@@ -2731,6 +2731,25 @@ elseif ($datain == "systemsms") {
     update("product", "Location", $text, "Location", $user['Processing_value']);
     update("user", "Processing_value", $text, "id", $from_id);
     step('home', $from_id);
+} elseif ($text == $textbotlang['keyboard']['panelDescription'] && $adminrulecheck['rule'] == "administrator") {
+    $typepanel = select("marzban_panel", "*", "name_panel", $user['Processing_value'], "select");
+    $current = trim((string) ($typepanel['description'] ?? ''));
+    sendmessage($from_id, sprintf($textbotlang['Admin']['managepanel']['panelDescAsk'], htmlspecialchars($user['Processing_value'])) . ($current !== '' ? "\n\n" . sprintf($textbotlang['Admin']['managepanel']['panelDescCurrent'], htmlspecialchars($current)) : ""), $backadmin, 'HTML');
+    step('getpaneldescription', $from_id);
+} elseif ($user['step'] == "getpaneldescription") {
+    if (!is_string($text) || trim($text) === '') {
+        sendmessage($from_id, $textbotlang['Admin']['managepanel']['panelDescNotText'], $backadmin, 'HTML');
+        return;
+    }
+    $desc = trim($text) === '.' ? '' : trim($text);
+    if (mb_strlen($desc) > 300) {
+        sendmessage($from_id, $textbotlang['Admin']['managepanel']['panelDescTooLong'], $backadmin, 'HTML');
+        return;
+    }
+    update("marzban_panel", "description", $desc, "name_panel", $user['Processing_value']);
+    step('home', $from_id);
+    $typepanel = select("marzban_panel", "*", "name_panel", $user['Processing_value'], "select");
+    outtypepanel($typepanel['type'], $textbotlang['Admin']['managepanel'][$desc === '' ? 'panelDescRemoved' : 'panelDescSaved']);
 } elseif ($text == $textbotlang['keyboard']['editPanelUrl'] && $adminrulecheck['rule'] == "administrator") {
     sendmessage($from_id, $textbotlang['Admin']['managepanel']['getUrlNew'], $backadmin, 'HTML');
     step('GeturlNew', $from_id);

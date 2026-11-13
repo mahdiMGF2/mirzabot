@@ -2883,3 +2883,28 @@ function mirzaEnsureInstallerRemoved()
         mirzaStopForInstaller('Mirza install folder still exists and could not be removed automatically; delete it manually to enable the bot.');
     }
 }
+
+// Admin-written panel descriptions (e.g. economy vs special), shown when the customer picks a service type.
+function panel_descriptions_text($agent, $userId = 0, $onlyTest = false): string
+{
+    global $pdo;
+    $out = [];
+    try {
+        $st = $pdo->prepare("SELECT name_panel, description, hide_user FROM marzban_panel WHERE " . ($onlyTest ? "TestAccount = 'ONTestAccount'" : "status = 'active'") . " AND (agent = ? OR agent = 'all') ORDER BY display_order, id");
+        $st->execute([$agent]);
+        foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $d = trim((string) ($r['description'] ?? ''));
+            if ($d === '') {
+                continue;
+            }
+            $hidden = json_decode((string) ($r['hide_user'] ?? ''), true);
+            if (is_array($hidden) && in_array($userId, $hidden)) {
+                continue;
+            }
+            $out[] = "▫️ <b>" . htmlspecialchars($r['name_panel']) . "</b>\n" . htmlspecialchars($d);
+        }
+    } catch (Throwable $e) {
+        error_log('panel descriptions failed: ' . $e->getMessage());
+    }
+    return implode("\n\n", $out);
+}

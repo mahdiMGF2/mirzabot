@@ -3069,7 +3069,8 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         } elseif ($user['step'] == "createusertest") {
             $location = $user['Processing_value_one'];
         } else {
-            sendmessage($from_id, $textbotlang['textbot']['selectLocation'], $list_marzban_usertest, 'html');
+            $testInfoText = panel_descriptions_text($user['agent'], $from_id, true);
+            sendmessage($from_id, $textbotlang['textbot']['selectLocation'] . ($testInfoText !== '' ? "\n\n" . $testInfoText : ""), $list_marzban_usertest, 'HTML');
             return;
         }
     }
@@ -3650,10 +3651,12 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         savedata('clear', "nameconfig", $text);
         step("home", $from_id);
     }
+    $panelInfoText = panel_descriptions_text($user['agent'], $from_id);
+    $selectLocationText = $textbotlang['textbot']['selectLocation'] . ($panelInfoText !== '' ? "\n\n" . $panelInfoText : "");
     if ($datain == "buy" || $datain == "buybacktow" || $datain == "buyback") {
-        Editmessagetext($from_id, $message_id, $textbotlang['textbot']['selectLocation'], $list_marzban_panel_user);
+        Editmessagetext($from_id, $message_id, $selectLocationText, $list_marzban_panel_user);
     } else {
-        sendmessage($from_id, $textbotlang['textbot']['selectLocation'], $list_marzban_panel_user, 'HTML');
+        sendmessage($from_id, $selectLocationText, $list_marzban_panel_user, 'HTML');
     }
 } elseif (preg_match('/^location_(.*)/', $datain, $dataget) || $datain == "backproduct") {
     $userdate = json_decode($user['Processing_value'], true);

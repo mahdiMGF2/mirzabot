@@ -2031,6 +2031,17 @@ The support access level has access to user services and support message reply s
                         'getPassword' => '🔑 The username was saved. Enter your password',
                         'getPasswordNew' => 'Send the new panel password',
                         'getUrlNew' => ' Send the new panel address',
+                        'panelDescAsk' => '📝 Description of panel «%s»
+
+This text is shown to the customer when they choose a service type, for example to explain the difference between an economy and a premium service.
+
+Send the new text (up to 300 characters). Send a single dot (.) to remove the description.',
+                        'panelDescCurrent' => 'Current text:
+%s',
+                        'panelDescNotText' => 'Please send the text as a text message.',
+                        'panelDescTooLong' => 'The text is longer than 300 characters; please shorten it.',
+                        'panelDescSaved' => '✅ The panel description was saved.',
+                        'panelDescRemoved' => '✅ The panel description was removed.',
                         'getUsernameNew' => ' Send the new panel username',
                         'invalidDomain' => '🔗 The domain address is invalid',
                         'invalidName' => 'The name is invalid',
@@ -3949,6 +3960,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'hiddify' => 'Hiddify',
                 'hidePanel' => 'Hide panel',
                 'hidePanelForAgent' => '❌ Hide a panel for the agent',
+                'panelDescription' => '📝 Panel description',
                 'hidePanelForUser' => '🫣 Hide panel for a user',
                 'inactiveAccount' => '📍 Inactive account',
                 'inactiveDays' => 'Number of days not used',
