@@ -825,6 +825,15 @@ You can now use the bot ✔️',
                         'sendNote' => '📝 Send your new note (you can send up to 150 characters).',
                 ],
                 'notify' => [
+                        'idleNotice' => '👋 Dear user, hello
+Your service "%s" has not been used for about %s days.',
+                        'idleNoticeSupport' => '
+If you have any connection problem or need help, please contact support: %s',
+                        'idleNoticeNote' => '
+
+(If everything is fine, this is just a reminder and no action is needed.)',
+                        'idleReport' => '📌 Unused-service reminders
+Messages sent: %s',
                         'deleteInfo' => '📌 Deletion cron notice
 
 Service username :‌ <code>%s</code>
@@ -1782,6 +1791,10 @@ trojan://xyz',
                         'notConnected' => 'Not connected',
                 ],
                 'cronjob' => [
+                        'askIdleDays' => '📌 After how many days without use should an active service trigger a reminder to its owner?
+Current value: %s days',
+                        'askIdleRepeat' => '📌 If the user still doesn\'t use it, repeat the reminder every how many days? (0 = send only once)
+Current value: %s',
                         'changedData' => '✅ The changes were successfully saved',
                         'setDayRemove' => '📌 Send the number of days after which accounts whose time has expired should be deleted
 Current time: ',
@@ -3866,6 +3879,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'cronDelete' => '❌ Deletion cron',
                 'cronDeleteVolume' => '❌ Volume deletion cron',
                 'cronFirstConnection' => '🕚 First connection cron',
+                'idleNoticeBtn' => '📭 Unused-service reminder',
                 'cronMessageStatus' => '🕚 Cron message sending status',
                 'cronTest' => '🔓Test cron',
                 'cronTime' => '🕚 Time cron',

@@ -63,6 +63,13 @@ class ServiceMonitor
                 $this->shouldRemoveServiceـvolume($data['invoice'], $data['user'], $data['userData'], $invoice['username']);
             if ($data['panel']['inboundstatus'] == "oninbounddisable" && $data['panel']['type'] == "marzban" && $data['panel']['version_panel'] != "1")
                 $this->active_inbound_expire($data['invoice'], $data['userData'], $data['panel']);
+            if (!empty($this->status_cron['idle']))
+                $this->checkIdle($data['invoice'], $data['user'], $data['userData'], $invoice['username']);
+        }
+        if ($this->idleSent > 0) {
+            $this->sendReportNotification(sprintf($this->textBotLang['users']['notify']['idleReport'], $this->idleSent) . "\n\n" . implode("\n", array_slice($this->idleLines, 0, 40)));
+            $this->idleSent = 0;
+            $this->idleLines = [];
         }
     }
 
@@ -238,6 +245,35 @@ class ServiceMonitor
             $this->updateInvoiceStatus("time", $invoice);
             return true;
         }
+    }
+
+    private int $idleSent = 0;
+    private array $idleLines = [];
+
+    // Reminder for an active service whose traffic has not changed for the configured number of days.
+    private function checkIdle($invoice, $user, $userData, $username)
+    {
+        if (($userData['status'] ?? '') != 'active')
+            return;
+        $key = 'inv:' . $invoice['id_invoice'];
+        // If the panel reports when the client was last online, that counts as use (3x-ui, Marzban, ...); the traffic counter is the fallback.
+        $online = $userData['online_at'] ?? null;
+        $onlineTs = null;
+        if ($online === 'online') {
+            $onlineTs = time();
+        } elseif (is_string($online) && preg_match('/^\d{4}[-\/]\d{2}[-\/]\d{2}/', $online)) {
+            $parsed = strtotime(str_replace('/', '-', $online));
+            $onlineTs = $parsed !== false ? min($parsed, time()) : null;
+        }
+        $idleDays = idle_notice_due($key, (int) ($userData['used_traffic'] ?? 0), $onlineTs);
+        if ($idleDays === null)
+            return;
+        $message = idle_notice_text($this->textBotLang, $username, $idleDays);
+        $this->send_notifactions($invoice, $user, $message, false, $invoice['bottype']);
+        idle_notice_mark_sent($key);
+        $this->idleSent++;
+        $who = !empty($user['username']) && $user['username'] != 'none' ? '@' . $user['username'] : '';
+        $this->idleLines[] = '• <code>' . htmlspecialchars((string) $username) . '</code> | ' . ($user['id'] ?? '') . ($who !== '' ? ' ' . htmlspecialchars($who) : '') . ' | ' . $idleDays . 'd';
     }
 
     private function send_notifactions($invoice, $status_cron_user, $message, $keyboard_active, $bot_token)

@@ -438,6 +438,7 @@ $featureCategories = [
             'cronday' => ['label' => $textbotlang['keyboard']['cronTime'], 'cron' => 'day', 'config' => 'settimecornday'],
             'cronvolume' => ['label' => $textbotlang['keyboard']['cronVolume'], 'cron' => 'volume', 'config' => 'settimecornvolume'],
             'on_hold' => ['label' => $textbotlang['keyboard']['cronFirstConnection'], 'cron' => 'on_hold', 'config' => 'setting_on_holdcron'],
+            'idlenotice' => ['label' => $textbotlang['keyboard']['idleNoticeBtn'], 'cron' => 'idle', 'config' => 'setidlenotice'],
             'notifremove' => ['label' => $textbotlang['keyboard']['cronDelete'], 'cron' => 'remove', 'config' => 'settimecornremove'],
             'notifremove_volume' => ['label' => $textbotlang['keyboard']['cronDeleteVolume'], 'cron' => 'remove_volume', 'config' => 'settimecornremovevolume'],
             'uptime_node' => ['label' => $textbotlang['keyboard']['nodeUptime'], 'cron' => 'uptime_node'],
