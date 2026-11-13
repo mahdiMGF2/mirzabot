@@ -663,6 +663,12 @@ You can now use the bot ✔️',
                         'invalidTimeRange' => '❌ The submitted time is invalid. The time must be between {maintime} days and {maxtime} days',
                 ],
                 'extend' => [
+                        'typeLimited' => 'Limited volume',
+                        'typeUnlimited' => 'Unlimited',
+                        'typeChangeWarning' => '⚠️ Notice: your service type is changing from "%s" to "%s".
+This change fully resets the volume and time, and nothing remaining is carried over to the new period.
+If you want to keep your remaining volume or time, renew the same type you have now, or buy a new service.
+To continue, press the confirm button.',
                         'confirm' => 'Confirm renewal',
                         'discount' => '🎁 Apply discount code',
                         'emptyServiceforExtend' => '❌ You have no service to renew.',
