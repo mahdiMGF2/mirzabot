@@ -32,6 +32,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
   exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'bulk') {
+  csrf_check_post();
+  $bt = $textbotlang['panel'];
+  $ids = array_values(array_unique(array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])))));
+  $op = (string) ($_POST['op'] ?? '');
+  $val = trim((string) ($_POST['value'] ?? ''));
+  $textOps = ['category' => 'category', 'agent' => 'agent', 'location' => 'Location'];
+  $fail = function ($msg) {
+    flash('error', $msg);
+    header('Location: product.php');
+    exit;
+  };
+  try {
+    if (!$ids) {
+      $fail($bt['bulkErrNone']);
+    }
+    $in = implode(',', array_fill(0, count($ids), '?'));
+    if (isset($textOps[$op])) {
+      if ($op === 'agent' && !in_array($val, ['f', 'n', 'n2'], true)) { $fail($bt['bulkErrAgent']); }
+      db_query($pdo, "UPDATE product SET {$textOps[$op]} = ? WHERE id IN ($in)", array_merge([$val], $ids));
+    } elseif ($op === 'status') {
+      db_query($pdo, "UPDATE product SET status_product = ? WHERE id IN ($in)", array_merge([$val === 'disable' ? 'disable' : 'active'], $ids));
+    } elseif ($op === 'price_percent') {
+      if (!preg_match('/^-?\d{1,3}(\.\d+)?$/', $val) || (float) $val <= -100) { $fail($bt['bulkErrPercent']); }
+      db_query($pdo, "UPDATE product SET price_product = CAST(ROUND(CAST(price_product AS DECIMAL(20,2)) * (1 + ? / 100)) AS CHAR) WHERE id IN ($in)", array_merge([(float) $val], $ids));
+    } elseif ($op === 'delete') {
+      db_query($pdo, "DELETE FROM product WHERE id IN ($in)", $ids);
+    } else {
+      $fail($bt['bulkErrOp']);
+    }
+    flash('success', sprintf($bt['bulkDone'], count($ids)));
+  } catch (Throwable $e) {
+    flash('error', $bt['bulkErrPrefix'] . $e->getMessage());
+  }
+  header('Location: product.php');
+  exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit') {
   csrf_check_post();
   $pid = (int) ($_POST['edit_id'] ?? 0);
@@ -88,6 +126,64 @@ include __DIR__ . '/inc/layout_head.php';
   <button class="btn btn-primary" onclick="openModal('addModal')"><?= icon('plus', 14) ?> <?= $textbotlang['panel']['productAddProductBtn'] ?></button>
 </div>
 
+<form method="POST" id="bulkForm" class="card fade-up" style="margin-bottom:12px;display:none"
+  data-confirm-apply="<?= htmlspecialchars($textbotlang['panel']['bulkConfirmApply']) ?>"
+  data-confirm-delete="<?= htmlspecialchars($textbotlang['panel']['bulkConfirmDelete']) ?>">
+  <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
+  <input type="hidden" name="action" value="bulk">
+  <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+    <b style="align-self:center"><span id="selCount">0</span> <?= $textbotlang['panel']['bulkSelectedSuffix'] ?></b>
+    <div class="field" style="margin:0">
+      <label><?= $textbotlang['panel']['bulkActionLabel'] ?></label>
+      <select name="op" id="bulkOp" class="select" style="min-width:230px">
+        <option value="price_percent"><?= $textbotlang['panel']['bulkOpPrice'] ?></option>
+        <option value="category"><?= $textbotlang['panel']['bulkOpCategory'] ?></option>
+        <option value="agent"><?= $textbotlang['panel']['bulkOpAgent'] ?></option>
+        <option value="location"><?= $textbotlang['panel']['bulkOpLocation'] ?></option>
+        <option value="status"><?= $textbotlang['panel']['bulkOpStatus'] ?></option>
+        <option value="delete"><?= $textbotlang['panel']['bulkOpDelete'] ?></option>
+      </select>
+    </div>
+    <div class="field bulk-val" data-op="price_percent" style="margin:0;display:none">
+      <input type="number" step="any" name="value" class="input" style="max-width:200px" placeholder="<?= htmlspecialchars($textbotlang['panel']['bulkPlaceholderPercent']) ?>" disabled>
+    </div>
+    <div class="field bulk-val" data-op="category" style="margin:0;display:none">
+      <select name="value" class="select" disabled>
+        <option value=""><?= $textbotlang['panel']['bulkNoCategory'] ?></option>
+        <?php foreach ($categories as $cat): ?>
+          <option value="<?= htmlspecialchars($cat['remark'] ?? '') ?>"><?= htmlspecialchars($cat['remark'] ?? '') ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="field bulk-val" data-op="agent" style="margin:0;display:none">
+      <select name="value" class="select" disabled>
+        <option value="f"><?= $textbotlang['panel']['productColType'] ?></option>
+        <option value="n"><?= $textbotlang['panel']['productColLocation'] ?></option>
+        <option value="n2"><?= $textbotlang['panel']['productColCategory'] ?></option>
+      </select>
+    </div>
+    <div class="field bulk-val" data-op="location" style="margin:0;display:none">
+      <select name="value" class="select" disabled>
+        <option value="/all"><?= $textbotlang['panel']['bulkAllPanels'] ?></option>
+        <?php foreach ($panels as $pl): ?>
+          <option value="<?= htmlspecialchars($pl['name_panel'] ?? $pl['id']) ?>"><?= htmlspecialchars($pl['name_panel'] ?? $pl['id']) ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="field bulk-val" data-op="status" style="margin:0;display:none">
+      <select name="value" class="select" disabled>
+        <option value="active"><?= $textbotlang['panel']['bulkStatusActive'] ?></option>
+        <option value="disable"><?= $textbotlang['panel']['bulkStatusDisable'] ?></option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-sm" type="submit"><?= $textbotlang['panel']['bulkApplyBtn'] ?></button>
+    <button class="btn btn-sm" type="button" id="bulkClear"><?= $textbotlang['panel']['bulkClearBtn'] ?></button>
+  </div>
+  <div class="card-body" id="bulkHint" style="padding-top:0;font-size:.82rem;color:var(--mute)"
+    data-price_percent="<?= htmlspecialchars($textbotlang['panel']['bulkHintPrice']) ?>"
+    data-delete="<?= htmlspecialchars($textbotlang['panel']['bulkHintDelete']) ?>"></div>
+</form>
+
 <div class="card fade-up d1">
   <?php if (empty($products)): ?>
     <div class="empty" style="padding:60px 20px">
@@ -113,10 +209,57 @@ include __DIR__ . '/inc/layout_head.php';
         <button type="button" class="search-clear">✕</button>
       </div>
     </div>
+    <?php
+      $usedLocs = array_values(array_unique(array_map(fn($x) => (string) ($x['Location'] ?? ''), $products)));
+      $usedCats = array_values(array_unique(array_map(fn($x) => (string) ($x['category'] ?? ''), $products)));
+      sort($usedLocs);
+      sort($usedCats);
+    ?>
+    <div id="prodFilters" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:0 16px 12px">
+      <div class="field" style="margin:0">
+        <label><?= $textbotlang['panel']['filterPanel'] ?></label>
+        <select class="select" data-pf="loc">
+          <option value=""><?= $textbotlang['panel']['filterAll'] ?></option>
+          <?php foreach ($usedLocs as $loc): ?>
+            <option value="<?= htmlspecialchars($loc === '' ? '__none' : $loc) ?>"><?= htmlspecialchars($loc === '/all' ? $textbotlang['panel']['bulkAllPanels'] : ($loc === '' ? '—' : $loc)) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="field" style="margin:0">
+        <label><?= $textbotlang['panel']['filterCategory'] ?></label>
+        <select class="select" data-pf="cat">
+          <option value=""><?= $textbotlang['panel']['filterAll'] ?></option>
+          <?php foreach ($usedCats as $cat): ?>
+            <option value="<?= htmlspecialchars($cat === '' ? '__none' : $cat) ?>"><?= htmlspecialchars($cat === '' ? $textbotlang['panel']['bulkNoCategory'] : $cat) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="field" style="margin:0">
+        <label><?= $textbotlang['panel']['filterAgent'] ?></label>
+        <select class="select" data-pf="agent">
+          <option value=""><?= $textbotlang['panel']['filterAll'] ?></option>
+          <option value="f"><?= $textbotlang['panel']['productColType'] ?></option>
+          <option value="n"><?= $textbotlang['panel']['productColLocation'] ?></option>
+          <option value="n2"><?= $textbotlang['panel']['productColCategory'] ?></option>
+        </select>
+      </div>
+      <div class="field" style="margin:0">
+        <label><?= $textbotlang['panel']['filterStatus'] ?></label>
+        <select class="select" data-pf="status">
+          <option value=""><?= $textbotlang['panel']['filterAll'] ?></option>
+          <option value="active"><?= $textbotlang['panel']['bulkStatusActive'] ?></option>
+          <option value="disable"><?= $textbotlang['panel']['bulkStatusDisable'] ?></option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-sm" id="pfReset"><?= $textbotlang['panel']['filterReset'] ?></button>
+      <span id="pfCount" class="cf" style="align-self:center" data-label="<?= htmlspecialchars($textbotlang['panel']['filterShown']) ?>" data-total="<?= count($products) ?>"></span>
+    </div>
+    <style>.pf-hide{display:none !important}</style>
     <div class="tbl-wrap">
       <table id="prodTbl" class="tbl-xl">
         <thead>
           <tr>
+            <th><input type="checkbox" id="selAll" title="<?= htmlspecialchars($textbotlang['panel']['bulkSelectAll']) ?>"></th>
             <th>#</th>
             <th><?= $textbotlang['panel']['productColPrice'] ?></th>
             <th><?= $textbotlang['panel']['productColActions'] ?></th>
@@ -131,7 +274,8 @@ include __DIR__ . '/inc/layout_head.php';
         <tbody>
           <?php $i = 1;
           foreach ($products as $p): ?>
-            <tr>
+            <tr data-loc="<?= htmlspecialchars((string) (($p['Location'] ?? '') !== '' ? $p['Location'] : '__none')) ?>" data-cat="<?= htmlspecialchars((string) (($p['category'] ?? '') !== '' ? $p['category'] : '__none')) ?>" data-agent="<?= htmlspecialchars((string) ($p['agent'] ?? '')) ?>" data-status="<?= (($p['status_product'] ?? 'active') === 'disable') ? 'disable' : 'active' ?>">
+              <td><input type="checkbox" class="selRow" value="<?= (int) $p['id'] ?>"></td>
               <td class="cf"><?= $i++ ?></td>
               <td class="cs"><?= htmlspecialchars($p['name_product'] ?? '') ?></td>
               <td class="cn cs"><?= number_format((int) ($p['price_product'] ?? 0)) ?> <span class="cf"><?= $textbotlang['panel']['productFieldServiceDays'] ?></span></td>
@@ -308,6 +452,6 @@ include __DIR__ . '/inc/layout_head.php';
   </div>
 </div>
 
-<script src="js/product.js"></script>
+<script src="js/product.js?v=2"></script>
 
 <?php include __DIR__ . '/inc/layout_foot.php'; ?>
