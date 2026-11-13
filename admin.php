@@ -55,7 +55,7 @@ $backmenu_register([
     "CartDirect", "changecard", "getnamecard", "getcardremove", "showcardallusers",
     "getcashcart", "gethelpcart", "getlistidcart", "getmaincart", "getmaxcart", "gettimeauto"
 ], $CartManage);
-$backmenu_register(["getidExceptio", "getidExceptioremove"], $Exception_auto_cart_keyboard);
+$backmenu_register(["getidExceptio", "getidExceptioremove", "getidWhite", "getidWhiteremove"], $Exception_auto_cart_keyboard);
 $backmenu_register(["apiternado", "getcashiranpay2", "getfeeiranpay2", "getmaaxiranpay2", "getmainiranpay2", "helpiranpay2"], $trnado);
 $backmenu_register(["merchant_zarinpal", "getcashzarinpal", "getmaaxzarinpal", "getmainaqzarinpal", "helpzarinpal"], $keyboardzarinpal);
 $backmenu_register(["merchant_id_aqayepardakht", "getcashahaypar", "getmaaxaqayepardakht", "getmainaqayepardakht", "helpaqayepardakht"], $aqayepardakht);
@@ -93,7 +93,7 @@ if ($adminrulecheck['rule'] != "administrator") {
         "limitusertest_", "lowbalanceuser_", "manageinvoice_", "manageuser_", "next_pageinvoice_", "next_pageuseragent_",
         "previous_pageinvoice_", "previous_pageuseragent_", "reject_pay_", "removeaffiliate-", "removeaffiliateuser-", "removebotsell_",
         "removefull-", "removehide_", "removeservice-", "removeserviceandback-", "sendmessageuser_", "settimepricesrc_", "setvolumesrc_",
-        "showcarduser-", "statuscronuser-", "unbanuserr_", "unverify-", "updateinfouser_", "verify_", "vieworderuser_", "viewpaymentuser_",
+        "showcarduser-", "autowl_", "autobl_", "statuscronuser-", "unbanuserr_", "unverify-", "updateinfouser_", "verify_", "vieworderuser_", "viewpaymentuser_",
     ];
     $limitedRoleSteps = [
         "GetusernameconfigAndOrdedrs", "addbalancemanual", "addbalanceuser", "addbalanceusercurrent", "adddecriptionblock", "get_number_limit",
@@ -2234,6 +2234,8 @@ elseif ($datain == "systemsms") {
             [['text' => $textbotlang['keyboard']['userAffiliates'], 'callback_data' => "affiliates-" . $id_user]],
             [['text' => $textbotlang['keyboard']['removeFromAffiliate'], 'callback_data' => "removeaffiliate-" . $id_user], ['text' => $textbotlang['keyboard']['deleteUserAffiliates'], 'callback_data' => "removeaffiliateuser-" . $id_user]],
             [['text' => $textbotlang['keyboard']['activateCard'], 'callback_data' => "showcarduser-" . $id_user]],
+            [['text' => $textbotlang['keyboard']['addAutoWhitelist'], 'callback_data' => "autowl_" . $id_user]],
+            [['text' => $textbotlang['keyboard']['addAutoBlacklist'], 'callback_data' => "autobl_" . $id_user]],
             [['text' => $textbotlang['keyboard']['authenticateUser'], 'callback_data' => "verify_" . $id_user], ['text' => $textbotlang['keyboard']['unauthUser'], 'callback_data' => "unverify-" . $id_user]],
             [['text' => $textbotlang['keyboard']['deactivateCard'], 'callback_data' => "carduserhide-" . $id_user]],
             [['text' => $textbotlang['keyboard']['addOrder'], 'callback_data' => "addordermanualـ" . $id_user], ['text' => $textbotlang['keyboard']['testAccountLimit'], 'callback_data' => "limitusertest_" . $id_user]],
@@ -5024,6 +5026,21 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     sendmessage($from_id, $textbotlang['Admin']['SettingnowPayment']['saveApi'], $shopkeyboard, 'HTML');
     config_set('shop', "minbalancebuybulk", $text);
     step('home', $from_id);
+} elseif (preg_match('/^auto(wl|bl)_(\w+)$/', $datain, $dataget) && ($adminrulecheck['rule'] == "administrator" || $adminrulecheck['rule'] == "Seller")) {
+    $white = $dataget[1] == 'wl';
+    $target = $dataget[2];
+    $same = $white ? 'Whitelist_auto_cart' : 'Exception_auto_cart';
+    $other = $white ? 'Exception_auto_cart' : 'Whitelist_auto_cart';
+    $sameList = pay_user_list($same);
+    if (in_array($target, $sameList, true)) {
+        pay_user_list_save($same, array_values(array_diff($sameList, [$target])));
+        sendmessage($from_id, $textbotlang['Admin']['Payment'][$white ? 'autoWlRemoved' : 'autoBlRemoved'], null, 'HTML');
+    } else {
+        $sameList[] = $target;
+        pay_user_list_save($same, $sameList);
+        pay_user_list_save($other, array_values(array_diff(pay_user_list($other), [$target])));
+        sendmessage($from_id, $textbotlang['Admin']['Payment'][$white ? 'autoWlAdded' : 'autoBlAdded'], null, 'HTML');
+    }
 } elseif (preg_match('/showcarduser-(.*)/', $datain, $dataget)) {
     $id_user = $dataget[1];
     sendmessage($id_user, $textbotlang['users']['Balance']['cardEnabledNotice'], null, 'HTML');
@@ -9422,6 +9439,58 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     sendmessage($from_id, $textbotlang['Admin']['Payment']['excludeListTitle'], null, 'HTML');
     sendmessage($from_id, $list, null, 'HTML');
+} elseif ($text == $textbotlang['keyboard']['addWhiteUser']) {
+    sendmessage($from_id, $textbotlang['Admin']['Payment']['askWhiteUserId'], $backadmin, 'HTML');
+    step("getidWhite", $from_id);
+} elseif ($user['step'] == "getidWhite") {
+    if (!rowExists("user", "id", $text)) {
+        sendmessage($from_id, $textbotlang['Admin']['Payment']['userNotFound'], $backadmin, 'HTML');
+        return;
+    }
+    $whiteList = pay_user_list('Whitelist_auto_cart');
+    if (in_array($text, $whiteList, true)) {
+        sendmessage($from_id, $textbotlang['Admin']['Payment']['whiteAlready'], $backadmin, 'HTML');
+        return;
+    }
+    $whiteList[] = $text;
+    pay_user_list_save('Whitelist_auto_cart', $whiteList);
+    sendmessage($from_id, $textbotlang['Admin']['Payment']['whiteAdded'], $Exception_auto_cart_keyboard, 'HTML');
+    step("home", $from_id);
+} elseif ($text == $textbotlang['keyboard']['removeWhiteUser']) {
+    sendmessage($from_id, $textbotlang['Admin']['Payment']['askRemoveWhiteId'], $backadmin, 'HTML');
+    step("getidWhiteremove", $from_id);
+} elseif ($user['step'] == "getidWhiteremove") {
+    $whiteList = pay_user_list('Whitelist_auto_cart');
+    if (!in_array($text, $whiteList, true)) {
+        sendmessage($from_id, $textbotlang['Admin']['Payment']['whiteNotIn'], $backadmin, 'HTML');
+        return;
+    }
+    pay_user_list_save('Whitelist_auto_cart', array_values(array_diff($whiteList, [$text])));
+    sendmessage($from_id, $textbotlang['Admin']['Payment']['whiteRemoved'], $Exception_auto_cart_keyboard, 'HTML');
+    step("home", $from_id);
+} elseif ($text == $textbotlang['keyboard']['showWhiteList']) {
+    $whiteList = pay_user_list('Whitelist_auto_cart');
+    if (count($whiteList) == 0) {
+        sendmessage($from_id, $textbotlang['Admin']['Payment']['whiteListEmpty'], null, 'HTML');
+        return;
+    }
+    sendmessage($from_id, $textbotlang['Admin']['Payment']['whiteListTitle'], null, 'HTML');
+    sendmessage($from_id, implode("\n", $whiteList), null, 'HTML');
+} elseif ($text == $textbotlang['keyboard']['autoConfirmModeBtn'] || ($datain == "autocartmode" && $adminrulecheck['rule'] == "administrator")) {
+    $mode = card_autoconfirm_mode();
+    if ($datain == "autocartmode") {
+        $mode = $mode === 'whitelist' ? 'blacklist' : 'whitelist';
+        config_set('pay', 'autoconfirm_mode', $mode);
+    }
+    $modeName = $textbotlang['Admin']['Payment'][$mode === 'whitelist' ? 'autoModeNameWhite' : 'autoModeNameBlack'];
+    $switchKey = $mode === 'whitelist' ? 'autoModeSwitchToBlack' : 'autoModeSwitchToWhite';
+    $modeKeyboard = json_encode(['inline_keyboard' => [[['text' => $textbotlang['Admin']['Payment'][$switchKey], 'callback_data' => 'autocartmode']]]]);
+    $modeText = sprintf($textbotlang['Admin']['Payment']['autoModeInfo'], $modeName);
+    if ($datain == "autocartmode") {
+        Editmessagetext($from_id, $message_id, $modeText, $modeKeyboard);
+    } else {
+        sendmessage($from_id, $modeText, $modeKeyboard, 'HTML');
+    }
 } elseif ($text == $textbotlang['keyboard']['setApi'] && $adminrulecheck['rule'] == "administrator") {
     $PaySetting = config_get('pay', "marchent_floypay");
     $textaqayepardakht = sprintf($textbotlang['Admin']['gateway']['askApiCode2'], $PaySetting);

@@ -1554,6 +1554,8 @@ $Exception_auto_cart_keyboard = json_encode([
     'keyboard' => [
         [['text' => $textbotlang['keyboard']['excludeUser']], ['text' => $textbotlang['keyboard']['removeUserFromList']]],
         [['text' => $textbotlang['keyboard']['showUserList']]],
+        [['text' => $textbotlang['keyboard']['addWhiteUser']], ['text' => $textbotlang['keyboard']['removeWhiteUser']]],
+        [['text' => $textbotlang['keyboard']['showWhiteList']], ['text' => $textbotlang['keyboard']['autoConfirmModeBtn']]],
         [['text' => $textbotlang['keyboard']['backToCardSettings']]]
     ],
     'resize_keyboard' => true
