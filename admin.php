@@ -89,7 +89,7 @@ if ($adminrulecheck['rule'] != "administrator") {
     $limitedRoleCallbackPrefixes = [
         "Confirm_pay_", "Response_", "acceptblock_", "addbalamceuser_", "addbalanceuser_", "affiliates-", "agenttypshowlist_",
         "banuserlist_", "blockuserfake_", "carduserhide-", "changeloclimitbyuser_", "changestatusadmin_", "confirmaccountdisableadmin_",
-        "confirmchannel-", "confirmnumber_", "confirmremovefulls-", "confirmserivceadmin-", "disableconfig-", "extendadmin_", "hidepanel_",
+        "confirmchannel-", "confirmnumber_", "confirmremovefulls-", "confirmserivceadmin-", "disableconfig-", "extadmin", "extendadmin_", "hidepanel_",
         "limitusertest_", "lowbalanceuser_", "manageinvoice_", "manageuser_", "next_pageinvoice_", "next_pageuseragent_",
         "previous_pageinvoice_", "previous_pageuseragent_", "reject_pay_", "removeaffiliate-", "removeaffiliateuser-", "removebotsell_",
         "removefull-", "removehide_", "removeservice-", "removeserviceandback-", "sendmessageuser_", "settimepricesrc_", "setvolumesrc_",
@@ -7510,9 +7510,147 @@ elseif ($text == $textbotlang['keyboard']['hidePanelForUser'] && $adminrulecheck
     }
     update("user", "Processing_value_one", $nameloc['id_invoice'], "id", $from_id);
     savedata("clear", "id_invoice", $nameloc['id_invoice']);
-    $textcustom = $textbotlang['Admin']['order']['askVolume'];
-    sendmessage($from_id, $textcustom, $backuser, 'html');
+    $owner = select("user", "*", "id", $nameloc['id_user'], "select");
+    if (!is_array($owner)) {
+        // Owner not found in the bot: fall back to the manual volume/days renewal.
+        sendmessage($from_id, $textbotlang['Admin']['order']['askVolume'], $backuser, 'html');
+        step('gettimecustomvolomforextendadmin', $from_id);
+        return;
+    }
+    $planrows = admin_extend_plans($nameloc, $owner);
+    $introtext = sprintf($textbotlang['Admin']['order'][empty($planrows) ? 'extAdminNoPlan' : 'extAdminPickPlan'], number_format($owner['Balance']));
+    $planrows[] = [['text' => $textbotlang['Admin']['order']['extAdminManualBtn'], 'callback_data' => 'extadminmanual']];
+    $planrows[] = [['text' => $textbotlang['keyboard']['backToMainMenu2'], 'callback_data' => 'backuser']];
+    step('home', $from_id);
+    sendmessage($from_id, $introtext, json_encode(['inline_keyboard' => $planrows]), 'HTML');
+} elseif ($datain == "extadminmanual") {
+    $userdate = json_decode((string) $user['Processing_value'], true);
+    if (empty($userdate['id_invoice'])) {
+        sendmessage($from_id, $textbotlang['Admin']['order']['renewError'], null, 'HTML');
+        return;
+    }
+    deletemessage($from_id, $message_id);
+    sendmessage($from_id, $textbotlang['Admin']['order']['askVolume'], $backuser, 'html');
     step('gettimecustomvolomforextendadmin', $from_id);
+} elseif (preg_match('/^extadminplan_(.*)/', $datain, $dataget)) {
+    $userdate = json_decode((string) $user['Processing_value'], true);
+    $nameloc = !empty($userdate['id_invoice']) ? select("invoice", "*", "id_invoice", $userdate['id_invoice'], "select") : false;
+    $owner = is_array($nameloc) ? select("user", "*", "id", $nameloc['id_user'], "select") : false;
+    if (!is_array($nameloc) || !is_array($owner)) {
+        sendmessage($from_id, $textbotlang['Admin']['order']['renewError'], null, 'HTML');
+        return;
+    }
+    $stmt = $pdo->prepare("SELECT * FROM product WHERE (Location = :loc OR Location = '/all') AND agent = :agent AND code_product = :code AND one_buy_status = '0'");
+    $stmt->execute([':loc' => $nameloc['Service_location'], ':agent' => $owner['agent'], ':code' => $dataget[1]]);
+    $planproduct = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($planproduct == false) {
+        sendmessage($from_id, $textbotlang['Admin']['order']['renewError'], null, 'HTML');
+        return;
+    }
+    $quote = admin_extend_quote($owner, $planproduct);
+    savedata("save", "code_product", $planproduct['code_product']);
+    $planTime = intval($planproduct['Service_time']) == 0 ? $textbotlang['users']['status']['unlimited'] : $planproduct['Service_time'];
+    $planVolume = intval($planproduct['Volume_constraint']) == 0 ? $textbotlang['users']['status']['unlimited'] : $planproduct['Volume_constraint'];
+    $planconfirmtext = sprintf($textbotlang['Admin']['order']['extAdminConfirm'], $nameloc['username'], $planproduct['name_product'], $planTime, $planVolume, number_format($quote['price']), number_format($quote['cashback']), number_format($quote['charge']), number_format($owner['Balance']));
+    $planconfirmkeyboard = json_encode([
+        'inline_keyboard' => [
+            [['text' => $textbotlang['Admin']['order']['extAdminConfirmBtn'], 'callback_data' => 'extadminpay']],
+            [['text' => $textbotlang['Admin']['order']['extAdminFreeBtn'], 'callback_data' => 'extadminfree']],
+            [['text' => $textbotlang['keyboard']['backToMainMenu2'], 'callback_data' => 'backuser']],
+        ]
+    ]);
+    Editmessagetext($from_id, $message_id, $planconfirmtext, $planconfirmkeyboard);
+} elseif ($datain == "extadminpay" || $datain == "extadminfree") {
+    Editmessagetext($from_id, $message_id, $text_inline, json_encode(['inline_keyboard' => []]));
+    $paid = $datain == "extadminpay";
+    $userdate = json_decode((string) $user['Processing_value'], true);
+    $nameloc = (!empty($userdate['id_invoice']) && !empty($userdate['code_product'])) ? select("invoice", "*", "id_invoice", $userdate['id_invoice'], "select") : false;
+    $owner = is_array($nameloc) ? select("user", "*", "id", $nameloc['id_user'], "select") : false;
+    if (!is_array($nameloc) || !is_array($owner) || !in_array($nameloc['Status'], ['active', 'end_of_time', 'end_of_volume', 'sendedwarn', 'send_on_hold'])) {
+        sendmessage($from_id, $textbotlang['Admin']['order']['renewError'], null, 'HTML');
+        return;
+    }
+    $marzban_list_get = select("marzban_panel", "*", "name_panel", $nameloc['Service_location'], "select");
+    $stmt = $pdo->prepare("SELECT * FROM product WHERE (Location = :loc OR Location = '/all') AND agent = :agent AND code_product = :code AND one_buy_status = '0'");
+    $stmt->execute([':loc' => $nameloc['Service_location'], ':agent' => $owner['agent'], ':code' => $userdate['code_product']]);
+    $planproduct = $stmt->fetch(PDO::FETCH_ASSOC);
+    $DataUserOut = $ManagePanel->DataUser($nameloc['Service_location'], $nameloc['username']);
+    if ($planproduct == false || $DataUserOut['status'] == "Unsuccessful") {
+        sendmessage($from_id, $textbotlang['Admin']['order']['renewError'], null, 'HTML');
+        return;
+    }
+    // Clear the saved plan first so a repeated tap on the same button can't charge twice.
+    savedata("clear", "id_invoice", null);
+    $quote = admin_extend_quote($owner, $planproduct);
+    $balanceBefore = $owner['Balance'];
+    if ($paid && !deductBalance($owner, $quote['charge'])) {
+        sendmessage($from_id, $textbotlang['users']['Balance']['notEnoughBalance'], null, 'HTML');
+        return;
+    }
+    $extend = $ManagePanel->extend($marzban_list_get['Methodextend'], $planproduct['Volume_constraint'], $planproduct['Service_time'], $nameloc['username'], $planproduct['code_product'], $marzban_list_get['code_panel']);
+    if ($extend['status'] == false) {
+        if ($paid) {
+            addBalance($owner['id'], $quote['charge']);
+        }
+        $extend['msg'] = json_encode($extend['msg']);
+        $textreports = sprintf($textbotlang['Admin']['reportgroup']['errorRenewServiceAdmin'], $marzban_list_get['name_panel'], $nameloc['username'], $extend['msg']);
+        sendmessage($from_id, $textbotlang['Admin']['order']['renewErrorSupport'], null, 'HTML');
+        if (strlen($setting['Channel_Report']) > 0) {
+            telegram('sendmessage', [
+                'chat_id' => $setting['Channel_Report'],
+                'message_thread_id' => $errorreport,
+                'text' => $textreports,
+                'parse_mode' => "HTML"
+            ]);
+        }
+        return;
+    }
+    $dateacc = date('Y/m/d H:i:s');
+    $extend_json = json_encode($extend);
+    if ($paid) {
+        // Recorded like the owner's own paid renewal (counts in the stats, "renew same plan" keeps working).
+        $stmt = $pdo->prepare("INSERT IGNORE INTO service_other (id_user, username, value, type, time, price, output, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$owner['id'], $nameloc['username'], json_encode([
+            "volumebuy" => $planproduct['Volume_constraint'],
+            "Service_time" => $planproduct['Service_time'],
+            "oldvolume" => $DataUserOut['data_limit'],
+            "oldtime" => $DataUserOut['expire'],
+            'code_product' => $planproduct['code_product'],
+            'id_order' => bin2hex(random_bytes(2))
+        ]), 'extend_user', $dateacc, $planproduct['price_product'], $extend_json, 'paid']);
+        if ($nameloc['name_product'] == $textbotlang['common']['labels']['testService2']) {
+            update("invoice", "name_product", $planproduct['name_product'], "id_invoice", $nameloc['id_invoice']);
+            update("invoice", "price_product", $planproduct['price_product'], "id_invoice", $nameloc['id_invoice']);
+        }
+    } else {
+        $stmt = $pdo->prepare("INSERT IGNORE INTO service_other (id_user, username, value, type, time, price, output, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$from_id, $nameloc['username'], $planproduct['Volume_constraint'] . "_" . $planproduct['Service_time'], 'extend_user_by_admin', $dateacc, 0, $extend_json, 'paid']);
+        update("invoice", "price_product", 0, "id_invoice", $nameloc['id_invoice']);
+        update("invoice", "Volume", $planproduct['Volume_constraint'], "id_invoice", $nameloc['id_invoice']);
+        update("invoice", "Service_time", $planproduct['Service_time'], "id_invoice", $nameloc['id_invoice']);
+    }
+    update("invoice", "Status", "active", "id_invoice", $nameloc['id_invoice']);
+    if ($paid) {
+        $balanceAfter = select("user", "Balance", "id", $owner['id'], "select")['Balance'];
+        if ($quote['cashback'] > 0) {
+            sendmessage($owner['id'], sprintf($textbotlang['users']['extend']['giftCharged'], $quote['cashback']), null, 'HTML');
+        }
+        sendmessage($owner['id'], sprintf($textbotlang['Admin']['order']['extAdminUserNotice'], $nameloc['username'], $planproduct['name_product'], number_format($quote['charge'])), null, 'HTML');
+        sendmessage($from_id, sprintf($textbotlang['Admin']['order']['extAdminDonePaid'], $nameloc['username'], number_format($quote['charge']), number_format($balanceAfter)), null, 'HTML');
+        $text_report = sprintf($textbotlang['Admin']['reportgroup']['renewedByAdminPaid'], $from_id, $owner['id'], $planproduct['name_product'], $nameloc['username'], $nameloc['Service_location'], number_format($quote['charge']), number_format($balanceBefore), number_format($balanceAfter));
+    } else {
+        sendmessage($from_id, $textbotlang['users']['extend']['thanks'], null, 'HTML');
+        sendmessage($owner['id'], sprintf($textbotlang['users']['extend']['adminRenewNotice'], $nameloc['username'], intval($planproduct['Volume_constraint']) == 0 ? $textbotlang['users']['status']['unlimited'] : $planproduct['Volume_constraint'], intval($planproduct['Service_time']) == 0 ? $textbotlang['users']['status']['unlimited'] : $planproduct['Service_time']), null, 'HTML');
+        $text_report = sprintf($textbotlang['Admin']['reportgroup']['renewedByAdmin'], $from_id, $nameloc['id_user'], $planproduct['name_product'], $nameloc['username'], $nameloc['Service_location']);
+    }
+    if (strlen($setting['Channel_Report']) > 0) {
+        telegram('sendmessage', [
+            'chat_id' => $setting['Channel_Report'],
+            'message_thread_id' => $otherservice,
+            'text' => $text_report,
+            'parse_mode' => "HTML"
+        ]);
+    }
 } elseif ($user['step'] == "gettimecustomvolomforextendadmin") {
     $userdate = json_decode($user['Processing_value'], true);
     $nameloc = select("invoice", "*", "id_invoice", $userdate['id_invoice'], "select");

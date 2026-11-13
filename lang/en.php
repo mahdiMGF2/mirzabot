@@ -698,6 +698,9 @@ You can now use the bot ✔️',
                         'restartError' => '❌ An error occurred. Perform the renewal steps from the beginning.',
                         'errorSupport' => '❌ An error occurred while renewing the service; contact support',
                         'genericError' => '❌ An error occurred during renewal. Contact support',
+                        'adminRenewNotice' => '📣 Your service %s was renewed by the admin.
+🔋 Volume: %s GB
+⏱ Duration: %s days',
                         'giftCharged' => 'Congratulations 🎉
 📌 As a renewal gift, an amount of %s Toman was credited to your account',
                         'giftChargedFn' => 'Congratulations 🎉
@@ -2270,6 +2273,28 @@ Number of remaining people :  %s',
                         'askVolume' => '📌 Send your requested volume.',
                         'askTime' => '⌛️ Select your service duration ',
                         'renewErrorSupport' => '❌ An error occurred while renewing the service; contact support',
+                        'extAdminPickPlan' => '📌 Select the renewal plan.
+
+💰 User wallet balance: %s Toman
+Only plans that fit the user\'s balance are shown, and the plan price is deducted from the user\'s wallet.',
+                        'extAdminNoPlan' => '❌ No plan fits the user\'s wallet balance (%s Toman).
+
+You can renew the service with "Manual volume and days" without deducting from the wallet.',
+                        'extAdminManualBtn' => '✍️ Manual volume and days (no deduction)',
+                        'extAdminConfirm' => '📜 Renewal invoice for service %s
+
+🛍 Product name: %s
+⏱ Renewal duration: %s days
+🔋 Renewal volume: %s GB
+💸 Plan price (with the user\'s discount): %s Toman
+🎁 Renewal cashback: %s Toman
+💳 Amount to deduct from wallet: %s Toman
+💰 Current user balance: %s Toman',
+                        'extAdminConfirmBtn' => '✅ Renew and deduct from user\'s wallet',
+                        'extAdminFreeBtn' => '🆓 Renew for free (no deduction)',
+                        'extAdminDonePaid' => '✅ Service %s was renewed and %s Toman was deducted from the user\'s wallet.
+💰 New user balance: %s Toman',
+                        'extAdminUserNotice' => '📣 Your service %s was renewed by the admin to the plan %s and %s Toman was deducted from your wallet.',
                         'confirmDeleteFromDb' => '📌 By confirming the option below, this service will be completely deleted from the bot\'s database and will no longer count in account statistics ( this section does not delete the service from the panel and only deletes it from the bot\'s database )',
                         'deleted' => '✅ The service was deleted successfully.',
                         'detailRow' => '
@@ -2620,6 +2645,16 @@ Number created: %s',
 Panel name: %s
 Service username: %s
 Error reason: %s',
+                        'renewedByAdminPaid' => '⭕️ The admin renewed the user\'s service and the price was deducted from the user\'s wallet.
+
+🪪 Admin numeric ID: <code>%s</code>
+🪪 User numeric ID: <code>%s</code>
+🛍 Product name: %s
+👤 Customer username in the panel: %s
+📍 Service location: %s
+💳 Amount deducted: %s Toman
+💰 Balance before: %s Toman
+💰 Balance after: %s Toman',
                         'renewedByAdmin' => '⭕️ The admin renewed the user\'s service.
         
 User information: 
