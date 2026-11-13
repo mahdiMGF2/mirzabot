@@ -1412,6 +1412,30 @@ In this section you can view unapproved payments and approve or reject them.
                         'userExcludeRemoved' => '✅ The user was successfully removed from the list.',
                         'excludeListEmpty' => '❌ There is no user in the list',
                         'excludeListTitle' => 'List of people👇',
+                        'autoWlAdded' => '✅ The user was added to the card-to-card auto-approve whitelist. (The whitelist only matters in "Whitelist only" mode.)',
+                        'autoWlRemoved' => '↩️ The user was removed from the card-to-card auto-approve whitelist.',
+                        'autoModeInfo' => '📌 Current auto-confirm mode: <b>%s</b>
+
+🔹 Everyone except the blacklist: every user\'s receipt is confirmed automatically after the set delay, except blacklisted users.
+🔹 Whitelist only: only whitelisted users\' receipts are confirmed automatically.
+
+⏳ The delay is set in the auto-confirm time setting.
+⚠️ This only works while "confirm receipts without checking" is on.',
+                        'autoModeNameBlack' => 'Everyone except the blacklist',
+                        'autoModeNameWhite' => 'Whitelist only',
+                        'autoModeSwitchToWhite' => '🔁 Switch to: Whitelist only',
+                        'autoModeSwitchToBlack' => '🔁 Switch to: Everyone except the blacklist',
+                        'autoModeChanged' => '✅ Auto-confirm mode changed: %s',
+                        'askWhiteUserId' => 'Send the numeric ID of the user to add to the whitelist.',
+                        'whiteAdded' => '✅ The user was added to the whitelist.',
+                        'whiteAlready' => '⚠️ This user is already on the whitelist.',
+                        'askRemoveWhiteId' => 'Send the numeric ID of the user to remove from the whitelist.',
+                        'whiteRemoved' => '✅ The user was removed from the whitelist.',
+                        'whiteNotIn' => '⚠️ This user is not on the whitelist.',
+                        'whiteListEmpty' => 'The whitelist is empty.',
+                        'whiteListTitle' => '📋 Whitelisted users:',
+                        'autoBlAdded' => '🚫 The user was added to the card-to-card auto-approve blacklist. Their receipts are not approved automatically.',
+                        'autoBlRemoved' => '↩️ The user was removed from the card-to-card auto-approve blacklist.',
                         'approvedByOther' => '✅. The payment was approved by another admin
 👤 User ID: <code>%s</code>
 🛒 Payment tracking code: %s
@@ -3742,6 +3766,12 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'accountCreateLimit' => '🚨 Account creation limit',
                 'activateAccount' => '💡 Turn on account',
                 'activateCard' => '💳 Activate card number',
+                'addAutoWhitelist' => '✅ Add to card-to-card auto-approve whitelist',
+                'autoConfirmModeBtn' => '🔀 Auto-confirm mode',
+                'addWhiteUser' => '✅ Add user to whitelist',
+                'removeWhiteUser' => '❌ Remove user from whitelist',
+                'showWhiteList' => '👁 Show whitelist',
+                'addAutoBlacklist' => '🚫 Add to card-to-card auto-approve blacklist',
                 'activateSalesBot' => '🤖 Activate sales bot',
                 'activateWebPanel' => '✅ Activate web panel',
                 'activeCardUserList' => 'List of users with active card number.',
@@ -3923,7 +3953,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'educationCategory' => '📗Tutorial category',
                 'educationSection' => '📚 Tutorial section',
                 'enableShowCard' => '💰 Activate card number display',
-                'excludeUser' => '➕ Exempt user',
+                'excludeUser' => '➕ Add user to blacklist',
                 'excludeUserAutoConfirm' => '💳 Exempt user from automatic approval',
                 'exclusiveSubLink' => '💎 Dedicated subscription link',
                 'exportActiveCardUsers' => '📄 Export users with active card number',
@@ -4057,7 +4087,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'rejoin' => '📌 Re-membership',
                 'removeFromAffiliate' => '🔄 Remove from referrals',
                 'removeFromHiddenList' => '❌  Remove user from hidden list',
-                'removeUserFromList' => '❌ Remove user from list',
+                'removeUserFromList' => '❌ Remove user from blacklist',
                 'renameNode' => '🗂 Rename node',
                 'renew' => 'Renew',
                 'renewCurrentPlan' => '♻️ Renew current plan',
@@ -4124,7 +4154,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'showPanel' => '🖥 Show panel',
                 'showProductPrice' => '💰 Show product price',
                 'showTestAccount' => '🎁 Show test',
-                'showUserList' => '👁 Show people list',
+                'showUserList' => '👁 Show blacklist',
                 'start' => 'Start',
                 'startBtn' => 'Start button',
                 'startGift' => '🎁 Start gift',
