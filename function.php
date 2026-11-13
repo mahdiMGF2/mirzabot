@@ -1076,6 +1076,49 @@ function releaseDiscountCode($code, $userId): void
     $pdo->prepare("DELETE FROM giftcodeconsumed WHERE id_user = ? AND code = ? LIMIT 1")->execute([$userId, $code]);
     clearSelectCache('discountsell');
 }
+// Admin renewal quote for a service owner: the plan price after the owner's own discount, the renewal
+// cashback (same setting the owner's self-service renewal uses) and the amount charged to the wallet.
+function admin_extend_quote(array $owner, array $product): array
+{
+    $price = floatval($product['price_product']);
+    if (intval($owner['pricediscount']) != 0) {
+        $price = $price - ($price * $owner['pricediscount']) / 100;
+    }
+    $price = max(0, round($price));
+    if ($owner['agent'] == "f") {
+        $percent = config_get('shop', "chashbackextend") ?? 0;
+    } else {
+        $percent = (json_decode((string) config_get('shop', "chashbackextend_agent"), true) ?: [])[$owner['agent']] ?? 0;
+    }
+    $cashback = 0;
+    if (intval($percent) != 0 && $price != 0) {
+        $cashback = round(($price * $percent) / 100);
+    }
+    return ['price' => $price, 'cashback' => $cashback, 'charge' => max($price - $cashback, 0)];
+}
+// Plans an admin can renew a service into: the same products the owner sees in their own renewal list
+// (panel location, owner's agent type, hidden panels skipped), limited to what the owner's balance covers.
+// Plans an admin can renew a service into: the same products the owner sees in their own renewal list
+// (panel location, owner's agent type, hidden panels skipped), limited to what the owner's balance covers.
+function admin_extend_plans(array $invoice, array $owner): array
+{
+    global $pdo, $textbotlang;
+    $stmt = $pdo->prepare("SELECT * FROM product WHERE (Location = :loc OR Location = '/all') AND agent = :agent AND one_buy_status = '0' ORDER BY display_order, id");
+    $stmt->execute([':loc' => $invoice['Service_location'], ':agent' => $owner['agent']]);
+    $rows = [];
+    while ($product = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $hide = json_decode((string) $product['hide_panel'], true);
+        if (is_array($hide) && in_array($invoice['Service_location'], $hide)) {
+            continue;
+        }
+        $quote = admin_extend_quote($owner, $product);
+        if ($owner['agent'] != "n2" && floatval($owner['Balance']) < $quote['price']) {
+            continue;
+        }
+        $rows[] = [['text' => $product['name_product'] . " - " . number_format($quote['price']) . $textbotlang['common']['labels']['tomanUnit'], 'callback_data' => "extadminplan_" . $product['code_product']]];
+    }
+    return $rows;
+}
 function cancelPendingGatewayOrders($id_user): void
 {
     global $pdo;

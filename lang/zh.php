@@ -698,6 +698,9 @@ https://t.me/%s?start=%s',
                         'restartError' => '❌ 发生了错误。请从头执行续费步骤。',
                         'errorSupport' => '❌ 续费服务时发生错误；请联系客服',
                         'genericError' => '❌ 续费过程中发生错误。请联系客服',
+                        'adminRenewNotice' => '📣 您的服务 %s 已由管理员续费。
+🔋 流量：%s GB
+⏱ 时长：%s 天',
                         'giftCharged' => '恭喜 🎉
 📌 作为续费礼品，金额 %s 托曼已充值到您的账户',
                         'giftChargedFn' => '恭喜 🎉
@@ -2270,6 +2273,28 @@ support 权限级别可访问用户服务和客服消息回复部分',
                         'askVolume' => '📌 请发送您请求的流量。',
                         'askTime' => '⌛️ 请选择您的服务时长 ',
                         'renewErrorSupport' => '❌ 续费服务时发生错误；请联系客服',
+                        'extAdminPickPlan' => '📌 请选择续费套餐。
+
+💰 用户钱包余额：%s 土曼
+仅显示余额足够的套餐，套餐费用将从用户钱包中扣除。',
+                        'extAdminNoPlan' => '❌ 没有与用户钱包余额（%s 土曼）相符的套餐。
+
+您可以使用“手动流量和天数”续费，此方式不会扣除钱包余额。',
+                        'extAdminManualBtn' => '✍️ 手动流量和天数（不扣费）',
+                        'extAdminConfirm' => '📜 服务 %s 的续费账单
+
+🛍 产品名称：%s
+⏱ 续费时长：%s 天
+🔋 续费流量：%s GB
+💸 套餐价格（含用户折扣）：%s 土曼
+🎁 续费返现：%s 土曼
+💳 将从钱包扣除：%s 土曼
+💰 用户当前余额：%s 土曼',
+                        'extAdminConfirmBtn' => '✅ 续费并从用户钱包扣费',
+                        'extAdminFreeBtn' => '🆓 免费续费（不扣费）',
+                        'extAdminDonePaid' => '✅ 服务 %s 已续费，已从用户钱包扣除 %s 土曼。
+💰 用户新余额：%s 土曼',
+                        'extAdminUserNotice' => '📣 管理员已将您的服务 %s 续费为套餐 %s，并从您的钱包扣除了 %s 土曼。',
                         'confirmDeleteFromDb' => '📌 确认下方选项后，此服务将从机器人数据库中彻底删除，且不再计入账户统计（此部分不会从面板删除服务，仅从机器人数据库删除）',
                         'deleted' => '✅ 服务删除成功。',
                         'detailRow' => '
@@ -2620,6 +2645,16 @@ f,n.n2',
 面板名称：%s
 服务用户名：%s
 错误原因：%s',
+                        'renewedByAdminPaid' => '⭕️ 管理员已为用户续费服务，费用已从用户钱包扣除。
+
+🪪 管理员数字 ID：<code>%s</code>
+🪪 用户数字 ID：<code>%s</code>
+🛍 产品名称：%s
+👤 客户在面板中的用户名：%s
+📍 服务位置：%s
+💳 扣除金额：%s 土曼
+💰 扣费前余额：%s 土曼
+💰 扣费后余额：%s 土曼',
                         'renewedByAdmin' => '⭕️ 管理员续费了用户的服务。
         
 用户信息： 
