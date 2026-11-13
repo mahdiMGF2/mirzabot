@@ -259,6 +259,8 @@ return [
                         'addedNotice' => '💎 尊敬的用户，已向您的钱包余额添加 %s 托曼。',
                         'deductedNotice2' => '❌ 尊敬的用户，已从您的钱包余额中扣除 %s 托曼。',
                         'addedNotice2' => '💎 尊敬的用户，已向您的钱包余额添加 %s 托曼。',
+                        'paymentReversedNotice' => '❌ 付款 %s（金额 %s）已被管理员取消。',
+                        'paymentAmountFixedNotice' => 'ℹ️ 付款 %s 的金额已被管理员从 %s 修改为 %s。',
                         'addedNotice3' => '💎 尊敬的用户，已向您的钱包余额添加 %s 托曼。',
                         'addedNotice4' => '💰尊敬的用户，已向您的余额添加 %s 托曼。',
                         'addedNotice5' => '💰尊敬的用户，已向您的余额添加 %s 托曼。',
@@ -1389,6 +1391,60 @@ n2',
                 'Payment' => [
                         'reasonRejecting' => '请发送拒绝该支付的原因',
                         'rejected' => '⭕️ 支付已成功拒绝，并已向用户发送消息',
+                        'fixBtnOpen' => '🛠 修正账单',
+                        'fixNotPaid' => '⚠️ 该付款已不是“已确认”状态，无法修改。',
+                        'fixMenu' => '🛠 修正账单
+
+🛒 付款编号：<code>%s</code>
+🙍‍♂️ 用户 ID：<code>%s</code>
+💰 金额：%s
+📦 类型：%s
+%s',
+                        'fixType_topup' => '钱包充值',
+                        'fixType_buy' => '购买新服务',
+                        'fixType_extend_user' => '服务续费',
+                        'fixType_extra_user' => '增加流量',
+                        'fixType_extra_time_user' => '增加时长',
+                        'fixLinkedService' => '⚜️ 服务：<code>%s</code>',
+                        'fixBtnAmount' => '✏️ 修改金额',
+                        'fixBtnCancel' => '🗑 取消账单',
+                        'fixBtnBack' => '🔙 返回',
+                        'fixConfirmCancel' => '❓ 取消账单 <code>%s</code>
+
+确认后将执行：
+%s',
+                        'fixPlanStatus' => '• 账单状态变为“已取消”，并从财务报表中移除',
+                        'fixPlanDelete' => '• 服务 <code>%s</code> 将从面板中删除',
+                        'fixPlanDisable' => '• 服务 <code>%s</code> 将被停用（不删除）',
+                        'fixPlanNoService' => '• 未找到可取消的服务（已被删除或未创建）。钱包不会自动变动；如有需要请使用手动增加或扣除余额',
+                        'fixPlanWalletAdd' => '• 将向用户钱包增加 %s',
+                        'fixPlanWalletDeduct' => '• 将从用户钱包扣除 %s（余额不足则跳过）',
+                        'fixNoteCashback' => 'ℹ️ 已发放的返现和推荐佣金不会撤回',
+                        'fixBtnGoNotify' => '✅ 取消并通知用户',
+                        'fixBtnGoSilent' => '✅ 取消，不通知用户',
+                        'fixAskAmount' => '✏️ 请发送正确的金额（英文数字）：',
+                        'fixSameAmount' => 'ℹ️ 新金额与当前金额相同，未做任何更改',
+                        'fixConfirmAmount' => '❓ 修改账单 <code>%s</code> 的金额
+
+当前金额：%s
+新金额：%s
+
+%s
+
+是否同时将差额应用到钱包？',
+                        'fixBtnWalletNotify' => '✅ 修改 + 钱包 + 通知用户',
+                        'fixBtnWalletSilent' => '✅ 修改 + 钱包，不通知',
+                        'fixBtnRecordNotify' => '📝 仅修改账单 + 通知用户',
+                        'fixBtnRecordSilent' => '📝 仅修改账单，不通知',
+                        'fixPanelFailed' => '❌ 在面板上删除或停用服务失败。未做任何更改，请重试。',
+                        'fixDoneCancel' => '✅ 账单 <code>%s</code> 已取消。',
+                        'fixDoneDeleted' => '🗑 服务 %s 已从面板删除',
+                        'fixDoneDisabled' => '⏸ 服务 %s 已停用',
+                        'fixDoneWallet' => '💰 钱包变动：%s',
+                        'fixWalletLow' => '⚠️ 用户余额不足，无法扣除；钱包未变动。如有需要请使用手动扣除余额',
+                        'fixDoneAmount' => '✅ 账单 <code>%s</code> 的金额已从 %s 修改为 %s。',
+                        'fixLogCancel' => '账单已被管理员 %s 取消',
+                        'fixLogAmount' => '金额从 %s 修改为 %s（管理员 %s）',
                         'reviewedPayment' => '❌ 该支付已被其他管理员审核过',
                         'reviewReceiptsFirst' => '⚠️ 如需批准用户请求，请先审核并批准购买或续费收据。然后批准钱包充值收据。 ',
                         'autoConfirmDesc' => '📌 激活此功能后，在您不在线的时段，机器人会自动批准所有卡对卡交易；待您上线后，您再审核收据，如果发送的是虚假收据，则取消该交易',
@@ -2572,6 +2628,20 @@ f,n.n2',
                         'userUnblocked' => '数字 ID 为
 %s 的用户已在机器人中被解封 
 封禁管理员：%s',
+                        'paymentFixCancel' => '🛠 管理员取消了账单
+
+👮 管理员：<code>%s</code>
+👤 用户：<code>%s</code> @%s
+🛒 付款：<code>%s</code>
+💰 金额：%s
+%s',
+                        'paymentFixAmount' => '🛠 管理员修改了账单金额
+
+👮 管理员：<code>%s</code>
+👤 用户：<code>%s</code> @%s
+🛒 付款：<code>%s</code>
+💰 金额：%s → %s
+%s',
                         'balanceManualAdd' => '管理员确认卡对卡收据并手动增加余额
         
 用户数字 ID：%s

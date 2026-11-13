@@ -1121,11 +1121,79 @@ function paymentOrder($order_id): array
 function claimPaymentPaid($order_id)
 {
     global $pdo;
-    $stmt = $pdo->prepare("UPDATE payment_report SET payment_Status = 'paid' WHERE id_order = :id_order AND payment_Status <> 'paid'");
+    $stmt = $pdo->prepare("UPDATE payment_report SET payment_Status = 'paid' WHERE id_order = :id_order AND payment_Status NOT IN ('paid', 'reversed')");
     $stmt->bindValue(':id_order', $order_id);
     $stmt->execute();
     clearSelectCache('payment_report');
     return $stmt->rowCount() >= 1;
+}
+
+// Admin correction of an approved payment (cancel it or fix its amount).
+// Describes what the payment did: a wallet top-up, or the direct payment of a purchase/renewal/extra.
+// wallet_cancel: wallet change that undoes the payment (+ refund to the user, - take back from the user);
+// it is 0 when the linked service is already gone, because the wallet cannot be derived safely then.
+function payment_fix_context($order_id)
+{
+    $pay = select("payment_report", "*", "id_order", $order_id, "select");
+    if (!$pay || $pay['payment_Status'] !== 'paid') {
+        return null;
+    }
+    $linked = paymentOrder($order_id);
+    $paid = intval($pay['price']);
+    $ctx = ['payment' => $pay, 'type' => 'topup', 'invoice' => null, 'service_row' => null, 'order_price' => 0, 'service_live' => false, 'wallet_cancel' => -$paid];
+    $deadStates = ['removebyadmin', 'removeTime', 'removevolume', 'removebyuser', 'unpaid', 'Unpaid', 'Unsuccessful'];
+    if ($linked['invoice']) {
+        $ctx['type'] = 'buy';
+        $ctx['invoice'] = $linked['invoice'];
+        $ctx['order_price'] = intval($linked['invoice']['price_product']);
+    } elseif ($linked['service'] && in_array($linked['service']['type'], ['extend_user', 'extra_user', 'extra_time_user'], true)) {
+        $ctx['type'] = $linked['service']['type'];
+        $ctx['service_row'] = $linked['service'];
+        $ctx['order_price'] = intval($linked['service']['price']);
+        $ctx['invoice'] = select("invoice", "*", "username", $linked['service']['username'], "select") ?: null;
+    }
+    if ($ctx['type'] !== 'topup') {
+        $ctx['service_live'] = $ctx['invoice'] && !in_array($ctx['invoice']['Status'], $deadStates, true);
+        $ctx['wallet_cancel'] = $ctx['service_live'] ? $ctx['order_price'] - $paid : 0;
+    }
+    return $ctx;
+}
+
+// Text lines describing what cancelling an approved payment will do.
+function payment_fix_plan_lines($ctx)
+{
+    global $textbotlang;
+    $t = $textbotlang['Admin']['Payment'];
+    $lines = [$t['fixPlanStatus']];
+    if ($ctx['type'] !== 'topup') {
+        if ($ctx['service_live']) {
+            $lines[] = sprintf($ctx['type'] === 'buy' ? $t['fixPlanDelete'] : $t['fixPlanDisable'], $ctx['invoice']['username']);
+        } else {
+            $lines[] = $t['fixPlanNoService'];
+        }
+    }
+    if ($ctx['wallet_cancel'] > 0) {
+        $lines[] = sprintf($t['fixPlanWalletAdd'], number_format($ctx['wallet_cancel']));
+    } elseif ($ctx['wallet_cancel'] < 0) {
+        $lines[] = sprintf($t['fixPlanWalletDeduct'], number_format(-$ctx['wallet_cancel']));
+    }
+    $lines[] = $t['fixNoteCashback'];
+    return implode("\n", $lines);
+}
+
+// Moves money in the user's wallet. Returns 'none' (nothing to do), 'ok' or 'low' (not enough balance, nothing changed).
+function payment_wallet_move($userId, $delta)
+{
+    $delta = intval($delta);
+    if ($delta === 0) {
+        return 'none';
+    }
+    if ($delta > 0) {
+        addBalance($userId, $delta);
+        return 'ok';
+    }
+    $u = select("user", "*", "id", $userId, "select");
+    return $u && deductBalance($u, -$delta) ? 'ok' : 'low';
 }
 
 function DirectPayment($order_id, $image = 'images.jpg')
