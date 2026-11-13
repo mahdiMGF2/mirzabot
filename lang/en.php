@@ -259,6 +259,8 @@ To enable it, the bot owner needs a Telegram Premium subscription, or the bot mu
                         'addedNotice' => '💎 Dear user, an amount of %s Toman was added to your wallet balance.',
                         'deductedNotice2' => '❌ Dear user, an amount of %s Toman was deducted from your wallet balance.',
                         'addedNotice2' => '💎 Dear user, an amount of %s Toman was added to your wallet balance.',
+                        'paymentReversedNotice' => '❌ Payment %s of %s was cancelled by the administration.',
+                        'paymentAmountFixedNotice' => 'ℹ️ The amount of payment %s was corrected by the administration from %s to %s.',
                         'addedNotice3' => '💎 Dear user, an amount of %s Toman was added to your wallet balance.',
                         'addedNotice4' => '💰Dear user, an amount of %s Toman was added to your balance.',
                         'addedNotice5' => '💰Dear user, an amount of %s Toman was added to your balance.',
@@ -1389,6 +1391,60 @@ Current group: %s',
                 'Payment' => [
                         'reasonRejecting' => 'Send the reason for rejecting the payment',
                         'rejected' => '⭕️ The payment was successfully rejected and a message was sent to the user',
+                        'fixBtnOpen' => '🛠 Fix invoice',
+                        'fixNotPaid' => '⚠️ This payment is no longer in the "confirmed" state and cannot be changed.',
+                        'fixMenu' => '🛠 Fix invoice
+
+🛒 Payment number: <code>%s</code>
+🙍‍♂️ User ID: <code>%s</code>
+💰 Amount: %s
+📦 Type: %s
+%s',
+                        'fixType_topup' => 'Wallet top-up',
+                        'fixType_buy' => 'New service purchase',
+                        'fixType_extend_user' => 'Service renewal',
+                        'fixType_extra_user' => 'Extra volume',
+                        'fixType_extra_time_user' => 'Extra time',
+                        'fixLinkedService' => '⚜️ Service: <code>%s</code>',
+                        'fixBtnAmount' => '✏️ Fix amount',
+                        'fixBtnCancel' => '🗑 Cancel invoice',
+                        'fixBtnBack' => '🔙 Back',
+                        'fixConfirmCancel' => '❓ Cancel invoice <code>%s</code>
+
+Confirming will do the following:
+%s',
+                        'fixPlanStatus' => '• The invoice becomes "cancelled" and leaves the financial reports',
+                        'fixPlanDelete' => '• Service <code>%s</code> is deleted from the panel',
+                        'fixPlanDisable' => '• Service <code>%s</code> is disabled (not deleted)',
+                        'fixPlanNoService' => '• No service to cancel was found (already deleted or never created). The wallet is not changed automatically; use the manual add/deduct balance buttons if needed',
+                        'fixPlanWalletAdd' => '• %s is added to the user wallet',
+                        'fixPlanWalletDeduct' => '• %s is taken from the user wallet (skipped if the balance is not enough)',
+                        'fixNoteCashback' => 'ℹ️ Cashback and referral commission already paid are not reversed',
+                        'fixBtnGoNotify' => '✅ Cancel and notify the user',
+                        'fixBtnGoSilent' => '✅ Cancel without notifying the user',
+                        'fixAskAmount' => '✏️ Send the correct amount (English digits):',
+                        'fixSameAmount' => 'ℹ️ The new amount equals the current one; nothing changed',
+                        'fixConfirmAmount' => '❓ Fix the amount of invoice <code>%s</code>
+
+Current amount: %s
+New amount: %s
+
+%s
+
+Apply the difference to the wallet as well?',
+                        'fixBtnWalletNotify' => '✅ Fix + wallet + notify the user',
+                        'fixBtnWalletSilent' => '✅ Fix + wallet, no message',
+                        'fixBtnRecordNotify' => '📝 Fix invoice only + notify the user',
+                        'fixBtnRecordSilent' => '📝 Fix invoice only, no message',
+                        'fixPanelFailed' => '❌ Deleting or disabling the service on the panel failed. Nothing was changed; try again.',
+                        'fixDoneCancel' => '✅ Invoice <code>%s</code> cancelled.',
+                        'fixDoneDeleted' => '🗑 Service %s deleted from the panel',
+                        'fixDoneDisabled' => '⏸ Service %s disabled',
+                        'fixDoneWallet' => '💰 Wallet change: %s',
+                        'fixWalletLow' => '⚠️ The user balance was too low to deduct; the wallet was not changed. Use the manual deduct balance button if needed',
+                        'fixDoneAmount' => '✅ Invoice <code>%s</code> amount changed from %s to %s.',
+                        'fixLogCancel' => 'Invoice cancelled by admin %s',
+                        'fixLogAmount' => 'Amount changed from %s to %s by admin %s',
                         'reviewedPayment' => '❌ This payment has already been reviewed by another admin',
                         'reviewReceiptsFirst' => '⚠️ To approve user requests, first review and approve the purchase or subscription renewal receipts. Then approve the wallet top-up receipt. ',
                         'autoConfirmDesc' => '📌 By activating this feature, during the times when you are not online, the bot automatically approves all card-to-card transactions; then after you come online, you review the receipts, and if a fake receipt was sent, you cancel the transaction',
@@ -2572,6 +2628,20 @@ Blocking admin: %s',
                         'userUnblocked' => 'User with numeric ID
 %s  was unblocked in the bot 
 Blocking admin: %s',
+                        'paymentFixCancel' => '🛠 Invoice cancelled by admin
+
+👮 Admin: <code>%s</code>
+👤 User: <code>%s</code> @%s
+🛒 Payment: <code>%s</code>
+💰 Amount: %s
+%s',
+                        'paymentFixAmount' => '🛠 Invoice amount fixed by admin
+
+👮 Admin: <code>%s</code>
+👤 User: <code>%s</code> @%s
+🛒 Payment: <code>%s</code>
+💰 Amount: %s → %s
+%s',
                         'balanceManualAdd' => 'Confirming a card-to-card receipt and manually increasing the balance by an admin
         
 User numeric ID: %s

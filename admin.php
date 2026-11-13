@@ -1735,7 +1735,7 @@ elseif ($datain == "systemsms") {
         Editmessagetext($from_id, $message_id, $textconfrom, $Confirm_pay);
         return;
     }
-    $claim = $pdo->prepare("UPDATE payment_report SET payment_Status = 'paid' WHERE id_order = ? AND payment_Status NOT IN ('paid', 'reject')");
+    $claim = $pdo->prepare("UPDATE payment_report SET payment_Status = 'paid' WHERE id_order = ? AND payment_Status NOT IN ('paid', 'reject', 'reversed')");
     $claim->execute([$order_id]);
     clearSelectCache('payment_report');
     if ($claim->rowCount() === 0) {
@@ -1796,7 +1796,7 @@ elseif ($datain == "systemsms") {
         ));
         return;
     }
-    $claim = $pdo->prepare("UPDATE payment_report SET payment_Status = 'reject' WHERE id_order = ? AND payment_Status NOT IN ('paid', 'reject')");
+    $claim = $pdo->prepare("UPDATE payment_report SET payment_Status = 'reject' WHERE id_order = ? AND payment_Status NOT IN ('paid', 'reject', 'reversed')");
     $claim->execute([$id_order]);
     clearSelectCache('payment_report');
     if ($claim->rowCount() === 0) {
@@ -3746,9 +3746,188 @@ elseif ($datain == "systemsms") {
     $PaymentUsers = select("payment_report", "*", "id_user", $iduser, "fetchAll");
     foreach ($PaymentUsers as $paymentUser) {
         $text_order = sprintf($textbotlang['Admin']['Payment']['detailRow'], $paymentUser['id_order'], $paymentUser['id_user'], $paymentUser['price'], $paymentUser['payment_Status'], $paymentUser['Payment_Method'], $paymentUser['time']);
-        sendmessage($from_id, $text_order, null, 'HTML');
+        $fixKeyboard = null;
+        if ($paymentUser['payment_Status'] === 'paid' && $adminrulecheck['rule'] == "administrator") {
+            $fixKeyboard = json_encode(['inline_keyboard' => [[['text' => $textbotlang['Admin']['Payment']['fixBtnOpen'], 'callback_data' => "payfix_" . $paymentUser['id_order']]]]]);
+        }
+        sendmessage($from_id, $text_order, $fixKeyboard, 'HTML');
     }
     sendmessage($from_id, $textbotlang['Admin']['manageUser']['sendPaymentList'], $keyboardadmin, 'HTML');
+} elseif (preg_match('/^payfix_(\S+)$/', $datain, $dataget) && $adminrulecheck['rule'] == "administrator") {
+    $ctx = payment_fix_context($dataget[1]);
+    if (!$ctx) {
+        telegram('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => $textbotlang['Admin']['Payment']['fixNotPaid'], 'show_alert' => true, 'cache_time' => 5]);
+        return;
+    }
+    $pay = $ctx['payment'];
+    $linkedLine = $ctx['invoice'] ? sprintf($textbotlang['Admin']['Payment']['fixLinkedService'], $ctx['invoice']['username']) : '';
+    $menuText = sprintf($textbotlang['Admin']['Payment']['fixMenu'], $pay['id_order'], $pay['id_user'], number_format(intval($pay['price'])), $textbotlang['Admin']['Payment']['fixType_' . $ctx['type']], $linkedLine);
+    $menuKeyboard = json_encode(['inline_keyboard' => [
+        [['text' => $textbotlang['Admin']['Payment']['fixBtnAmount'], 'callback_data' => "payfixamt_" . $pay['id_order']], ['text' => $textbotlang['Admin']['Payment']['fixBtnCancel'], 'callback_data' => "payfixcan_" . $pay['id_order']]],
+    ]]);
+    Editmessagetext($from_id, $message_id, $menuText, $menuKeyboard);
+} elseif (preg_match('/^payfixcan_(\S+)$/', $datain, $dataget) && $adminrulecheck['rule'] == "administrator") {
+    $ctx = payment_fix_context($dataget[1]);
+    if (!$ctx) {
+        telegram('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => $textbotlang['Admin']['Payment']['fixNotPaid'], 'show_alert' => true, 'cache_time' => 5]);
+        return;
+    }
+    $id = $ctx['payment']['id_order'];
+    $confirmKeyboard = json_encode(['inline_keyboard' => [
+        [['text' => $textbotlang['Admin']['Payment']['fixBtnGoNotify'], 'callback_data' => "payfixgo_" . $id . "_1"]],
+        [['text' => $textbotlang['Admin']['Payment']['fixBtnGoSilent'], 'callback_data' => "payfixgo_" . $id . "_0"]],
+        [['text' => $textbotlang['Admin']['Payment']['fixBtnBack'], 'callback_data' => "payfix_" . $id]],
+    ]]);
+    Editmessagetext($from_id, $message_id, sprintf($textbotlang['Admin']['Payment']['fixConfirmCancel'], $id, payment_fix_plan_lines($ctx)), $confirmKeyboard);
+} elseif (preg_match('/^payfixgo_(\S+)_([01])$/', $datain, $dataget) && $adminrulecheck['rule'] == "administrator") {
+    $id = $dataget[1];
+    $notifyUser = $dataget[2] === '1';
+    $ctx = payment_fix_context($id);
+    $claim = $pdo->prepare("UPDATE payment_report SET payment_Status = 'reversed' WHERE id_order = ? AND payment_Status = 'paid'");
+    $claim->execute([$id]);
+    clearSelectCache('payment_report');
+    if (!$ctx || $claim->rowCount() === 0) {
+        telegram('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => $textbotlang['Admin']['Payment']['fixNotPaid'], 'show_alert' => true, 'cache_time' => 5]);
+        return;
+    }
+    $pay = $ctx['payment'];
+    $inv = $ctx['invoice'];
+    $serviceNote = '';
+    if ($ctx['service_live']) {
+        $DataUserOut = $ManagePanel->DataUser($inv['Service_location'], $inv['username']);
+        $gone = isset($DataUserOut['msg']) && $DataUserOut['msg'] == "User not found";
+        $panelOk = $gone;
+        if (!$gone && ($DataUserOut['status'] ?? '') != "Unsuccessful") {
+            if ($ctx['type'] === 'buy') {
+                $ManagePanel->RemoveUser($inv['Service_location'], $inv['username']);
+                $panelOk = true;
+            } else {
+                if (($DataUserOut['status'] ?? '') == "active") {
+                    $changed = $ManagePanel->Change_status($inv['username'], $inv['Service_location']);
+                    $panelOk = ($changed['status'] ?? '') != "Unsuccessful";
+                } else {
+                    $panelOk = true;
+                }
+            }
+        }
+        if (!$panelOk) {
+            $pdo->prepare("UPDATE payment_report SET payment_Status = 'paid' WHERE id_order = ? AND payment_Status = 'reversed'")->execute([$id]);
+            clearSelectCache('payment_report');
+            sendmessage($from_id, $textbotlang['Admin']['Payment']['fixPanelFailed'], $keyboardadmin, 'HTML');
+            return;
+        }
+        if ($ctx['type'] === 'buy') {
+            update("invoice", "Status", "removebyadmin", "id_invoice", $inv['id_invoice']);
+            $serviceNote = sprintf($textbotlang['Admin']['Payment']['fixDoneDeleted'], $inv['username']);
+        } else {
+            update("invoice", "Status", "disablebyadmin", "id_invoice", $inv['id_invoice']);
+            update("service_other", "status", "reversed", "id", $ctx['service_row']['id']);
+            $serviceNote = sprintf($textbotlang['Admin']['Payment']['fixDoneDisabled'], $inv['username']);
+        }
+    }
+    $walletNote = '';
+    $walletResult = payment_wallet_move($pay['id_user'], $ctx['wallet_cancel']);
+    if ($walletResult === 'ok') {
+        $walletNote = sprintf($textbotlang['Admin']['Payment']['fixDoneWallet'], ($ctx['wallet_cancel'] > 0 ? '+' : '-') . number_format(abs($ctx['wallet_cancel'])));
+    } elseif ($walletResult === 'low') {
+        $walletNote = $textbotlang['Admin']['Payment']['fixWalletLow'];
+    }
+    update("payment_report", "dec_not_confirmed", trim(($pay['dec_not_confirmed'] ?? '') . "\n" . sprintf($textbotlang['Admin']['Payment']['fixLogCancel'], $from_id)), "id_order", $id);
+    $payUser = select("user", "*", "id", $pay['id_user'], "select");
+    if ($notifyUser) {
+        sendmessage($pay['id_user'], sprintf($textbotlang['users']['Balance']['paymentReversedNotice'], $id, number_format(intval($pay['price']))), null, 'HTML');
+    }
+    if (strlen($setting['Channel_Report']) > 0) {
+        telegram('sendmessage', [
+            'chat_id' => $setting['Channel_Report'],
+            'message_thread_id' => $paymentreports,
+            'text' => sprintf($textbotlang['Admin']['reportgroup']['paymentFixCancel'], $from_id, $pay['id_user'], $payUser['username'] ?? '', $id, number_format(intval($pay['price'])), trim($serviceNote . "\n" . $walletNote)),
+            'parse_mode' => "HTML"
+        ]);
+    }
+    Editmessagetext($from_id, $message_id, trim(sprintf($textbotlang['Admin']['Payment']['fixDoneCancel'], $id) . "\n" . $serviceNote . "\n" . $walletNote), json_encode(['inline_keyboard' => []]));
+} elseif (preg_match('/^payfixamt_(\S+)$/', $datain, $dataget) && $adminrulecheck['rule'] == "administrator") {
+    $ctx = payment_fix_context($dataget[1]);
+    if (!$ctx) {
+        telegram('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => $textbotlang['Admin']['Payment']['fixNotPaid'], 'show_alert' => true, 'cache_time' => 5]);
+        return;
+    }
+    update("user", "Processing_value", $dataget[1], "id", $from_id);
+    step('payfixamount', $from_id);
+    sendmessage($from_id, $textbotlang['Admin']['Payment']['fixAskAmount'], $backadmin, 'HTML');
+} elseif ($user['step'] == "payfixamount" && $adminrulecheck['rule'] == "administrator") {
+    if (!ctype_digit($text) || intval($text) <= 0) {
+        sendmessage($from_id, $textbotlang['Admin']['Balance']['invalidPrice'], $backadmin, 'HTML');
+        return;
+    }
+    $ctx = payment_fix_context($user['Processing_value']);
+    if (!$ctx) {
+        step('home', $from_id);
+        sendmessage($from_id, $textbotlang['Admin']['Payment']['fixNotPaid'], $keyboardadmin, 'HTML');
+        return;
+    }
+    $oldAmount = intval($ctx['payment']['price']);
+    $newAmount = intval($text);
+    $delta = $newAmount - $oldAmount;
+    update("user", "Processing_value_tow", $newAmount, "id", $from_id);
+    step('home', $from_id);
+    if ($delta === 0) {
+        sendmessage($from_id, $textbotlang['Admin']['Payment']['fixSameAmount'], $keyboardadmin, 'HTML');
+        return;
+    }
+    $walletLine = $delta > 0
+        ? sprintf($textbotlang['Admin']['Payment']['fixPlanWalletAdd'], number_format($delta))
+        : sprintf($textbotlang['Admin']['Payment']['fixPlanWalletDeduct'], number_format(-$delta));
+    $rows = [
+        [['text' => $textbotlang['Admin']['Payment']['fixBtnWalletNotify'], 'callback_data' => "payfixamtgo_11"]],
+        [['text' => $textbotlang['Admin']['Payment']['fixBtnWalletSilent'], 'callback_data' => "payfixamtgo_10"]],
+        [['text' => $textbotlang['Admin']['Payment']['fixBtnRecordNotify'], 'callback_data' => "payfixamtgo_01"]],
+        [['text' => $textbotlang['Admin']['Payment']['fixBtnRecordSilent'], 'callback_data' => "payfixamtgo_00"]],
+    ];
+    sendmessage($from_id, sprintf($textbotlang['Admin']['Payment']['fixConfirmAmount'], $ctx['payment']['id_order'], number_format($oldAmount), number_format($newAmount), $walletLine . "\n" . $textbotlang['Admin']['Payment']['fixNoteCashback']), json_encode(['inline_keyboard' => $rows]), 'HTML');
+} elseif (preg_match('/^payfixamtgo_([01])([01])$/', $datain, $dataget) && $adminrulecheck['rule'] == "administrator") {
+    $applyWallet = $dataget[1] === '1';
+    $notifyUser = $dataget[2] === '1';
+    $id = $user['Processing_value'];
+    $newAmount = intval($user['Processing_value_tow']);
+    $ctx = payment_fix_context($id);
+    if (!$ctx || $newAmount <= 0) {
+        telegram('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => $textbotlang['Admin']['Payment']['fixNotPaid'], 'show_alert' => true, 'cache_time' => 5]);
+        return;
+    }
+    $pay = $ctx['payment'];
+    $oldAmount = intval($pay['price']);
+    $claim = $pdo->prepare("UPDATE payment_report SET price = ? WHERE id_order = ? AND payment_Status = 'paid' AND price = ?");
+    $claim->execute([$newAmount, $id, $pay['price']]);
+    clearSelectCache('payment_report');
+    if ($claim->rowCount() === 0) {
+        telegram('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => $textbotlang['Admin']['Payment']['fixNotPaid'], 'show_alert' => true, 'cache_time' => 5]);
+        return;
+    }
+    $delta = $newAmount - $oldAmount;
+    $walletNote = '';
+    if ($applyWallet) {
+        $walletResult = payment_wallet_move($pay['id_user'], $delta);
+        if ($walletResult === 'ok') {
+            $walletNote = sprintf($textbotlang['Admin']['Payment']['fixDoneWallet'], ($delta > 0 ? '+' : '-') . number_format(abs($delta)));
+        } elseif ($walletResult === 'low') {
+            $walletNote = $textbotlang['Admin']['Payment']['fixWalletLow'];
+        }
+    }
+    update("payment_report", "dec_not_confirmed", trim(($pay['dec_not_confirmed'] ?? '') . "\n" . sprintf($textbotlang['Admin']['Payment']['fixLogAmount'], number_format($oldAmount), number_format($newAmount), $from_id)), "id_order", $id);
+    $payUser = select("user", "*", "id", $pay['id_user'], "select");
+    if ($notifyUser) {
+        sendmessage($pay['id_user'], sprintf($textbotlang['users']['Balance']['paymentAmountFixedNotice'], $id, number_format($oldAmount), number_format($newAmount)), null, 'HTML');
+    }
+    if (strlen($setting['Channel_Report']) > 0) {
+        telegram('sendmessage', [
+            'chat_id' => $setting['Channel_Report'],
+            'message_thread_id' => $paymentreports,
+            'text' => sprintf($textbotlang['Admin']['reportgroup']['paymentFixAmount'], $from_id, $pay['id_user'], $payUser['username'] ?? '', $id, number_format($oldAmount), number_format($newAmount), $walletNote),
+            'parse_mode' => "HTML"
+        ]);
+    }
+    Editmessagetext($from_id, $message_id, trim(sprintf($textbotlang['Admin']['Payment']['fixDoneAmount'], $id, number_format($oldAmount), number_format($newAmount)) . "\n" . $walletNote), json_encode(['inline_keyboard' => []]));
 } elseif (preg_match('/affiliates-(\w+)/', $datain, $dataget)) {
     $iduser = $dataget[1];
     $affiliatesUsers = select("user", "*", "affiliates", $iduser, "fetchAll");
@@ -4049,7 +4228,7 @@ elseif ($datain == "systemsms") {
     $id_order = $datagetr[1];
     $Payment_report = select("payment_report", "*", "id_order", $id_order, "select");
     update("user", "Processing_value", $id_order, "id", $from_id);
-    $claim = $pdo->prepare("UPDATE payment_report SET payment_Status = 'paid' WHERE id_order = ? AND payment_Status NOT IN ('paid', 'reject')");
+    $claim = $pdo->prepare("UPDATE payment_report SET payment_Status = 'paid' WHERE id_order = ? AND payment_Status NOT IN ('paid', 'reject', 'reversed')");
     $claim->execute([$id_order]);
     clearSelectCache('payment_report');
     if ($claim->rowCount() === 0) {
