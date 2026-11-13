@@ -2349,7 +2349,7 @@ function bottext_apply_overrides(array &$base, $lang)
 }
 function extendMethodKeys()
 {
-    return ['resetVolumeTime', 'addTimeVolumeNextMonth', 'resetTimeAddVolume', 'resetVolumeAddTime', 'addTimeConvertVolume'];
+    return ['resetVolumeTime', 'addTimeVolumeNextMonth', 'resetTimeAddVolume', 'resetVolumeAddTime', 'addTimeConvertVolume', 'smartRenew'];
 }
 function extendMethodLabels()
 {
