@@ -1651,6 +1651,13 @@ Status: approved (%s)',
                         'activatedUrl' => 'https://api.telegram.org/bot%s/sendmessage?chat_id=%s&text=✅ Dear user, your bot was installed successfully.',
                 ],
                 'algorithmExtend' => [
+                        'methodsHelp' => '📌 Choose a renewal method:
+
+🔹 Reset volume and time: usage goes to zero and the product\'s volume and time start from today; whatever was left is dropped.
+🔹 Add volume and time: the product\'s volume and days are added to the current volume and expiry; usage is not reset.
+🔹 Reset time, add volume: time restarts from today and the product\'s volume is added to the current volume; usage is not reset.
+🔹 Reset volume, add time: usage goes to zero and the volume equals the product\'s volume; the product\'s days are added to the current expiry.
+🔹 Carry remaining to next month: usage goes to zero, the remaining volume is added to the product\'s volume and the days are added to the current expiry.',
                         'saveData' => '✅ The service renewal method was successfully updated',
                         'invalidMethod' => '❌ The renewal method is invalid; select the correct renewal method from the list below',
                 ],
@@ -3754,8 +3761,8 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'addEducation' => '📚 Add tutorial',
                 'addOrder' => '🛒 Add order',
                 'addProduct' => '🛍 Add product',
-                'addTimeConvertVolume' => 'Adding time and converting total volume to remaining volume',
-                'addTimeVolumeNextMonth' => 'Adding time and volume to the next month',
+                'addTimeConvertVolume' => 'Carry remaining to next month',
+                'addTimeVolumeNextMonth' => 'Add volume and time',
                 'adminDeletedService' => '🔗 An admin deleted a service from the bot\'s database.
 
 - Admin numeric ID :‌{from_id}
@@ -4069,8 +4076,8 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'requestNotFound' => 'The requested request was not found.',
                 'requestRejected' => '✅Request rejected.',
                 'resetAllUsersLimit' => '🔄 Reset all users\' limits',
-                'resetTimeAddVolume' => 'Reset time and add previous volume',
-                'resetVolumeAddTime' => 'Reset volume and add time',
+                'resetTimeAddVolume' => 'Reset time, add volume',
+                'resetVolumeAddTime' => 'Reset volume, add time',
                 'resetVolumeTime' => 'Reset volume and time',
                 'searchOrder' => '🛍 Search order',
                 'searchUserBtn' => '🔍 Search user',
