@@ -1556,6 +1556,28 @@ Number of products sold: %s
                 ],
                 'addorder' => [
                         'stepFive' => '📌 The service was successfully added to the user\'s account.',
+                        'orderConfirm' => '📜 Service invoice
+
+👤 User: %s
+🏷 Service name: %s
+📍 Panel: %s
+🛍 Product: %s
+⏱ Duration: %s days
+🔋 Volume: %s GB
+💸 Price (with the user\'s discount): %s Toman
+💰 User balance: %s Toman',
+                        'orderPayBtn' => '✅ Create and charge the user\'s wallet',
+                        'orderFreeBtn' => '🆓 Create for free (no charge)',
+                        'orderModePaid' => 'paid',
+                        'orderModeFree' => 'free',
+                        'orderReport' => '📣 Service created by admin (%s)
+
+👤 User: <code>%s</code> %s
+🏷 Service name: <code>%s</code>
+📍 Panel: %s
+🛍 Product: %s
+💸 Amount: %s Toman
+🧑‍💼 Admin: <code>%s</code>',
                         'stepFour' => '📌 Send the product name.',
                         'stepThree' => '📌 Select the config location.',
                         'stepTwo' => '📌 Send the user\'s config username.',

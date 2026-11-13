@@ -1556,6 +1556,28 @@ n2',
                 ],
                 'addorder' => [
                         'stepFive' => '📌 服务已成功添加到该用户的账户。',
+                        'orderConfirm' => '📜 服务账单
+
+👤 用户：%s
+🏷 服务名称：%s
+📍 面板：%s
+🛍 产品：%s
+⏱ 时长：%s 天
+🔋 流量：%s GB
+💸 价格（含用户折扣）：%s 土曼
+💰 用户余额：%s 土曼',
+                        'orderPayBtn' => '✅ 创建并从用户钱包扣款',
+                        'orderFreeBtn' => '🆓 免费创建（不扣款）',
+                        'orderModePaid' => '付费',
+                        'orderModeFree' => '免费',
+                        'orderReport' => '📣 管理员创建了服务（%s）
+
+👤 用户：<code>%s</code> %s
+🏷 服务名称：<code>%s</code>
+📍 面板：%s
+🛍 产品：%s
+💸 金额：%s 土曼
+🧑‍💼 管理员：<code>%s</code>',
                         'stepFour' => '📌 请发送产品名称。',
                         'stepThree' => '📌 请选择配置位置。',
                         'stepTwo' => '📌 请发送该用户的配置用户名。',
