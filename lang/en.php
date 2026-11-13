@@ -1556,6 +1556,7 @@ Number of products sold: %s
                 ],
                 'addorder' => [
                         'stepFive' => '📌 The service was successfully added to the user\'s account.',
+                        'productNotForPanel' => '❌ This product is not defined for the selected panel. Pick one of this panel\'s products from the buttons.',
                         'stepFour' => '📌 Send the product name.',
                         'stepThree' => '📌 Select the config location.',
                         'stepTwo' => '📌 Send the user\'s config username.',
