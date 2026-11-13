@@ -2031,6 +2031,17 @@ support 权限级别可访问用户服务和客服消息回复部分',
                         'getPassword' => '🔑 用户名已保存。请输入您的密码',
                         'getPasswordNew' => '请发送新的面板密码',
                         'getUrlNew' => ' 请发送新的面板地址',
+                        'panelDescAsk' => '📝 面板「%s」的说明
+
+客户选择服务类型时会看到这段文字，例如用来说明经济版与高级版的区别。
+
+请发送新的文字（最多300个字符）。发送一个句点（.）可删除说明。',
+                        'panelDescCurrent' => '当前文字：
+%s',
+                        'panelDescNotText' => '请以文字消息发送。',
+                        'panelDescTooLong' => '文字超过300个字符，请缩短。',
+                        'panelDescSaved' => '✅ 面板说明已保存。',
+                        'panelDescRemoved' => '✅ 面板说明已删除。',
                         'getUsernameNew' => ' 请发送新的面板用户名',
                         'invalidDomain' => '🔗 域名地址无效',
                         'invalidName' => '名称无效',
@@ -3949,6 +3960,7 @@ f,n.n2',
                 'hiddify' => 'Hiddify',
                 'hidePanel' => '隐藏面板',
                 'hidePanelForAgent' => '❌ 为代理隐藏某个面板',
+                'panelDescription' => '📝 面板说明',
                 'hidePanelForUser' => '🫣 为某个用户隐藏面板',
                 'inactiveAccount' => '📍 未激活账户',
                 'inactiveDays' => '未使用的天数',

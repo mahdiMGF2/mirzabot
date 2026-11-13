@@ -1085,6 +1085,7 @@ foreach ($panelOptionRows as $panelType => $panelRows) {
     foreach ($panelRows as $panelRow) {
         $panelKeyboardRows[] = array_map(fn($key) => ['text' => $textbotlang['keyboard'][$key] ?? $key], $panelRow);
     }
+    $panelKeyboardRows[] = [['text' => $textbotlang['keyboard']['panelDescription']]];
     $panelKeyboardRows[] = [['text' => $textbotlang['keyboard']['hidePanelForUser']]];
     $panelKeyboardRows[] = [['text' => $textbotlang['keyboard']['removeFromHiddenList']]];
     $panelKeyboardRows[] = [['text' => $textbotlang['Admin']['backAdminBtn']], ['text' => $textbotlang['Admin']['backMenuBtn']]];
