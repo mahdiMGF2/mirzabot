@@ -4504,6 +4504,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'productThirtyValue' => '۳۰',
                 'productTomanUnit' => 'Cancel',
                 'productUnlimitedLabel' => 'Description',
+                'productLimitIp' => 'Simultaneous IP limit (0 = unlimited; x-ui services)',
                 'productVolumeGbSuffix' => 'Volume (GB)',
                 'productZeroValue' => '۰',
                 'productsHeading' => 'Registered product',

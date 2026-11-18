@@ -4504,6 +4504,7 @@ ID пользователя : %s
                 'productThirtyValue' => '۳۰',
                 'productTomanUnit' => 'Отмена',
                 'productUnlimitedLabel' => 'Описание',
+                'productLimitIp' => 'Лимит одновременных IP (0 = без ограничения; сервисы x-ui)',
                 'productVolumeGbSuffix' => 'Объём (ГБ)',
                 'productZeroValue' => '۰',
                 'productsHeading' => 'Зарегистрированный продукт',
