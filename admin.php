@@ -4903,7 +4903,14 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     step('getnamepanelconfig', $from_id);
 } elseif ($user['step'] == "getnamepanelconfig") {
     update("user", "Processing_value_tow", $text, "id", $from_id);
-    sendmessage($from_id, $textbotlang['Admin']['addorder']['stepFour'], $json_list_product_list_admin, 'HTML');
+    // only offer the products that belong to the chosen panel (or to all panels)
+    $stmtPanelProducts = $pdo->prepare("SELECT name_product FROM product WHERE Location = :location OR Location = '/all' ORDER BY id");
+    $stmtPanelProducts->execute([':location' => $text]);
+    $panelProductKeyboard = ['keyboard' => [[['text' => $textbotlang['Admin']['backAdminBtn']]]], 'resize_keyboard' => true];
+    foreach (array_unique($stmtPanelProducts->fetchAll(PDO::FETCH_COLUMN)) as $panelProductName) {
+        $panelProductKeyboard['keyboard'][] = [['text' => $panelProductName]];
+    }
+    sendmessage($from_id, $textbotlang['Admin']['addorder']['stepFour'], json_encode($panelProductKeyboard), 'HTML');
     step('stependforaddorder', $from_id);
 } elseif ($user['step'] == "stependforaddorder") {
     $sql = "SELECT * FROM product  WHERE name_product = :name_product AND (Location = :location OR Location = '/all') LIMIT 1";
@@ -4914,7 +4921,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     $info_product = $stmt->fetch(PDO::FETCH_ASSOC);
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $user['Processing_value_tow'], "select");
     if ($info_product == false || $marzban_list_get == false) {
-        sendmessage($from_id, $textbotlang['users']['status']['error'], $keyboardadmin, 'HTML');
+        sendmessage($from_id, $marzban_list_get == false ? $textbotlang['users']['status']['error'] : $textbotlang['Admin']['addorder']['productNotForPanel'], $keyboardadmin, 'HTML');
         step("home", $from_id);
         return;
     }
