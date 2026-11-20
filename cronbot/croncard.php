@@ -30,7 +30,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     if ($row['at_updated'] == null)
         continue;
     $since_start = time() - strtotime($row['at_updated']);
-    if ($since_start >= 3600)
+    if ($since_start >= $timecheck + 3600)
         continue;
     if ($since_start <= $timecheck)
         continue;

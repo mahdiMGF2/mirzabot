@@ -1556,6 +1556,28 @@ n2',
                 ],
                 'addorder' => [
                         'stepFive' => '📌 服务已成功添加到该用户的账户。',
+                        'orderConfirm' => '📜 服务账单
+
+👤 用户：%s
+🏷 服务名称：%s
+📍 面板：%s
+🛍 产品：%s
+⏱ 时长：%s 天
+🔋 流量：%s GB
+💸 价格（含用户折扣）：%s 土曼
+💰 用户余额：%s 土曼',
+                        'orderPayBtn' => '✅ 创建并从用户钱包扣款',
+                        'orderFreeBtn' => '🆓 免费创建（不扣款）',
+                        'orderModePaid' => '付费',
+                        'orderModeFree' => '免费',
+                        'orderReport' => '📣 管理员创建了服务（%s）
+
+👤 用户：<code>%s</code> %s
+🏷 服务名称：<code>%s</code>
+📍 面板：%s
+🛍 产品：%s
+💸 金额：%s 土曼
+🧑‍💼 管理员：<code>%s</code>',
                         'stepFour' => '📌 请发送产品名称。',
                         'stepThree' => '📌 请选择配置位置。',
                         'stepTwo' => '📌 请发送该用户的配置用户名。',
@@ -1651,6 +1673,14 @@ n2',
                         'activatedUrl' => 'https://api.telegram.org/bot%s/sendmessage?chat_id=%s&text=✅ 尊敬的用户，您的机器人已成功安装。',
                 ],
                 'algorithmExtend' => [
+                        'methodsHelp' => '📌 请选择续费方式：
+
+🔹 重置流量和时间：用量清零，套餐的流量和时长从今天开始计算；之前的剩余部分作废。
+🔹 叠加流量和时间：套餐的流量和天数叠加到当前流量和到期时间上；用量不清零。
+🔹 重置时间，叠加流量：时间从今天重新计算，套餐流量叠加到当前流量上；用量不清零。
+🔹 重置流量，叠加时间：用量清零，流量等于套餐流量；套餐天数叠加到当前到期时间上。
+🔹 剩余结转到下月：用量清零，剩余流量加到套餐流量上，天数叠加到当前到期时间上。
+🔹 智能续费：到期前按“结转剩余”处理，到期后按“重置流量和时间”处理。',
                         'saveData' => '✅ 服务续费方式已成功更新',
                         'invalidMethod' => '❌ 续费方式无效；请从下方列表中选择正确的续费方式',
                 ],
@@ -3754,8 +3784,9 @@ f,n.n2',
                 'addEducation' => '📚 添加教程',
                 'addOrder' => '🛒 添加订单',
                 'addProduct' => '🛍 添加产品',
-                'addTimeConvertVolume' => '添加时间并将总流量转换为剩余流量',
-                'addTimeVolumeNextMonth' => '将时间和流量添加到下个月',
+                'addTimeConvertVolume' => '剩余结转到下月',
+                'smartRenew' => '智能续费（到期前：结转剩余；到期后：从零开始）',
+                'addTimeVolumeNextMonth' => '叠加流量和时间',
                 'adminDeletedService' => '🔗 一位管理员从机器人数据库中删除了一个服务。
 
 - 管理员数字 ID：‌{from_id}
@@ -4069,8 +4100,8 @@ f,n.n2',
                 'requestNotFound' => '未找到请求的申请。',
                 'requestRejected' => '✅请求已拒绝。',
                 'resetAllUsersLimit' => '🔄 重置所有用户的限制',
-                'resetTimeAddVolume' => '重置时间并添加之前的流量',
-                'resetVolumeAddTime' => '重置流量并添加时间',
+                'resetTimeAddVolume' => '重置时间，叠加流量',
+                'resetVolumeAddTime' => '重置流量，叠加时间',
                 'resetVolumeTime' => '重置流量和时间',
                 'searchOrder' => '🛍 搜索订单',
                 'searchUserBtn' => '🔍 搜索用户',

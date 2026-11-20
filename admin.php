@@ -4852,7 +4852,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     update("user", "cardpayment", "1");
     config_set('setting', "showcard", "1");
 } elseif ($text == $textbotlang['keyboard']['renewalMethod'] && $adminrulecheck['rule'] == "administrator") {
-    sendmessage($from_id, $textbotlang['users']['selectoption'], $Methodextend, 'HTML');
+    sendmessage($from_id, $textbotlang['Admin']['algorithmExtend']['methodsHelp'], $Methodextend, 'HTML');
     step('updateextendmethod', $from_id);
 } elseif ($user['step'] == "updateextendmethod") {
     $aarayvalid = array(
@@ -4860,7 +4860,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         $textbotlang['keyboard']['addTimeVolumeNextMonth'],
         $textbotlang['keyboard']['resetTimeAddVolume'],
         $textbotlang['keyboard']['resetVolumeAddTime'],
-        $textbotlang['keyboard']['addTimeConvertVolume']
+        $textbotlang['keyboard']['addTimeConvertVolume'],
+        $textbotlang['keyboard']['smartRenew']
     );
     if (!in_array($text, $aarayvalid)) {
         sendmessage($from_id, $textbotlang['Admin']['algorithmExtend']['invalidMethod'], null, 'HTML');
@@ -4906,18 +4907,42 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     sendmessage($from_id, $textbotlang['Admin']['addorder']['stepFour'], $json_list_product_list_admin, 'HTML');
     step('stependforaddorder', $from_id);
 } elseif ($user['step'] == "stependforaddorder") {
-    $sql = "SELECT * FROM product  WHERE name_product = :name_product AND (Location = :location OR Location = '/all') LIMIT 1";
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':name_product', $text, PDO::PARAM_STR);
-    $stmt->bindParam(':location', $user['Processing_value_tow'], PDO::PARAM_STR);
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM product  WHERE name_product = :name_product AND (Location = :location OR Location = '/all') LIMIT 1");
+    $stmt->execute([':name_product' => $text, ':location' => $user['Processing_value_tow']]);
     $info_product = $stmt->fetch(PDO::FETCH_ASSOC);
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $user['Processing_value_tow'], "select");
-    if ($info_product == false || $marzban_list_get == false) {
+    $owner = select("user", "*", "id", $user['Processing_value'], "select");
+    if ($info_product == false || $marzban_list_get == false || !is_array($owner)) {
         sendmessage($from_id, $textbotlang['users']['status']['error'], $keyboardadmin, 'HTML');
         step("home", $from_id);
         return;
     }
+    update("user", "Processing_value_four", $info_product['name_product'], "id", $from_id);
+    $orderDays = intval($info_product['Service_time']) == 0 ? $textbotlang['users']['status']['unlimited'] : $info_product['Service_time'];
+    $orderGb = intval($info_product['Volume_constraint']) == 0 ? $textbotlang['users']['status']['unlimited'] : $info_product['Volume_constraint'];
+    $orderConfirmText = sprintf($textbotlang['Admin']['addorder']['orderConfirm'], $user['Processing_value'], $user['Processing_value_one'], $marzban_list_get['name_panel'], $info_product['name_product'], $orderDays, $orderGb, number_format(admin_order_price($owner, $info_product)), number_format($owner['Balance']));
+    sendmessage($from_id, $orderConfirmText, json_encode([
+        'inline_keyboard' => [
+            [['text' => $textbotlang['Admin']['addorder']['orderPayBtn'], 'callback_data' => 'addorderpay']],
+            [['text' => $textbotlang['Admin']['addorder']['orderFreeBtn'], 'callback_data' => 'addorderfree']],
+        ]
+    ]), 'HTML');
+    step('confirmaddorder', $from_id);
+} elseif (($datain == "addorderpay" || $datain == "addorderfree") && $user['step'] == "confirmaddorder") {
+    step('home', $from_id);
+    Editmessagetext($from_id, $message_id, $text_inline, json_encode(['inline_keyboard' => []]));
+    $paid = $datain == "addorderpay";
+    $text = $user['Processing_value_four'];
+    $stmt = $pdo->prepare("SELECT * FROM product  WHERE name_product = :name_product AND (Location = :location OR Location = '/all') LIMIT 1");
+    $stmt->execute([':name_product' => $text, ':location' => $user['Processing_value_tow']]);
+    $info_product = $stmt->fetch(PDO::FETCH_ASSOC);
+    $marzban_list_get = select("marzban_panel", "*", "name_panel", $user['Processing_value_tow'], "select");
+    $owner = select("user", "*", "id", $user['Processing_value'], "select");
+    if ($info_product == false || $marzban_list_get == false || !is_array($owner)) {
+        sendmessage($from_id, $textbotlang['users']['status']['error'], $keyboardadmin, 'HTML');
+        return;
+    }
+    $orderPrice = admin_order_price($owner, $info_product);
     $DataUserOut = $ManagePanel->DataUser($user['Processing_value_tow'], $user['Processing_value_one']);
     if ($DataUserOut['status'] == "Unsuccessful") {
         $datetimestep = strtotime("+" . $info_product['Service_time'] . "days");
@@ -4933,8 +4958,15 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             'username' => "",
             'type' => 'buy'
         );
+        if ($paid && !deductBalance($owner, $orderPrice)) {
+            sendmessage($from_id, $textbotlang['users']['Balance']['notEnoughBalance'], $keyboardadmin, 'HTML');
+            return;
+        }
         $DataUserOut = $ManagePanel->createUser($user['Processing_value_tow'], $info_product['code_product'], $user['Processing_value_one'], $datac);
         if ($DataUserOut['username'] == null) {
+            if ($paid) {
+                addBalance($owner['id'], $orderPrice);
+            }
             sendmessage($from_id, $textbotlang['Admin']['reportgroup']['checkReportGroup'], null, 'HTML');
             $DataUserOut['msg'] = json_encode($DataUserOut['msg']);
             $texterros = sprintf($textbotlang['Admin']['reportgroup']['errorConfigCreateAdmin'], $DataUserOut['msg'], $from_id, $marzban_list_get['name_panel']);
@@ -4951,7 +4983,9 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         }
     } else {
         $DataUserOut['configs'] = $DataUserOut['links'];
+        $paid = false;
     }
+    $invoicePrice = $paid ? $orderPrice : 0;
     $date = time();
     $randomString = bin2hex(random_bytes(4));
     $notifctions = json_encode(array(
@@ -4966,7 +5000,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     $stmt->bindParam(':time_sell', $date, PDO::PARAM_STR);
     $stmt->bindParam(':Service_location', $user['Processing_value_tow'], PDO::PARAM_STR);
     $stmt->bindParam(':name_product', $info_product['name_product'], PDO::PARAM_STR);
-    $stmt->bindParam(':price_product', $info_product['price_product'], PDO::PARAM_STR);
+    $stmt->bindParam(':price_product', $invoicePrice, PDO::PARAM_STR);
     $stmt->bindParam(':Volume', $info_product['Volume_constraint'], PDO::PARAM_STR);
     $stmt->bindParam(':Service_time', $info_product['Service_time'], PDO::PARAM_STR);
     $stmt->bindParam(':Status', $Status, PDO::PARAM_STR);
@@ -5009,8 +5043,20 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         update("invoice", "user_info", $DataUserOut['subscription_url'], "id_invoice", $randomString);
     }
     sendMessageService($marzban_list_get, $DataUserOut['configs'], $output_config_link, $DataUserOut['username'], $Shoppinginfo, $textcreatuser, $randomString, $user['Processing_value'], wireguard: $DataUserOut['wireguard'] ?? []);
-    sendmessage($from_id, $textbotlang['Admin']['addorder']['stepFive'], $keyboardadmin, 'HTML');
-    step('home', $from_id);
+    $doneResult = sendmessage($from_id, $textbotlang['Admin']['addorder']['stepFive'], $keyboardadmin, 'HTML');
+    if (!is_array($doneResult) || empty($doneResult['ok'])) {
+        error_log('admin add-order: confirmation to admin ' . $from_id . ' was not delivered: ' . json_encode($doneResult));
+    }
+    if (strlen($setting['Channel_Report']) > 0) {
+        $orderOwnerName = !empty($owner['username']) && $owner['username'] != 'none' ? '@' . htmlspecialchars($owner['username']) : '';
+        telegram('sendmessage', [
+            'chat_id' => $setting['Channel_Report'],
+            'message_thread_id' => $buyreport,
+            'text' => sprintf($textbotlang['Admin']['addorder']['orderReport'], $paid ? $textbotlang['Admin']['addorder']['orderModePaid'] : $textbotlang['Admin']['addorder']['orderModeFree'], $owner['id'], $orderOwnerName, htmlspecialchars($DataUserOut['username']), $marzban_list_get['name_panel'], $info_product['name_product'], number_format($invoicePrice), $from_id),
+            'parse_mode' => "HTML",
+        ]);
+    }
+    update("user", "Processing_value_four", "none", "id", $from_id);
 } elseif ($text == $textbotlang['keyboard']['minBulkBalance'] && $adminrulecheck['rule'] == "administrator") {
     $PaySetting = config_get('shop', "minbalancebuybulk");
     $textmin = sprintf($textbotlang['Admin']['price']['askBulkMin'], $PaySetting);
