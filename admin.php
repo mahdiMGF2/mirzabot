@@ -4916,7 +4916,6 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         step("home", $from_id);
         return;
     }
-    // Ask how to charge before anything is created: from the user's wallet or free (same choice as the admin renewal).
     update("user", "Processing_value_four", $info_product['name_product'], "id", $from_id);
     $orderDays = intval($info_product['Service_time']) == 0 ? $textbotlang['users']['status']['unlimited'] : $info_product['Service_time'];
     $orderGb = intval($info_product['Volume_constraint']) == 0 ? $textbotlang['users']['status']['unlimited'] : $info_product['Volume_constraint'];
@@ -4929,8 +4928,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     ]), 'HTML');
     step('confirmaddorder', $from_id);
 } elseif (($datain == "addorderpay" || $datain == "addorderfree") && $user['step'] == "confirmaddorder") {
-    // From here on the old creation flow runs; $paid decides whether the user's wallet is charged.
-    step('home', $from_id); // a second tap on the same button finds the step changed and does nothing
+    step('home', $from_id);
     Editmessagetext($from_id, $message_id, $text_inline, json_encode(['inline_keyboard' => []]));
     $paid = $datain == "addorderpay";
     $text = $user['Processing_value_four'];
@@ -4984,7 +4982,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         }
     } else {
         $DataUserOut['configs'] = $DataUserOut['links'];
-        $paid = false; // the client already existed on the panel: nothing new was created, nothing is charged
+        $paid = false;
     }
     $invoicePrice = $paid ? $orderPrice : 0;
     $date = time();

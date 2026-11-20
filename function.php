@@ -1076,7 +1076,6 @@ function releaseDiscountCode($code, $userId): void
     $pdo->prepare("DELETE FROM giftcodeconsumed WHERE id_user = ? AND code = ? LIMIT 1")->execute([$userId, $code]);
     clearSelectCache('discountsell');
 }
-// Price an admin-created service costs the owner: product price minus the owner's personal discount.
 function admin_order_price(array $owner, array $product): int
 {
     $price = floatval($product['price_product']);
