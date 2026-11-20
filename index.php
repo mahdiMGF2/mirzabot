@@ -1949,7 +1949,6 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         }
         return;
     }
-    // Only now that the renewal succeeded: a failed renewal must leave a test service as it was.
     if ($nameloc['name_product'] == $textbotlang['common']['labels']['testService2']) {
         update("invoice", "name_product", $prodcut['name_product'], "id_invoice", $nameloc['id_invoice']);
         update("invoice", "price_product", $prodcut['price_product'], "id_invoice", $nameloc['id_invoice']);
