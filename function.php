@@ -2884,10 +2884,6 @@ function mirzaEnsureInstallerRemoved()
     }
 }
 
-/**
- * Renewal product list filtered by general category and/or duration.
- * Returns the inline keyboard JSON (serviceextendselect_<code> rows).
- */
 function extend_product_keyboard(array $invoice, array $user, ?string $category, ?string $month, string $backCallback): string
 {
     global $pdo, $textbotlang;
