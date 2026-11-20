@@ -2347,7 +2347,6 @@ function bottext_apply_overrides(array &$base, $lang)
     }
     customEmojiLabels($emojiLabels);
 }
-// True when a renewal switches between a limited-volume plan and an unlimited one (volume 0 = unlimited).
 function renewal_type_changed($currentLimitBytes, $newVolumeGb): bool
 {
     return (intval($currentLimitBytes) == 0) !== (intval($newVolumeGb) == 0);
