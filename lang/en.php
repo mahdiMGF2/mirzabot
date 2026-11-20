@@ -1793,7 +1793,7 @@ trojan://xyz',
                         'changedData' => '✅ The changes were successfully saved',
                         'setDayRemove' => '📌 Send the number of days after which accounts whose time has expired should be deleted
 Current time: ',
-                        'setVolumeRemove' => '📌 Send the number of days after which accounts whose volume has run out should be deleted. The account time is calculated based on the user\'s last connection. This feature is for the Marzban panel
+                        'setVolumeRemove' => '📌 Send the number of days after which accounts whose volume has run out should be deleted. The account time is calculated based on the user\'s last connection. This feature is for Marzban and 3x-ui panels
 Current time: ',
                         'cannotDeleteUnlimited' => '❌ The service cannot be deleted because its volume and time are unlimited. ',
                         'askOnHoldDays' => 'In this section you must set, if the user has not connected to their config after a certain number of days and is in on_hold status, to send the user a message',
@@ -3763,6 +3763,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'addOrder' => '🛒 Add order',
                 'addProduct' => '🛍 Add product',
                 'addTimeConvertVolume' => 'Carry remaining to next month',
+                'smartRenew' => 'Smart renew (before expiry: carry over the rest; after expiry: start fresh)',
                 'addTimeVolumeNextMonth' => 'Add volume and time',
                 'adminDeletedService' => '🔗 An admin deleted a service from the bot\'s database.
 
@@ -4512,6 +4513,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'productThirtyValue' => '۳۰',
                 'productTomanUnit' => 'Cancel',
                 'productUnlimitedLabel' => 'Description',
+                'productLimitIp' => 'Simultaneous IP limit (0 = unlimited; x-ui services)',
                 'productVolumeGbSuffix' => 'Volume (GB)',
                 'productZeroValue' => '۰',
                 'productsHeading' => 'Registered product',

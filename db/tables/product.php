@@ -33,5 +33,6 @@ return [
         ['hide_panel', '{}', 'TEXT'],
         ['status_product', 'active', "VARCHAR(20) NOT NULL DEFAULT 'active'"],
         ['display_order', null, 'INT NOT NULL DEFAULT 0'],
+        ['limit_ip', '0', 'INT NOT NULL DEFAULT 0'],
     ],
 ];

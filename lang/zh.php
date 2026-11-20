@@ -1793,7 +1793,7 @@ trojan://xyz',
                         'changedData' => '✅ 更改已成功保存',
                         'setDayRemove' => '📌 请发送在到期后多少天删除已到期账户
 当前时间： ',
-                        'setVolumeRemove' => '📌 请发送在流量用尽后多少天删除账户。账户时间根据用户最后一次连接计算。此功能适用于 Marzban 面板
+                        'setVolumeRemove' => '📌 请发送在流量用尽后多少天删除账户。账户时间根据用户最后一次连接计算。此功能适用于 Marzban 和 3x-ui 面板
 当前时间： ',
                         'cannotDeleteUnlimited' => '❌ 由于流量和时间均为无限，无法删除该服务。',
                         'askOnHoldDays' => '在此部分，您必须设置：如果用户在若干天后仍未连接到其配置且处于 on_hold 状态，则向用户发送消息',
@@ -3763,6 +3763,7 @@ f,n.n2',
                 'addOrder' => '🛒 添加订单',
                 'addProduct' => '🛍 添加产品',
                 'addTimeConvertVolume' => '剩余结转到下月',
+                'smartRenew' => '智能续费（到期前：结转剩余；到期后：从零开始）',
                 'addTimeVolumeNextMonth' => '叠加流量和时间',
                 'adminDeletedService' => '🔗 一位管理员从机器人数据库中删除了一个服务。
 
@@ -4512,6 +4513,7 @@ f,n.n2',
                 'productThirtyValue' => '۳۰',
                 'productTomanUnit' => '取消',
                 'productUnlimitedLabel' => '说明',
+                'productLimitIp' => '同时在线 IP 限制（0 = 不限；x-ui 服务）',
                 'productVolumeGbSuffix' => '流量 (GB)',
                 'productZeroValue' => '۰',
                 'productsHeading' => '已登记产品',
