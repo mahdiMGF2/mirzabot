@@ -251,7 +251,7 @@ $setting_panel = json_encode([
         [['text' => $textbotlang['keyboard']['setTestAccountLimitAll']]],
         [['text' => $textbotlang['keyboard']['activateWebPanel']], ['text' => $textbotlang['keyboard']['optimizeBot']]],
         [['text' => $textbotlang['keyboard']['setBotCommands']], ['text' => $textbotlang['keyboard']['apiToken']]],
-        [['text' => $textbotlang['keyboard']['reWebhookAgentBots']]],
+        [['text' => $textbotlang['keyboard']['reWebhookAgentBots']], ['text' => $textbotlang['keyboard']['sessionTimeoutBtn']]],
         [['text' => $textbotlang['Admin']['backAdminBtn']], ['text' => $textbotlang['Admin']['backMenuBtn']]]
     ],
     'resize_keyboard' => true
