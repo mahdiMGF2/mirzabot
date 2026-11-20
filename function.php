@@ -2371,6 +2371,25 @@ function extendMethodLabels()
                 $labels[trim($label)] = $key;
         }
     }
+    $legacyLabels = [
+        'اضافه شدن زمان و تبدیل حجم کل به حجم باقی مانده' => 'addTimeConvertVolume',
+        'اضافه شدن زمان و حجم به ماه بعد' => 'addTimeVolumeNextMonth',
+        'ریست زمان و اضافه کردن حجم قبلی' => 'resetTimeAddVolume',
+        'ریست شدن حجم و اضافه شدن زمان' => 'resetVolumeAddTime',
+        'Adding time and converting total volume to remaining volume' => 'addTimeConvertVolume',
+        'Adding time and volume to the next month' => 'addTimeVolumeNextMonth',
+        'Reset time and add previous volume' => 'resetTimeAddVolume',
+        'Reset volume and add time' => 'resetVolumeAddTime',
+        'Добавление времени и преобразование общего объёма в остаточный' => 'addTimeConvertVolume',
+        'Добавление времени и объёма на следующий месяц' => 'addTimeVolumeNextMonth',
+        'Сброс времени и добавление предыдущего объёма' => 'resetTimeAddVolume',
+        'Сброс объёма и добавление времени' => 'resetVolumeAddTime',
+        '添加时间并将总流量转换为剩余流量' => 'addTimeConvertVolume',
+        '将时间和流量添加到下个月' => 'addTimeVolumeNextMonth',
+        '重置时间并添加之前的流量' => 'resetTimeAddVolume',
+        '重置流量并添加时间' => 'resetVolumeAddTime',
+    ];
+    $labels += $legacyLabels;
     return $labels;
 }
 function extendMethodKey($value, $default = 'resetVolumeTime')

@@ -1657,7 +1657,8 @@ Status: approved (%s)',
 🔹 Add volume and time: the product\'s volume and days are added to the current volume and expiry; usage is not reset.
 🔹 Reset time, add volume: time restarts from today and the product\'s volume is added to the current volume; usage is not reset.
 🔹 Reset volume, add time: usage goes to zero and the volume equals the product\'s volume; the product\'s days are added to the current expiry.
-🔹 Carry remaining to next month: usage goes to zero, the remaining volume is added to the product\'s volume and the days are added to the current expiry.',
+🔹 Carry remaining to next month: usage goes to zero, the remaining volume is added to the product\'s volume and the days are added to the current expiry.
+🔹 Smart renew: before expiry it works like "Carry remaining to next month"; after expiry it works like "Reset volume and time".',
                         'saveData' => '✅ The service renewal method was successfully updated',
                         'invalidMethod' => '❌ The renewal method is invalid; select the correct renewal method from the list below',
                 ],
