@@ -1695,6 +1695,10 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         $pricelastextend = $product['price_product'];
     }
     $textextend = sprintf($textbotlang['users']['extend']['invoiceCreated'], $nameloc['username'], $product['name_product'], $pricelastextend, $product['Service_time'], $product['Volume_constraint'], $product['note'], $user['Balance']);
+    $currentInfo = $ManagePanel->DataUser($nameloc['Service_location'], $nameloc['username']);
+    if (is_array($currentInfo) && ($currentInfo['status'] ?? 'Unsuccessful') != 'Unsuccessful') {
+        $textextend .= renewal_type_warning($textbotlang, $currentInfo['data_limit'] ?? 0, $product['Volume_constraint']);
+    }
     if ($user['step'] == "getvolumecustomuserforextend") {
         sendmessage($from_id, $textextend, $keyboardextend, 'HTML');
     } else {
@@ -1776,6 +1780,10 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     if ($info_product['price_product'] < 0)
         $info_product['price_product'] = 0;
     $textextend = sprintf($textbotlang['users']['extend']['invoiceCreated2'], $nameloc['username'], $info_product['name_product'], $info_product['price_product'], $info_product['Service_time'], $info_product['Volume_constraint'], $info_product['note'], $user['Balance']);
+    $currentInfo = $ManagePanel->DataUser($nameloc['Service_location'], $nameloc['username']);
+    if (is_array($currentInfo) && ($currentInfo['status'] ?? 'Unsuccessful') != 'Unsuccessful') {
+        $textextend .= renewal_type_warning($textbotlang, $currentInfo['data_limit'] ?? 0, $info_product['Volume_constraint']);
+    }
     $keyboardextend = json_encode([
         'inline_keyboard' => [
             [

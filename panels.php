@@ -215,6 +215,9 @@ class ManagePanel
         update("invoice", 'uuid', null, "username", $username);
         update("invoice", 'Status', "active", "username", $username);
         $Method_extend = extendMethodKey($Method_extend);
+        if (renewal_type_changed($data_limit_old, $new_limit)) {
+            $Method_extend = "resetVolumeTime";
+        }
         if ($Method_extend == "resetVolumeTime") {
             $reset = $this->ResetUserDataUsage($username, $panel['name_panel']);
             if ($reset['status'] == false) {

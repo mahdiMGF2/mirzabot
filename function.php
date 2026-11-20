@@ -2347,6 +2347,19 @@ function bottext_apply_overrides(array &$base, $lang)
     }
     customEmojiLabels($emojiLabels);
 }
+function renewal_type_changed($currentLimitBytes, $newVolumeGb): bool
+{
+    return (intval($currentLimitBytes) == 0) !== (intval($newVolumeGb) == 0);
+}
+function renewal_type_warning(array $lang, $currentLimitBytes, $newVolumeGb): string
+{
+    if (!renewal_type_changed($currentLimitBytes, $newVolumeGb)) {
+        return '';
+    }
+    $from = intval($currentLimitBytes) == 0 ? $lang['users']['extend']['typeUnlimited'] : $lang['users']['extend']['typeLimited'];
+    $to = intval($newVolumeGb) == 0 ? $lang['users']['extend']['typeUnlimited'] : $lang['users']['extend']['typeLimited'];
+    return "\n\n" . sprintf($lang['users']['extend']['typeChangeWarning'], $from, $to);
+}
 function extendMethodKeys()
 {
     return ['resetVolumeTime', 'addTimeVolumeNextMonth', 'resetTimeAddVolume', 'resetVolumeAddTime', 'addTimeConvertVolume'];
