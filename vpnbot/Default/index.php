@@ -1371,10 +1371,13 @@ $textonebuy
     $DataUserOut = $ManagePanel->DataUser($nameloc['Service_location'], $nameloc['username']);
     update("invoice", "user_info", json_encode($DataUserOut), "id_invoice", $nameloc['id_invoice']);
     if (isset($DataUserOut['msg']) && $DataUserOut['msg'] == "User not found") {
-        update("invoice", "Status", "disabledn", "id_invoice", $nameloc['id_invoice']);
-        sendmessage($from_id, $textbotlang['users']['status']['userNotFound'], $keyboard, 'html');
-        step('home', $from_id);
-        return;
+        $DataUserOut = $ManagePanel->DataUser($nameloc['Service_location'], $nameloc['username']);
+        if (isset($DataUserOut['msg']) && $DataUserOut['msg'] == "User not found") {
+            update("invoice", "Status", "disabledn", "id_invoice", $nameloc['id_invoice']);
+            sendmessage($from_id, $textbotlang['users']['status']['userNotFound'], $keyboard, 'html');
+            step('home', $from_id);
+            return;
+        }
     }
     if ($DataUserOut['status'] == "Unsuccessful") {
         sendmessage($from_id, $textbotlang['users']['status']['panelNotConnected'], $keyboard, 'html');

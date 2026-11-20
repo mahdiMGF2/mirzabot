@@ -81,9 +81,16 @@ class XuiSinglePanelDriver extends BasePanelDriver
             );
         }
         if (empty($user_data['obj'])) {
+            $panelMsg = (string) ($user_data['msg'] ?? '');
+            if (!empty($user_data['success']) || stripos($panelMsg, 'not found') !== false) {
+                return array(
+                    'status' => 'Unsuccessful',
+                    'msg' => "User not found"
+                );
+            }
             return array(
                 'status' => 'Unsuccessful',
-                'msg' => "User not found"
+                'msg' => $panelMsg !== '' ? $panelMsg : 'empty response'
             );
         }
         $user_data = $user_data['obj'];
