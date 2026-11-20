@@ -18,11 +18,6 @@ if ($autoconfirm != "onauto")
     return;
 $paymentreports = config_get('topic', "paymentreport");
 $textbotlang = languagechange();
-$list_Exceptions = config_get('pay', "Exception_auto_cart");
-$list_Exceptions = is_string($list_Exceptions) ? json_decode($list_Exceptions, true) : [];
-if (!is_array($list_Exceptions)) {
-    $list_Exceptions = [];
-}
 $timecheck = $setting['timeauto_not_verify'] * 60;
 $stmt = $pdo->prepare("SELECT * FROM payment_report WHERE payment_Status = 'waiting' AND (Payment_Method = 'cart to cart' OR Payment_Method = 'arze digital offline') AND bottype IS NULL");
 $stmt->execute();
@@ -35,7 +30,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     if ($since_start <= $timecheck)
         continue;
     $Payment_report = $row;
-    if (in_array($Payment_report['id_user'], $list_Exceptions))
+    if (!card_autoconfirm_allowed($Payment_report['id_user']))
         continue;
     if ($Payment_report['payment_Status'] == "paid") {
         continue;

@@ -606,6 +606,35 @@ function config_get(string $scope, string $name, $default = null)
     return array_key_exists($name, $all) ? $all[$name] : $default;
 }
 
+// Card-to-card auto confirmation (cronbot/croncard.php) works in one of two modes:
+//  'blacklist' (default): every user is confirmed except those in Exception_auto_cart
+//  'whitelist': only users in Whitelist_auto_cart are confirmed
+// The blacklist always wins. The delay is the usual timeauto_not_verify setting.
+function pay_user_list(string $name): array
+{
+    $list = config_get('pay', $name);
+    $list = is_string($list) ? json_decode($list, true) : [];
+    return is_array($list) ? array_values(array_map('strval', $list)) : [];
+}
+function pay_user_list_save(string $name, array $list): void
+{
+    config_set('pay', $name, json_encode(array_values(array_unique(array_map('strval', $list)))));
+}
+function card_autoconfirm_mode(): string
+{
+    return config_get('pay', 'autoconfirm_mode') === 'whitelist' ? 'whitelist' : 'blacklist';
+}
+function card_autoconfirm_allowed($userId): bool
+{
+    $id = (string) $userId;
+    if (in_array($id, pay_user_list('Exception_auto_cart'), true)) {
+        return false;
+    }
+    if (card_autoconfirm_mode() === 'whitelist') {
+        return in_array($id, pay_user_list('Whitelist_auto_cart'), true);
+    }
+    return true;
+}
 function config_set(string $scope, string $name, $value): void
 {
     global $pdo;
