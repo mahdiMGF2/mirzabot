@@ -1933,10 +1933,6 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
             'parse_mode' => "HTML"
         ]);
     }
-    if ($nameloc['name_product'] == $textbotlang['common']['labels']['testService2']) {
-        update("invoice", "name_product", $prodcut['name_product'], "id_invoice", $nameloc['id_invoice']);
-        update("invoice", "price_product", $prodcut['price_product'], "id_invoice", $nameloc['id_invoice']);
-    }
     $extend = $ManagePanel->extend($marzban_list_get['Methodextend'], $prodcut['Volume_constraint'], $prodcut['Service_time'], $nameloc['username'], $prodcut['code_product'], $marzban_list_get['code_panel']);
     if ($extend['status'] == false) {
         addBalance($from_id, $pricelastextend);
@@ -1955,6 +1951,10 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
             ]);
         }
         return;
+    }
+    if ($nameloc['name_product'] == $textbotlang['common']['labels']['testService2']) {
+        update("invoice", "name_product", $prodcut['name_product'], "id_invoice", $nameloc['id_invoice']);
+        update("invoice", "price_product", $prodcut['price_product'], "id_invoice", $nameloc['id_invoice']);
     }
     if ($cashbackextend) {
         sendmessage($from_id, sprintf($textbotlang['users']['extend']['giftCharged'], $cashbackextend), null, 'HTML');
