@@ -4852,7 +4852,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     update("user", "cardpayment", "1");
     config_set('setting', "showcard", "1");
 } elseif ($text == $textbotlang['keyboard']['renewalMethod'] && $adminrulecheck['rule'] == "administrator") {
-    sendmessage($from_id, $textbotlang['users']['selectoption'], $Methodextend, 'HTML');
+    sendmessage($from_id, $textbotlang['Admin']['algorithmExtend']['methodsHelp'], $Methodextend, 'HTML');
     step('updateextendmethod', $from_id);
 } elseif ($user['step'] == "updateextendmethod") {
     $aarayvalid = array(
