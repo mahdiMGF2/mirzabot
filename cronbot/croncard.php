@@ -30,7 +30,6 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     if ($row['at_updated'] == null)
         continue;
     $since_start = time() - strtotime($row['at_updated']);
-    // Only receipts up to one hour past the configured delay are approved, so the delay can be any length.
     if ($since_start >= $timecheck + 3600)
         continue;
     if ($since_start <= $timecheck)
