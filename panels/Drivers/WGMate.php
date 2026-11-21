@@ -27,10 +27,12 @@ class WGMatePanelDriver extends BasePanelDriver
             $Output['msg'] = $data_Output['error'] ?? ('error code : ' . $ConnectToPanel['status']);
         } else {
             $data_Output = $data_Output['data'];
+            $subscription = subscription_wgmate($Get_Data_Panel['name_panel'], $data_Output['id']);
             $Output['status'] = 'successful';
             $Output['username'] = $data_Output['username'];
             $Output['subscription_url'] = $invoice != false ? "https://$domainhosts/sub/" . $invoice['id_invoice'] : rtrim($Get_Data_Panel['url_panel'], '/') . '/sub/' . $data_Output['subToken'];
-            $Output['configs'] = links_wgmate($Get_Data_Panel['name_panel'], $data_Output['id']);
+            $Output['configs'] = array_merge(links_wgmate($Get_Data_Panel['name_panel'], $data_Output['id']), array_values(array_filter(array_column($subscription, 'shareUri'), fn($uri) => stripos($uri, 'amneziawg://') === 0)));
+            $Output['wireguard'] = array_values(array_filter(array_column($subscription, 'shareUri'), fn($uri) => stripos($uri, 'wireguard://') === 0));
         }
         return $Output;
     }
@@ -55,6 +57,7 @@ class WGMatePanelDriver extends BasePanelDriver
             );
         } else {
             $UsernameData = $UsernameData['user'];
+            $subscription = subscription_wgmate($Get_Data_Panel['name_panel'], $UsernameData['id']);
             $Output = array(
                 'status' => status_wgmate($UsernameData),
                 'username' => $UsernameData['username'],
@@ -67,7 +70,8 @@ class WGMatePanelDriver extends BasePanelDriver
                 'sub_updated_at' => null,
                 'sub_last_user_agent' => null,
                 'uuid' => null,
-                'data_limit_reset' => 'no_reset'
+                'data_limit_reset' => 'no_reset',
+                'wireguard' => array_values(array_filter(array_column($subscription, 'shareUri'), fn($uri) => stripos($uri, 'wireguard://') === 0))
             );
         }
         return $Output;
@@ -91,10 +95,12 @@ class WGMatePanelDriver extends BasePanelDriver
             );
         } else {
             $Data_User = $this->DataUser($name_panel, $username);
+            $subscription = subscription_wgmate($name_panel, json_decode($revoke_sub['body'], true)['data']['id'] ?? '');
             $Output = array(
                 'status' => 'successful',
-                'configs' => links_wgmate($name_panel, json_decode($revoke_sub['body'], true)['data']['id'] ?? ''),
-                'subscription_url' => $Data_User['subscription_url']
+                'configs' => array_merge(links_wgmate($name_panel, json_decode($revoke_sub['body'], true)['data']['id'] ?? ''), array_values(array_filter(array_column($subscription, 'shareUri'), fn($uri) => stripos($uri, 'amneziawg://') === 0))),
+                'subscription_url' => $Data_User['subscription_url'],
+                'wireguard' => array_values(array_filter(array_column($subscription, 'shareUri'), fn($uri) => stripos($uri, 'wireguard://') === 0))
             );
         }
         return $Output;

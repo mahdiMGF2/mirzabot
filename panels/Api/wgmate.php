@@ -43,6 +43,9 @@ function status_wgmate(array $user)
     if ($user['quotaBytes'] && $user['usedBytes'] >= $user['quotaBytes']) {
         return "limited";
     }
+    if (($user['holdDays'] ?? 0) > 0 && ($user['expiresAt'] ?? "") == "") {
+        return "on_hold";
+    }
     return $user['status'];
 }
 function links_wgmate($location, $user_id)
@@ -50,6 +53,10 @@ function links_wgmate($location, $user_id)
     $links = json_decode(request_wgmate($location, "GET", '/users/' . $user_id . '/links')['body'] ?? '', true)['data'] ?? [];
     unset($links['subscription']);
     return array_values($links);
+}
+function subscription_wgmate($location, $user_id)
+{
+    return json_decode(request_wgmate($location, "GET", '/users/' . $user_id . '/subscription')['body'] ?? '', true)['data']['configs'] ?? [];
 }
 function adduser_wgmate($location, $data_limit, $username_ac, $timestamp, $name_product, $note = '', $limitip = null)
 {
@@ -65,11 +72,20 @@ function adduser_wgmate($location, $data_limit, $username_ac, $timestamp, $name_
         'expiresAt' => $timestamp == 0 ? "" : gmdate('Y-m-d\TH:i:s\Z', $timestamp),
     );
     if (is_array($template)) {
-        $data['protocols'] = $template['protocols'] ?? [];
-        $data['serverId'] = $template['serverId'] ?? '';
+        if (!empty($template['bindings'])) {
+            $data['bindings'] = $template['bindings'];
+        } else {
+            $data['protocols'] = $template['protocols'] ?? [];
+            $data['serverId'] = $template['serverId'] ?? '';
+        }
     }
     if ($limitip != null && $panel['limit_in_panel'] == "1") {
         $data['connLimit'] = intval($limitip);
+    }
+    $on_hold = $name_product == "usertest" ? $panel['on_hold_test'] != "0" : $panel['conecton'] != "offconecton";
+    if ($on_hold && $timestamp != 0 && $timestamp - time() >= 86400) {
+        $data['expiresAt'] = "";
+        $data['holdDays'] = max(1, (int) round(($timestamp - time()) / 86400));
     }
     return request_wgmate($location, "POST", '/users', $data);
 }

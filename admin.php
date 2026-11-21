@@ -7159,7 +7159,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             sendmessage($from_id, $textbotlang['users']['status']['userNotFound'], null, 'html');
             return;
         }
-        update("marzban_panel", "proxies", json_encode(array('protocols' => $userdata['protocols'], 'serverId' => $userdata['serverId'])), "name_panel", $user['Processing_value']);
+        update("marzban_panel", "proxies", json_encode(array('protocols' => $userdata['protocols'], 'serverId' => $userdata['serverId'], 'bindings' => array_map(fn($binding) => array('serverId' => $binding['serverId'], 'protocols' => $binding['protocols'], 'isPrimary' => !empty($binding['isPrimary'])), $userdata['bindings'] ?? []))), "name_panel", $user['Processing_value']);
         sendmessage($from_id, $textbotlang['Admin']['managepanel']['protocolSaved'], $panelOptions['rebecca'], 'HTML');
     } elseif ($panel['type'] == "nexora") {
         $userdata = getuser_nexora($text, $user['Processing_value'])['user'];
@@ -8290,7 +8290,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
             ['text' => $textbotlang['keyboard']['sendSubLink'], 'callback_data' => "none"],
         ];
     }
-    if (in_array($panel['type'], ['marzban', "x-ui_single", "marzneshin"])) {
+    if (in_array($panel['type'], ['marzban', "x-ui_single", "marzneshin", "wg_mate"])) {
         $Bot_Status['inline_keyboard'][] = [
             ['text' => $statusconnecton, 'callback_data' => "editpanel-connecton-{$panel['conecton']}-{$panel['code_panel']}"],
             ['text' => $textbotlang['keyboard']['firstConnection'], 'callback_data' => "none"],
@@ -8528,7 +8528,7 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
             ['text' => $textbotlang['keyboard']['sendSubLink'], 'callback_data' => "none"],
         ];
     }
-    if (in_array($panel['type'], ['marzban', "x-ui_single", "marzneshin"])) {
+    if (in_array($panel['type'], ['marzban', "x-ui_single", "marzneshin", "wg_mate"])) {
         $Bot_Status['inline_keyboard'][] = [
             ['text' => $statusconnecton, 'callback_data' => "editpanel-connecton-{$panel['conecton']}-{$panel['code_panel']}"],
             ['text' => $textbotlang['keyboard']['firstConnection'], 'callback_data' => "none"],
